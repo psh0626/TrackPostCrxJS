@@ -9,7 +9,7 @@ chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
   .catch((error) => console.error(error));
 
-chrome.tabs.onUpdated.addListener(async (tabId, changed, tab) => {
+chrome.tabs.onUpdated.addListener(async (tabId, changed, tab: chrome.tabs.Tab) => {
   if (tab.url == null) {
     return;
   }
