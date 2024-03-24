@@ -13,14 +13,17 @@
     "@fontsource/roboto": "^5.0.12",
     "@mui/icons-material": "^5.15.13",
     "@mui/material": "^5.15.13",
+    "events": "^3.3.0",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^1.0.14",
     "@types/chrome": "^0.0.263",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
+    "@types/xml2js": "^0.4.14",
     "@vitejs/plugin-react": "^1.3.0",
     "typescript": "^4.6.3",
     "vite": "^2.9.9"
