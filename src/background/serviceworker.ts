@@ -19,7 +19,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changed, tab: chrome.tabs.Tab) =
   if (url.origin == GCSS_URL) {
     await chrome.sidePanel.setOptions({
       tabId,
-      path: "sidepanel.html",
+      path: "index.html",
       enabled: true,
     });
     console.log(`sidepanel enabled for ${url.toString()}`);
@@ -31,7 +31,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changed, tab: chrome.tabs.Tab) =
   } else if (url.origin == ICARE_URL) {
     await chrome.sidePanel.setOptions({
       tabId,
-      path: "sidepanel.html",
+      path: "index.html",
       enabled: true,
     });
     console.log(`sidepanel enabled for ${url.toString()}`);
