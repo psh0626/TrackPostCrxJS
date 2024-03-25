@@ -11,6 +11,7 @@ import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import InputLabel from "@mui/material/InputLabel";
 
 function App() {
   // State for PostElement
@@ -19,7 +20,7 @@ function App() {
   // Tracking number state (you might want to bind this as well)
   const [item_id_field, set_item_id_field] = useState("");
 
-  const [is_valid, set_is_valid] = useState(false);
+  const [is_valid, set_is_valid] = useState(true);
 
   const FetchPostItem = async () => {
     set_post_element(await PostAPI.FetchPostElement(item_id_field)); // Update the state with the fetched PostElement
@@ -43,7 +44,7 @@ function App() {
           maxLength: 13,
           pattern: String.raw`[a-zA-Z]{2}\d{9}[a-zA-Z]{2}`,
         }}
-        helperText="Invalid Tracking Number"
+        helperText={is_valid ? " " : "Invalid Tracking Number"}
         onChange={(e) => CheckValue(e.target)}
         onKeyUp={(e) => {
           if (e.key === "Enter" && is_valid) {
