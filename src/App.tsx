@@ -23,15 +23,18 @@ function App() {
   const [is_valid, set_is_valid] = useState(true);
 
   const FetchPostItem = async () => {
-    const blankElm = new PostElement({ItemID: item_id_field});
-    set_post_element(blankElm);
+    set_post_element(new PostElement({ItemID: item_id_field}));
     set_post_element(await PostAPI.FetchPostElement(item_id_field)); // Update the state with the fetched PostElement
   };
 
   const CheckValue = (target: any) => {
     const pretty_value = target.value.trim().toUpperCase();
     set_item_id_field(pretty_value); // Update
-    set_is_valid(target.validity.valid);
+    if (pretty_value === "") {
+      set_is_valid(true);
+    } else {
+      set_is_valid(target.validity.valid);      
+    }
   };
   interface InfoFieldType{
     label_text: string;

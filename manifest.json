@@ -11,9 +11,15 @@
     "service_worker": "src/background/serviceworker.ts",
     "type": "module"
   },
-  "host_permissions":[
+  "host_permissions": [
     "https://ems.epost.go.kr/*",
     "https://icare.post/*",
     "https://gcss.ipc.be/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://icare.post/*", "https://gcss.ipc.be/*"],
+      "js": ["src/background/contentscript.ts"]
+    }
   ]
 }
