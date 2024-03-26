@@ -29,7 +29,7 @@ export class PostElement {
 }
 
 export class PostAPI {
-  private static async XmlToPostElement(xml: string): Promise<PostElement> {
+  private static async XmlToPostElement(xml: string, trackingNumber: string): Promise<PostElement> {
     try {
       const result = await parseStringPromise(xml, {
         explicitArray: false,
@@ -37,6 +37,11 @@ export class PostAPI {
         trim: true,
       });
       const data = result.xsync.LData; // Adjust based on your XML structure
+      if (data.length === 0)
+      {
+        console.log("Blank XML returned;")
+        return new PostElement({ItemID: trackingNumber, ItemTracked: false, });
+      }
 
       return new PostElement({
         ItemID: data.MAIL_NO,
@@ -88,6 +93,6 @@ export class PostAPI {
   }
 
   static async FetchPostElement(trackingNumber: string): Promise<PostElement> {
-    return await this.FetchPostXML(trackingNumber).then((xml) => this.XmlToPostElement(xml));
+    return await this.FetchPostXML(trackingNumber).then((xml) => this.XmlToPostElement(xml, trackingNumber));
   }
 }

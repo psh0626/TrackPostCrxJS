@@ -23,6 +23,8 @@ function App() {
   const [is_valid, set_is_valid] = useState(true);
 
   const FetchPostItem = async () => {
+    const blankElm = new PostElement({ItemID: item_id_field});
+    set_post_element(blankElm);
     set_post_element(await PostAPI.FetchPostElement(item_id_field)); // Update the state with the fetched PostElement
   };
 
@@ -30,6 +32,20 @@ function App() {
     const pretty_value = target.value.trim().toUpperCase();
     set_item_id_field(pretty_value); // Update
     set_is_valid(target.validity.valid);
+  };
+  interface InfoFieldType{
+    label_text: string;
+    binding: string;
+  }
+  const InfoTextField: React.FC<InfoFieldType> = ({label_text, binding}) => {
+    return (
+      <TextField 
+        variant="outlined"
+        size="small"
+        label={label_text}
+        value={binding}
+        InputLabelProps={ {shrink: post_element.ItemTracked} } ></TextField>
+    );
   };
 
   return (
@@ -55,52 +71,28 @@ function App() {
       <Divider />
       <Card>
         <Stack spacing={0.5}>
-          <Accordion disableGutters>
+          <Accordion disableGutters expanded={post_element.ItemTracked}>
             <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
               <Typography variant="h6">Sender</Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Stack spacing={2}>
-                <TextField
-                  variant="outlined"
-                  label="Sender Name"
-                  value={post_element.SenderName}
-                />
-                <TextField
-                  variant="outlined"
-                  label="Sender Phone"
-                  value={post_element.SenderPhone}
-                />
-                <TextField
-                  variant="outlined"
-                  label="Sender Address"
-                  value={post_element.SenderAddress}
-                />
+                <InfoTextField label_text="Name" binding={post_element.SenderName} />
+                <InfoTextField label_text="Phone" binding={post_element.SenderPhone} />
+                <InfoTextField label_text="Address" binding={post_element.SenderAddress} />
               </Stack>
             </AccordionDetails>
           </Accordion>
 
-          <Accordion disableGutters>
+          <Accordion disableGutters expanded={post_element.ItemTracked}>
             <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
               <Typography variant="h6">Addressee</Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Stack spacing={2}>
-                <TextField
-                  variant="outlined"
-                  label="Addressee Name"
-                  value={post_element.AddresseeName}
-                />
-                <TextField
-                  variant="outlined"
-                  label="Addressee Phone"
-                  value={post_element.AddresseePhone}
-                />
-                <TextField
-                  variant="outlined"
-                  label="Addressee Address"
-                  value={post_element.AddresseeAddress}
-                />
+                <InfoTextField label_text="Name" binding={post_element.AddresseeName} />
+                <InfoTextField label_text="Phone" binding={post_element.AddresseePhone} />
+                <InfoTextField label_text="Address" binding={post_element.AddresseeAddress} />
               </Stack>
             </AccordionDetails>
           </Accordion>
