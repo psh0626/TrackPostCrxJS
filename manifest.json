@@ -19,7 +19,7 @@
   "content_scripts": [
     {
       "matches": ["https://icare.post/*", "https://gcss.ipc.be/*"],
-      "js": ["src/background/contentscript.ts"]
+      "js": ["src/background/contentscript.tsx"]
     }
   ]
 }
