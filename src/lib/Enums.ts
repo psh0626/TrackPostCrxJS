@@ -1,4 +1,4 @@
-const COMMANDS = {
-  FETCH_POST_ELEMENT: "FetchPostElement",
-};
+class COMMANDS{
+  static FETCH_POST_ELEMENT: "FetchPostElement"
+}
 export default COMMANDS;
