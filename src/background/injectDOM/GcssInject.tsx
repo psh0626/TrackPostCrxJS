@@ -55,7 +55,7 @@ const FloatingHelper: React.FC<HelperProps> = ({ target_id, new_value, manual_ch
         variant="extended"
         onClick={buttonClicked}
         size="small"
-        color={tooltip_state==="Changed" ? "primary" : "secondary"}
+        color={tooltip_state === "Changed" ? "primary" : "default" }
         id={`IMIC_${target_id}`}
         sx={{ boxShadow: 0 }}>
         <CachedIcon />

@@ -14,9 +14,7 @@ import InjectUtil from "./injectDOM/InjectUtil";
     });
   }
   async function FindPostElement(item_id: string): Promise<PostElement> {
-    const raw_post_element: string = await SendCommand(
-      new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id)
-    );
+    const raw_post_element: string = await SendCommand(new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id));
 
     return new PostElement(JSON.parse(raw_post_element));
   }
@@ -29,17 +27,14 @@ import InjectUtil from "./injectDOM/InjectUtil";
     const currentURL = new URL(document.URL);
     if (currentURL.origin === GCSS_URL) {
       if (currentURL.pathname.includes("/create/")) {
-        const item_id: string =
-          document.querySelector(".value")?.textContent?.trim() ?? "";
+        const item_id: string = document.querySelector(".value")?.textContent?.trim() ?? "";
 
         if (!item_id) {
           console.log("Cannot find item_id in document classname 'value'");
           return;
         }
         if (item_id.slice(-2) !== "KR") {
-          console.log(
-            "item id is invalid to fetch PostElement (must end with KR)"
-          );
+          console.log("item id is invalid to fetch PostElement (must end with KR)");
           return;
         }
 
@@ -51,11 +46,9 @@ import InjectUtil from "./injectDOM/InjectUtil";
         }
 
         console.log(post_element);
-        const req_type = document.querySelector(
-          "select#sltTypeOfRequest"
-        ) as HTMLSelectElement;
+        const req_type = document.querySelector("select#sltTypeOfRequest") as HTMLSelectElement;
         console.log(req_type.value);
-        req_type.onchange = (ev) => {
+        req_type.onchange = () => {
           console.log(req_type.value);
           if (req_type.value === "401") {
             const getSelect = (id: string): HTMLSelectElement => {
@@ -78,11 +71,12 @@ import InjectUtil from "./injectDOM/InjectUtil";
               sndr_city: getInput("txt_senderCity"),
               sndr_phone: getInput("txt_senderTelephone"),
             };
-
+            InjectUtil.SwitchValue(dom.addr_name, post_element.AddresseeName, true);
             InjectUtil.SwitchValue(dom.addr_street, post_element.AddresseeAddress);
             InjectUtil.SwitchValue(dom.addr_phone, post_element.AddresseePhone);
-            InjectUtil.SwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase());
-            console.log(`react dom injected`);
+            InjectUtil.SwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
+
+            console.log("dom injected");
           }
         };
 

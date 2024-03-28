@@ -1,8 +1,8 @@
+import React from "react";
 import { useState } from "react";
 import { PostElement, PostAPI } from "./lib/PostUtil";
 
 import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Card from "@mui/material/Card";
 import Divider from "@mui/material/Divider";
@@ -11,7 +11,6 @@ import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import InputLabel from "@mui/material/InputLabel";
 
 function App() {
   // State for PostElement
@@ -27,7 +26,7 @@ function App() {
     set_post_element(await PostAPI.FetchPostElement(item_id_field)); // Update the state with the fetched PostElement
   };
 
-  const CheckValue = (target: any) => {
+  const CheckValue = (target: HTMLInputElement | HTMLTextAreaElement) => {
     const pretty_value = target.value.trim().toUpperCase();
     set_item_id_field(pretty_value); // Update
     if (pretty_value === "") {
