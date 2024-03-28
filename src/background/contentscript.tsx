@@ -1,8 +1,9 @@
 import { Padding } from "@mui/icons-material";
 import COMMANDS from "../lib/Enums";
 import Msg from "../lib/Message";
+import GcssInject from "./injectDOM/GcssInject";
 import { PostElement } from "../lib/PostUtil";
-import { createRoot } from "react-dom/client";
+import InjectUtil from "./injectDOM/InjectUtil";
 
 (() => {
   async function SendCommand(message: Msg): Promise<string> {
@@ -49,6 +50,7 @@ import { createRoot } from "react-dom/client";
           return;
         }
 
+        console.log(post_element);
         const req_type = document.querySelector(
           "select#sltTypeOfRequest"
         ) as HTMLSelectElement;
@@ -76,36 +78,11 @@ import { createRoot } from "react-dom/client";
               sndr_city: getInput("txt_senderCity"),
               sndr_phone: getInput("txt_senderTelephone"),
             };
-            const inject_elm = (id: string, original_value: string) => {
-              return (
-                <div className="flex-row" id={`IMIC_Injected_${id}`}>
-                  <div className="column">
-                    <div className="label_value" style={{ padding: "0px" }}>
-                      <div className="label"></div>
-                      <div
-                        className="value"
-                        style={{ justifyContent: "right" }}
-                      >
-                        <label>{original_value}</label>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="column"></div>
-                </div>
-              );
-            };
-            const dom_node = document.querySelector(
-              "#addresseeDetails .flex-row"
-            )!;
-            const rt = document.createElement("div");
-            const root = createRoot(rt);
-            root.render(inject_elm("Row1", dom.addr_name.value));
-            dom_node.insertAdjacentElement("beforebegin", rt);
 
-            console.log(`react dom injected: ${dom_node}`);
-            dom.addr_street.value = post_element.AddresseeAddress;
-            dom.addr_phone.value = post_element.AddresseePhone;
-            dom.addr_email.value = dom.addr_email.value.toLowerCase();
+            InjectUtil.SwitchValue(dom.addr_street, post_element.AddresseeAddress);
+            InjectUtil.SwitchValue(dom.addr_phone, post_element.AddresseePhone);
+            InjectUtil.SwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase());
+            console.log(`react dom injected`);
           }
         };
 
