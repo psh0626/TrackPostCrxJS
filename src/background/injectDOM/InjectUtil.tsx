@@ -3,11 +3,10 @@ import { createRoot } from "react-dom/client";
 import FloatingHelper from "./GcssInject";
 
 class InjectUtil {
-  private static GcssInjectFor(id: string, val: string, manual: boolean = false) {
+  private static GcssInjectFor(target_element: HTMLInputElement, val: string, manual: boolean = false) {
 
-    const targetElement = document.getElementById(id);
-    if (!targetElement) {
-      console.error("No target element found for id:" + id);
+    if (!target_element) {
+      console.error("No target element found for: " + target_element);
       return;
     }
 
@@ -17,21 +16,55 @@ class InjectUtil {
     const inject_react = createRoot(new_div);
     inject_react.render(
       <FloatingHelper
-        target_id={id}
+        target={target_element}
         new_value={val}
         manual_change={manual}
       />
     );
 
-    (targetElement.closest(".value") as HTMLDivElement).style.position = "relative";
+    (target_element.closest("div") as HTMLDivElement).style.position = "relative";
 
-    targetElement.insertAdjacentElement("afterend", new_div);
+    target_element.insertAdjacentElement("afterend", new_div);
   }
-  static SwitchValue(original_element: HTMLInputElement, change_to: string, manual: boolean = false) {
+
+  private static IcareInjectFor(target_elm: HTMLInputElement, val: string, manual: boolean = false){
+
+    if (!target_elm) {
+      console.error("No target element found for: " + target_elm);
+      return;
+    }
+
+    const new_div = document.createElement("div");
+    new_div.setAttribute("style", "display: flex; align-items: center;");
+
+    const inject_react = createRoot(new_div);
+    inject_react.render(
+      <FloatingHelper
+        target={target_elm}
+        new_value={val}
+        manual_change={manual}
+        for_icare={true}
+      />
+    );
+
+    (target_elm.closest("div") as HTMLDivElement).style.position = "relative";
+
+    target_elm.insertAdjacentElement("afterend", new_div);
+  }
+
+  static GcssSwitchValue(original_element: HTMLInputElement, change_to: string, manual: boolean = false) {
     if (manual) {      
-      this.GcssInjectFor(original_element.id, change_to, manual);
+      this.GcssInjectFor(original_element, change_to, manual);
     } else {
-      this.GcssInjectFor(original_element.id, original_element.value);
+      this.GcssInjectFor(original_element, original_element.value);
+      original_element.value = change_to;
+    }
+  }
+  static IcareSwitchValue(original_element: HTMLInputElement, change_to: string, manual: boolean = false) {
+    if (manual) {      
+      this.IcareInjectFor(original_element, change_to, manual);
+    } else {
+      this.IcareInjectFor(original_element, original_element.value);
       original_element.value = change_to;
     }
   }

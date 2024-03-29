@@ -6,22 +6,21 @@ import CachedIcon from "@mui/icons-material/Cached";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import { Tooltip, Typography } from "@mui/material";
 interface HelperProps {
-  target_id: string;
+  target: HTMLInputElement;
   new_value: string;
   manual_change?: boolean;
+  for_icare?: boolean;
 }
 
-const FloatingHelper: React.FC<HelperProps> = ({ target_id, new_value, manual_change = false }) => {
+const FloatingHelper: React.FC<HelperProps> = ({ target, new_value, manual_change = false, for_icare = false }) => {
   const [tooltip_state, set_tooltip_state] = useState<string>(manual_change ? "Original" : "Changed");
   const [tip, set_tip] = useState<string>(new_value);
 
   const buttonClicked = () => {
-    const tooltip_element = document.getElementById(`IMIC_${target_id}`)! as HTMLButtonElement;
-    const input_element = document.getElementById(target_id)! as HTMLInputElement;
+    const tooltip_element = document.getElementById(`IMIC_${target.id}`)! as HTMLButtonElement;
+    const value_to_keep = target.value; // keep changed value
 
-    const value_to_keep = input_element.value; // keep changed value
-
-    input_element.value = tip ?? ""; // original value to input
+    target.value = tip ?? ""; // original value to input
     tooltip_element.ariaLabel = value_to_keep; // changed value to tooltip
 
     set_tooltip_state(tooltip_state === "Changed" ? "Original" : "Changed");
@@ -32,6 +31,17 @@ const FloatingHelper: React.FC<HelperProps> = ({ target_id, new_value, manual_ch
     position: "absolute",
     zIndex: "999",
     right: "-105px",
+    transform: "scale(0.55)",
+    alignItems: "center",
+    width: "130px",
+    height: "34px",
+  };
+
+  const fab_style_icare: React.CSSProperties = {
+    position: "absolute",
+    zIndex: "999",
+    right: "-55px",
+    top: "-10px",
     transform: "scale(0.55)",
     alignItems: "center",
     width: "130px",
@@ -51,12 +61,12 @@ const FloatingHelper: React.FC<HelperProps> = ({ target_id, new_value, manual_ch
       placement="top"
       leaveDelay={300}>
       <Fab
-        style={fab_style}
+        style={for_icare ? fab_style_icare : fab_style}
         variant="extended"
         onClick={buttonClicked}
         size="small"
         color={tooltip_state === "Changed" ? "primary" : "default" }
-        id={`IMIC_${target_id}`}
+        id={`IMIC_${target.id}`}
         sx={{ boxShadow: 0 }}>
         <CachedIcon />
         <Typography
