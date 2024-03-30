@@ -9,7 +9,7 @@
     "128": "src/ext-icon.png"
   },
   "action": { "default_popup": "index.html" },
-  "permissions": ["storage", "tabs", "sidePanel", "webRequest"],
+  "permissions": ["storage", "tabs", "sidePanel", "webRequest", "clipboardWrite"],
   "side_panel": {
     "default_path": "index.html"
   },

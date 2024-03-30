@@ -6,9 +6,19 @@ import '@fontsource/roboto/300.css'
 import '@fontsource/roboto/400.css'
 import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { deepOrange, orange } from '@mui/material/colors'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+const myTheme = createTheme({
+  palette: {
+    primary: deepOrange,
+    secondary: orange,
+  },
+});
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <ThemeProvider theme={myTheme}>
+      <App />
+    </ThemeProvider>
   </React.StrictMode>
-)
+);
