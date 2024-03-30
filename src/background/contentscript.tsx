@@ -1,18 +1,81 @@
 import { Padding } from "@mui/icons-material";
 import COMMANDS from "../lib/Enums";
 import Msg from "../lib/Message";
-import GcssInject from "./injectDOM/GcssInject";
+import GcssInject from "./injectDOM/DomInject";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./injectDOM/InjectUtil";
 
 (() => {
-  
+  window.addEventListener("load", main, false);
+
+  console.log("Content script test: " + document.readyState);
+  if (document.readyState === "complete") main();
+
+  let post_element: PostElement;
+
+  async function main() {
+    console.log("Content script loaded");
+
+    const GCSS_URL = "https://gcss.ipc.be";
+    const ICARE_URL = "https://icare.post";
+
+    const currentURL = new URL(document.URL);
+    if (currentURL.origin === GCSS_URL) {
+      if (currentURL.pathname.includes("/create/")) {
+        const item_id: string = document.querySelector(".value")?.textContent?.trim() ?? "";
+
+        if (!item_id) {
+          console.log("Cannot find item_id in document classname 'value'");
+          return;
+        }
+        if (item_id.slice(-2) !== "KR") {
+          console.log("item id is invalid to fetch PostElement (must end with KR)");
+          return;
+        }
+
+        post_element = await FindPostElement(item_id);
+
+        if (!post_element.ItemTracked) {
+          console.log(`Item does not exist ${item_id}`);
+          return;
+        }
+        console.log(post_element);
+        injectGcss(post_element);
+        console.log("Dom Injected");
+      }
+    } else if (currentURL.origin === ICARE_URL) {
+      const param_action = currentURL.searchParams.get("action");
+      if (param_action && param_action === "new") {
+        const item_id = currentURL.searchParams.get("trackingId")?.toUpperCase();
+
+        if (item_id?.slice(-2) !== "KR") {
+          console.log("item id is invalid to fetch PostElement (must end with KR)");
+          return;
+        }
+
+        post_element = await FindPostElement(item_id);
+
+        if (!post_element.ItemTracked) {
+          console.log(`Item does not exist ${item_id}`);
+          return;
+        }
+        console.log(post_element);
+        let port = chrome.runtime.connect();
+        port.onMessage.addListener((message: Msg) => {
+          console.log("message received: ", message);
+          if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
+            setTimeout(() => InjectIcare(post_element), 300);
+          }
+        });
+      }
+    }
+  }
+
   function getElement<T>(cssString: string): T {
     return document.querySelector(cssString) as T;
-  }  
+  }
 
   const injectGcss = (post_element: PostElement) => {
-
     const getSelect = (id: string): HTMLSelectElement => {
       return getElement<HTMLSelectElement>(`#${id}`);
     };
@@ -72,21 +135,20 @@ import InjectUtil from "./injectDOM/InjectUtil";
   };
 
   const InjectIcare = (post_element: PostElement) => {
-
-    const event = new Event('change', { bubbles: true });
+    const event = new Event("change", { bubbles: true });
 
     const GetSelect = (name: string) => {
       return getElement<HTMLSelectElement>(`select[name="${name}"]`);
-    }
-    
+    };
+
     const GetInput = (name: string) => {
-      return getElement<HTMLInputElement>(`select[name="${name}"]`);
-    }
+      return getElement<HTMLInputElement>(`input[name="${name}"]`);
+    };
 
     const SetSelect = (select_element: HTMLSelectElement, new_value: string) => {
       select_element.value = new_value;
       select_element.dispatchEvent(event);
-    } //field89 inquirer
+    }; //field89 inquirer
 
     const dom = {
       inquirer: GetSelect("field89"), // 4: sender 5: addressee
@@ -109,7 +171,7 @@ import InjectUtil from "./injectDOM/InjectUtil";
     SetSelect(dom.item_categ, "13");
     SetSelect(dom.item_type, "39");
 
-    InjectUtil.IcareSwitchValue(dom.sndr_name, post_element.SenderName, true);
+    InjectUtil.IcareSwitchValue(dom.sndr_name, post_element.SenderName);
     InjectUtil.IcareSwitchValue(dom.sndr_street, post_element.SenderAddress);
     InjectUtil.IcareSwitchValue(dom.sndr_phone, post_element.SenderPhone);
 
@@ -125,9 +187,8 @@ import InjectUtil from "./injectDOM/InjectUtil";
     if (dom.addr_email.value.search(`;`) !== -1 && dom.addr_email.value.length > 1) {
       InjectUtil.IcareSwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
     }
-
-    return;
-  }
+    console.log("Dom Injected");
+  };
 
   async function SendCommand(message: Msg): Promise<string> {
     return new Promise((resolve) => {
@@ -141,54 +202,4 @@ import InjectUtil from "./injectDOM/InjectUtil";
 
     return new PostElement(JSON.parse(raw_post_element));
   }
-  window.onload = async () => {
-    console.log("Content script loaded");
-
-    const GCSS_URL = "https://gcss.ipc.be";
-    const ICARE_URL = "https://icare.post";
-
-    const currentURL = new URL(document.URL);
-    if (currentURL.origin === GCSS_URL) {
-      if (currentURL.pathname.includes("/create/")) {
-        const item_id: string = document.querySelector(".value")?.textContent?.trim() ?? "";
-
-        if (!item_id) {
-          console.log("Cannot find item_id in document classname 'value'");
-          return;
-        }
-        if (item_id.slice(-2) !== "KR") {
-          console.log("item id is invalid to fetch PostElement (must end with KR)");
-          return;
-        }
-
-        const post_element = await FindPostElement(item_id);
-
-        if (!post_element.ItemTracked) {
-          console.log(`Item does not exist ${item_id}`);
-          return;
-        }
-
-        injectGcss(post_element);
-        console.log(post_element);
-      }
-    }else if (currentURL.origin === ICARE_URL){
-      const param_action = currentURL.searchParams.get("action");
-      if(param_action && param_action === "new"){          
-        const item_id = currentURL.searchParams.get("trackingId")?.toUpperCase();
-
-        if (item_id?.slice(-2) !== "KR"){
-          console.log("item id is invalid to fetch PostElement (must end with KR)");
-          return;
-        }
-
-        const post_element = await FindPostElement(item_id);
-
-        if (!post_element.ItemTracked) {
-          console.log(`Item does not exist ${item_id}`);
-          return;
-        }
-
-      }
-    }
-  };
 })();

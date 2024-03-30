@@ -40,8 +40,8 @@ const FloatingHelper: React.FC<HelperProps> = ({ target, new_value, manual_chang
   const fab_style_icare: React.CSSProperties = {
     position: "absolute",
     zIndex: "999",
-    right: "-55px",
-    top: "-10px",
+    right: "-30px",
+    top: "-12px",
     transform: "scale(0.55)",
     alignItems: "center",
     width: "130px",
@@ -65,13 +65,11 @@ const FloatingHelper: React.FC<HelperProps> = ({ target, new_value, manual_chang
         variant="extended"
         onClick={buttonClicked}
         size="small"
-        color={tooltip_state === "Changed" ? "primary" : "default" }
+        color={tooltip_state === "Changed" ? "primary" : "default"}
         id={`IMIC_${target.id}`}
         sx={{ boxShadow: 0 }}>
         <CachedIcon />
-        <Typography
-          textAlign="center"
-          margin="12px 6px 12px 6px">
+        <Typography textAlign="center" margin="12px 6px 12px 6px">
           {tooltip_state}
         </Typography>
       </Fab>
