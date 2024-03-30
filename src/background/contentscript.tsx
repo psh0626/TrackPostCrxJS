@@ -1,11 +1,22 @@
-import { Padding } from "@mui/icons-material";
 import COMMANDS from "../lib/Enums";
 import Msg from "../lib/Message";
-import GcssInject from "./injectDOM/DomInject";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./injectDOM/InjectUtil";
+import { IcareAPI } from "./GetUnreadReplies/IcareReplies";
 
 (() => {
+  function getCSRFToken(): string | null {
+    const csrfMetaTag = document.querySelector("head meta[name=csrf-token]") as HTMLMetaElement;
+    return csrfMetaTag ? csrfMetaTag.content : null;
+  }
+  let csrfToken = getCSRFToken();
+  if (csrfToken) {
+    console.log("CSRF Token found:", csrfToken);
+    // You can now use the CSRF token for your requests or initialization logic here
+  } else {
+    console.log("CSRF Token not found");
+  }
+
   window.addEventListener("load", main, false);
 
   console.log("Content script test: " + document.readyState);
@@ -44,6 +55,9 @@ import InjectUtil from "./injectDOM/InjectUtil";
         console.log("Dom Injected");
       }
     } else if (currentURL.origin === ICARE_URL) {
+      if (csrfToken) {
+        await IcareAPI.FetchUnreadReplies(csrfToken); 
+      }
       const param_action = currentURL.searchParams.get("action");
       if (param_action && param_action === "new") {
         const item_id = currentURL.searchParams.get("trackingId")?.toUpperCase();
