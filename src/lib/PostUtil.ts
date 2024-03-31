@@ -85,7 +85,7 @@ export class PostAPI {
         throw new Error(response.statusText);
       }
       
-      return await response.text();
+      return response.text();
     } catch (error) {
       console.error("Failed to fetch and parse PostEntity:", error);
       return "";

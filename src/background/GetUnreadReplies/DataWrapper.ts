@@ -1,6 +1,7 @@
 
 export class WorkflowItem {
   internal_id: string = "";
+  tracking_id: string = "";
   link: string = "";
   dispatch_no: string = "";
   last_trace: string = "";
@@ -23,6 +24,7 @@ export class WorkflowItem {
 
     if (this.isRawData(data)) {
       this.internal_id = this.extractNameAttribute(data[0]);
+      this.tracking_id = this.extractInnerText(data[3]);
       this.link = this.extractHrefAndPrefix(data[3]);
       this.dispatch_no = data[4];
       this.last_trace = data[5];

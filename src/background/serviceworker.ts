@@ -1,6 +1,7 @@
 import { Msg, COMMANDS } from "../lib/Message";
 import { PostAPI, PostElement } from "../lib/PostUtil";
 import { WorkflowItem } from "./GetUnreadReplies/DataWrapper";
+import PopupTrack from "../lib/PopupTrack";
 
 const GCSS_URL = "https://gcss.ipc.be";
 const ICARE_URL = "https://icare.post";
@@ -8,7 +9,7 @@ console.log("BackgroundWorker has been initiated.");
 
 let MsgPort: chrome.runtime.Port | null = null;
 
-chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
+//chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
 chrome.action.setBadgeBackgroundColor({ color: "#424242" });
 chrome.action.setBadgeTextColor({ color: "white" });
 chrome.webRequest.onCompleted.addListener(
@@ -36,7 +37,7 @@ chrome.webRequest.onCompleted.addListener(
 chrome.runtime.onConnect.addListener((port) => {
   if (port.sender?.url?.includes("icare.post")) MsgPort = port;
 });
-chrome.runtime.onMessage.addListener((message: Msg, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (message: Msg, sender, sendResponse) => {
   const today = new Date();
   console.log(today.toLocaleString(), "\nmessage received from sender: ", sender, "\ncontent: ", message);
   if (message.Command === COMMANDS.FETCH_POST_ELEMENT) {
@@ -54,25 +55,53 @@ chrome.runtime.onMessage.addListener((message: Msg, sender, sendResponse) => {
   } else if (message.Command === COMMANDS.UNREAD_REPLIES) {
     if (message.Param === "?") {
       console.log("Unable to fetch/communicate data from Icare");
-      chrome.action.setBadgeText({ text: '?' });
+      chrome.action.setBadgeText({ text: "?" });
       return;
     }
     const workflow_items: WorkflowItem[] = JSON.parse(message.Param);
     //console.log("workflow items received: ", workflow_items);
-    chrome.action.setBadgeText({ text: `${workflow_items.length}` });
-    const options: chrome.notifications.NotificationOptions<true> = {
-      type: "basic",
-      priority: 2,
-      requireInteraction: true,
-      iconUrl: "src/ext-icon.png",
-      title: "IMIC 알림",
-      message: `ICare 읽지 않은 메시지가 ${workflow_items.length}개 있습니다.`,
-      contextMessage: `Icare unread replies: ${workflow_items.length}`,
-      buttons: [{ title: "확인" }, { title: "닫기" }],
-    };
-    chrome.notifications.create(message.Command, options);
+    await CreateNotification(workflow_items);
   }
 });
+
+async function CreateNotification(WorkFlowItems: WorkflowItem[]) {
+  const last_num = parseInt(await chrome.action.getBadgeText({}));
+  console.log("current number: ", WorkFlowItems.length, "  last number: ", last_num);
+  if (last_num >= WorkFlowItems.length /*current_num*/) {
+    return false;
+  }
+  const mapped_items = WorkFlowItems.map((item: WorkflowItem) => {
+    return {
+      title: `L${item.current_level} ${item.workflow_status}`,
+      message: `${item.tracking_id} (${item.tracking_id.slice(-2) === "KR" ? item.replying_op.substring(0, 2) : item.requesting_op.substring(0, 2)})`,
+    } as chrome.notifications.ItemOptions;
+  });
+  chrome.action.setBadgeText({ text: `${WorkFlowItems.length}` });
+  const options = {
+    type: "list",
+    priority: 2,
+    requireInteraction: true,
+    iconUrl: "src/ext-icon.png",
+    title: `IMIC 알림: ${WorkFlowItems.length}개 메시지 대기`,
+    message: `ICare 읽지 않은 메시지가 ${WorkFlowItems.length}개 있습니다.`,
+    contextMessage: `Icare unread replies: ${WorkFlowItems.length}`,
+    items: mapped_items,
+    buttons: [{ title: "확인" }, { title: "닫기" }],
+  };
+  chrome.notifications.clear(COMMANDS.UNREAD_REPLIES);
+  chrome.notifications.create(COMMANDS.UNREAD_REPLIES, options as chrome.notifications.NotificationOptions<true>);
+  // setTimeout(() => {
+  //   chrome.notifications.clear(COMMANDS.UNREAD_REPLIES);
+  // }, 9000);
+  return true;
+}
+
+chrome.notifications.onClicked.addListener((id) => {
+  if (id === COMMANDS.UNREAD_REPLIES) {
+    chrome.notifications.clear(id);
+  }
+});
+
 chrome.tabs.onUpdated.addListener((tabId, changed, tab: chrome.tabs.Tab) => {
   if (tab.url == null) {
     return;
@@ -103,4 +132,3 @@ chrome.tabs.onUpdated.addListener((tabId, changed, tab: chrome.tabs.Tab) => {
     }
   }
 });
-

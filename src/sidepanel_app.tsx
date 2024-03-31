@@ -1,9 +1,8 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useState } from "react";
 import { PostElement, PostAPI } from "./lib/PostUtil";
 
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Card from "@mui/material/Card";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
@@ -12,16 +11,15 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import Button from "@mui/material/Button";
-import { styled } from "@mui/material/styles";
+import { InfoTextField, StyledTextField } from "./custom/components";
+import PopupTrack from "./lib/PopupTrack";
 
-function App() {
+function SidePanelApp() {
   // State for PostElement
   const [post_element, set_post_element] = useState(new PostElement());
-
-  // Tracking number state (you might want to bind this as well)
   const [item_id_field, set_item_id_field] = useState("");
-
   const [is_valid, set_is_valid] = useState(true);
+  const popup_track = useRef<PopupTrack>(new PopupTrack());
 
   const FetchPostItem = async () => {
     set_post_element(new PostElement({ ItemID: item_id_field }));
@@ -38,77 +36,42 @@ function App() {
     }
   };
 
-  interface InfoFieldType {
-    label_text: string;
-    binding: string;
-    multiline?: boolean;
-  }
-  const InfoTextField: React.FC<InfoFieldType> = ({ label_text, binding, multiline }) => {
-    const TextFieldFocused = (e: React.FocusEvent<HTMLInputElement>) => {
-      e.target.select();
-      navigator.clipboard.writeText(e.target.value);
-    };
+  useEffect(() => {
+    popup_track.current.LoadLocal();
+    popup_track.current.OnChange(async () => {
+      if (popup_track.current.IsTracked) {
+        set_item_id_field(popup_track.current!.ItemId);
+        await FetchPostItem();
+        popup_track.current.Dispose();
+      }
+    });
+  }, []);
 
-    return (
-      <TextField
-        variant="outlined"
-        size="small"
-        value={binding}
-        label={label_text}
-        onFocus={TextFieldFocused}
-        InputLabelProps={{ shrink: post_element.ItemTracked }}
-        inputProps={{ style: { fontSize: "14px" } }}
-        multiline={multiline}></TextField>
-    );
-  };
-  const StyledTextField = styled(TextField)({
-    "& .MuiInputLabel-root": {
-      right: 0,
-      textAlign: "center",
-    },
-    "& .MuiInputLabel-shrink": {
-      margin: "0 auto",
-      position: "absolute",
-      right: "0",
-      left: "0",
-      top: "-3px",
-      width: "150px", // Need to give it a width so the positioning will work
-      background: "white", // Add a white bg
-      // display: "none" //if you want to hide it completly
-    },
-    "& .MuiOutlinedInput-root.Mui-focused": {
-      "& legend ": {
-        display: "none", // If you want it then you need to position it similar with above
-      },
-    },
-  });
   return (
     <Stack spacing={0} margin={5}>
       <StyledTextField
         variant="outlined"
         label="Tracking Number"
-        value={item_id_field}
         error={!is_valid}
         onFocus={(e) => e.target.select()}
         inputProps={{
-          style: { textTransform: "uppercase", textAlign: "center"},
+          style: { textTransform: "uppercase", textAlign: "center" },
           maxLength: 13,
           pattern: String.raw`[a-zA-Z]{2}\d{9}[a-zA-Z]{2}`,
         }}
         InputLabelProps={{
-          style: {textAlign: "center"}
+          style: { textAlign: "center" },
         }}
-        FormHelperTextProps={
-          {
-            style: {textAlign: "center"}
-          }
-        }
+        FormHelperTextProps={{
+          style: { textAlign: "center" },
+        }}
         helperText={is_valid ? " " : "Invalid Tracking Number"}
         onChange={(e) => CheckValue(e.target)}
         onKeyUp={(e) => {
           if (e.key === "Enter" && is_valid) {
             FetchPostItem();
           }
+          return true;
         }}
       />
       <Divider style={{ margin: "15px 0" }} />
@@ -140,9 +103,22 @@ function App() {
             </AccordionSummary>
             <AccordionDetails>
               <Stack spacing={2}>
-                <InfoTextField label_text="Name" binding={post_element.SenderName} />
-                <InfoTextField label_text="Phone" binding={post_element.SenderPhone} />
-                <InfoTextField label_text="Address" binding={post_element.SenderAddress} multiline={true} />
+                <InfoTextField
+                  label_text="Name"
+                  binding_value={post_element.SenderName}
+                  binding_shrink={post_element.ItemTracked}
+                />
+                <InfoTextField
+                  label_text="Phone"
+                  binding_value={post_element.SenderPhone}
+                  binding_shrink={post_element.ItemTracked}
+                />
+                <InfoTextField
+                  label_text="Address"
+                  binding_value={post_element.SenderAddress}
+                  binding_shrink={post_element.ItemTracked}
+                  multiline={true}
+                />
               </Stack>
             </AccordionDetails>
           </Accordion>
@@ -153,9 +129,22 @@ function App() {
             </AccordionSummary>
             <AccordionDetails>
               <Stack spacing={2}>
-                <InfoTextField label_text="Name" binding={post_element.AddresseeName} />
-                <InfoTextField label_text="Phone" binding={post_element.AddresseePhone} />
-                <InfoTextField label_text="Address" binding={post_element.AddresseeAddress} multiline={true} />
+                <InfoTextField
+                  label_text="Name"
+                  binding_value={post_element.AddresseeName}
+                  binding_shrink={post_element.ItemTracked}
+                />
+                <InfoTextField
+                  label_text="Phone"
+                  binding_value={post_element.AddresseePhone}
+                  binding_shrink={post_element.ItemTracked}
+                />
+                <InfoTextField
+                  label_text="Address"
+                  binding_value={post_element.AddresseeAddress}
+                  binding_shrink={post_element.ItemTracked}
+                  multiline={true}
+                />
               </Stack>
             </AccordionDetails>
           </Accordion>
@@ -172,4 +161,4 @@ function App() {
   );
 }
 
-export default App;
+export default SidePanelApp;
