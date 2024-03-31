@@ -1,10 +1,18 @@
-import COMMANDS from "./Enums";
-export default class Msg {
-  public Command: string | undefined = undefined;
-  public ItemId: string | undefined = undefined;
+export const COMMANDS = {
+  NULL: "NULL",
+  FETCH_POST_ELEMENT: "FETCH_POST_ELEMENT",
+  WEB_REQUEST_COMPLETE: "WEB_REQUEST_COMPLETE",
+  UNREAD_REPLIES: "UNREAD_REPLIES",
+} as const;
 
-  constructor(command?: string | undefined, param?: string | undefined) {
+export type CommandKey = keyof typeof COMMANDS;
+
+export class Msg {
+  public Command: CommandKey;
+  public Param: any = null;
+
+  constructor(command: CommandKey, param?: any) {
     this.Command = command;
-    this.ItemId = param;
+    this.Param = param;
   }
 }

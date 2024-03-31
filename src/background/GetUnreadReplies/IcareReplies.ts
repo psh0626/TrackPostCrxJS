@@ -1,28 +1,28 @@
 import axios, { AxiosResponse, AxiosRequestConfig } from "axios";
 import { IcareResponse, WorkflowItem } from "./DataWrapper";
+import { Msg, COMMANDS } from "../../lib/Message";
+import { GlobalTimer } from "./Timer";
 
 export class IcareAPI {
   static LastCsrfToken: string = "";
-  private static FirstTrialHeader = {
-        headers: {
-          Accept: "application/json, text/javascript; q=0.01",
-            "Accept-language": "ko,en;q=0.9,en-US;q=0.8,es;q=0.7",
-              "Content-Type": "application/json; charset=UTF-8",
-      },
-        withCredentials: true,
-    };
-  private static SecondTrialHeader = {
-      headers: {
-        Accept: "application/json, text/javascript, */*; q=0.01",
-        "Accept-language": "ko,en;q=0.9,en-US;q=0.8,es;q=0.7",
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-      },
-      withCredentials: true,
-    };
+  private static JsonOnly = {
+    headers: {
+      Accept: "application/json, text/javascript; q=0.01",
+      "Content-Type": "application/json; charset=UTF-8",
+    },
+    withCredentials: true,
+  };
+  private static AcceptAll = {
+    headers: {
+      Accept: "application/json, text/javascript, */*; q=0.01",
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+    },
+    withCredentials: true,
+  };
   static async FetchUnreadReplies(csrfToken: string) {
-    const bodyCombined = this.GetBodyStringForUnreadItems(csrfToken);
+    const bodyCombined = this.GetBodyStringForUnreadItems(this.LastCsrfToken ? this.LastCsrfToken : csrfToken);
     axios
-      .post("https://icare.post/?module=workflow&tab=active&action=overviewJson&mode=ajax", bodyCombined, this.FirstTrialHeader)
+      .post("https://icare.post/?module=workflow&tab=active&action=overviewJson&mode=ajax", bodyCombined, this.JsonOnly)
       .then((response: AxiosResponse<IcareResponse>) => {
         console.log("axios.post request success (first attempt)");
         const a = response.data.control;
@@ -42,7 +42,7 @@ export class IcareAPI {
     console.log("one more attempt begins");
     const bodyCombined = this.GetBodyStringForUnreadItems(csrfToken);
     axios
-      .post("https://icare.post/?module=workflow&tab=active&action=overviewJson&mode=ajax", bodyCombined, this.SecondTrialHeader)
+      .post("https://icare.post/?module=workflow&tab=active&action=overviewJson&mode=ajax", bodyCombined, this.AcceptAll)
       .then((response: AxiosResponse<IcareResponse>) => {
         console.log("axios.post request success (second attempt)");
         console.log(response.data);
@@ -50,15 +50,27 @@ export class IcareAPI {
         this.OnSuccess(response);
       })
       .catch((error) => {
-        console.error("axios.post request finally failed:", error);
+        console.error("axios.post request finally failed:", error); // 여기까지 오면 보통 로그아웃된 경우일 듯.
         const response: IcareResponse = error.response.data;
         this.LastCsrfToken = response.control.csrfToken;
+        if(GlobalTimer.IsRunning) GlobalTimer.Stop();
+        chrome.runtime.sendMessage(new Msg(COMMANDS.UNREAD_REPLIES, "?"));
       });
   }
 
   private static OnSuccess(response: AxiosResponse<IcareResponse>) {
     const workflow_items = response.data.content.data.map((rawdata) => new WorkflowItem(rawdata));
-    console.log(`${workflow_items.length} items fetched:`,workflow_items);
+    console.log(`${workflow_items.length} items fetched:`, workflow_items);
+
+
+    const json_data = JSON.stringify(workflow_items);
+    chrome.runtime.sendMessage(new Msg(COMMANDS.UNREAD_REPLIES, json_data));
+    
+    new GlobalTimer(15000, async () => { await this.FetchUnreadReplies(response.data.control.csrfToken); });
+    GlobalTimer.Start();
+
+    const today = new Date();
+    console.log(today.toLocaleString(), "\nworkflows sent");
   }
 
   private static GetBodyStringForUnreadItems(csrfToken: string): string {

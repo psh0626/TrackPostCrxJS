@@ -9,7 +9,7 @@
     "128": "src/ext-icon.png"
   },
   "action": { "default_popup": "index.html" },
-  "permissions": ["storage", "tabs", "sidePanel", "webRequest", "clipboardWrite"],
+  "permissions": ["storage", "tabs", "sidePanel", "webRequest", "clipboardWrite", "notifications"],
   "side_panel": {
     "default_path": "index.html"
   },
@@ -17,7 +17,7 @@
     "service_worker": "src/background/serviceworker.ts",
     "type": "module"
   },
-  "host_permissions": ["https://ems.epost.go.kr/*", "https://icare.post/*", "https://gcss.ipc.be/*"],
+  "host_permissions": ["https://ems.epost.go.kr/*", "https://icare.post/*", "https://gcss.ipc.be/*", "https://sso.emsog.post/"],
   "content_scripts": [
     {
       "matches": ["https://icare.post/*", "https://gcss.ipc.be/*"],

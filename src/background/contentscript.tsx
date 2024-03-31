@@ -1,10 +1,10 @@
-import COMMANDS from "../lib/Enums";
-import Msg from "../lib/Message";
+import { Msg, COMMANDS } from "../lib/Message";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./injectDOM/InjectUtil";
 import { IcareAPI } from "./GetUnreadReplies/IcareReplies";
 
 (() => {
+
   function getCSRFToken(): string | null {
     const csrfMetaTag = document.querySelector("head meta[name=csrf-token]") as HTMLMetaElement;
     return csrfMetaTag ? csrfMetaTag.content : null;
@@ -19,7 +19,7 @@ import { IcareAPI } from "./GetUnreadReplies/IcareReplies";
 
   window.addEventListener("load", main, false);
 
-  console.log("Content script test: " + document.readyState);
+  console.log("Content script loaded at: " + document.readyState);
   if (document.readyState === "complete") main();
 
   let post_element: PostElement;
@@ -79,7 +79,11 @@ import { IcareAPI } from "./GetUnreadReplies/IcareReplies";
           console.log("message received: ", message);
           if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
             setTimeout(() => InjectIcare(post_element), 300);
+            port.disconnect();
           }
+        });
+        port.onDisconnect.addListener((p) => {
+          port.disconnect();
         });
       }
     }
