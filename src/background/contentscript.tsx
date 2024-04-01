@@ -2,6 +2,7 @@ import { Msg, COMMANDS } from "../lib/Message";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./injectDOM/InjectUtil";
 import { IcareAPI } from "./GetUnreadReplies/IcareReplies";
+import { GlobalTimer } from "./GetUnreadReplies/Timer";
 
 (() => {
 
@@ -55,8 +56,35 @@ import { IcareAPI } from "./GetUnreadReplies/IcareReplies";
         console.log("Dom Injected");
       }
     } else if (currentURL.origin === ICARE_URL) {
-      if (csrfToken) {
-        await IcareAPI.FetchUnreadReplies(csrfToken); 
+      if(!GlobalTimer.IsRunning){
+        console.log("finding user id..");
+        
+        let user_id: string = "";
+        const home = document.querySelector("body > div.content-wrapper > main > div > div.row.row-wrap.dashboard-content > div:nth-child(3) > div > div > div:nth-child(1) > div > table > tbody > tr:nth-child(1) > td:nth-child(1) > a")?.getAttribute("href");
+        if(home){
+          const param = new URLSearchParams(home);
+          user_id = param.get("responsibleUser")!;
+        }else{
+          const me_option = document.querySelector("select[name='responsibleUser'] > option[data-select2-id='19']")
+          if(me_option){
+            user_id = me_option.getAttribute("value")!;
+          }
+        }
+        if(user_id){
+          console.log("user id found:", user_id);
+          IcareAPI.UserId = user_id;
+          if (csrfToken) {
+            console.log("fetching replies with found csrf:", csrfToken, "\nUserID: ", IcareAPI.UserId);
+            
+            await IcareAPI.FetchUnreadReplies(csrfToken); 
+          }else{
+            console.log("csrf forged and sending request. csrf: nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8");
+            await IcareAPI.FetchUnreadReplies("nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8");
+          }
+        }
+      }else{
+        console.log("timer is already on");
+        
       }
       const param_action = currentURL.searchParams.get("action");
       if (param_action && param_action === "new") {
@@ -78,7 +106,7 @@ import { IcareAPI } from "./GetUnreadReplies/IcareReplies";
         port.onMessage.addListener((message: Msg) => {
           console.log("message received: ", message);
           if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
-            setTimeout(() => InjectIcare(post_element), 300);
+            setTimeout(() => InjectIcare(post_element), 600);
             port.disconnect();
           }
         });
@@ -209,9 +237,11 @@ import { IcareAPI } from "./GetUnreadReplies/IcareReplies";
   };
 
   async function SendCommand(message: Msg): Promise<string> {
+    console.log("sending message:", message);
     return new Promise((resolve) => {
       chrome.runtime.sendMessage(message, (response) => {
         resolve(response);
+        console.log("message received:", response);
       });
     });
   }

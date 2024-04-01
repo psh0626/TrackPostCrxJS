@@ -9,7 +9,7 @@ console.log("BackgroundWorker has been initiated.");
 
 let MsgPort: chrome.runtime.Port | null = null;
 
-//chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
 chrome.action.setBadgeBackgroundColor({ color: "#424242" });
 chrome.action.setBadgeTextColor({ color: "white" });
 chrome.webRequest.onCompleted.addListener(
@@ -37,7 +37,7 @@ chrome.webRequest.onCompleted.addListener(
 chrome.runtime.onConnect.addListener((port) => {
   if (port.sender?.url?.includes("icare.post")) MsgPort = port;
 });
-chrome.runtime.onMessage.addListener(async (message: Msg, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener( (message: Msg, sender, sendResponse) => { // do not use async here it becomes stupid!!!
   const today = new Date();
   console.log(today.toLocaleString(), "\nmessage received from sender: ", sender, "\ncontent: ", message);
   if (message.Command === COMMANDS.FETCH_POST_ELEMENT) {
@@ -53,22 +53,31 @@ chrome.runtime.onMessage.addListener(async (message: Msg, sender, sendResponse) 
     })();
     return true;
   } else if (message.Command === COMMANDS.UNREAD_REPLIES) {
-    if (message.Param === "?") {
-      console.log("Unable to fetch/communicate data from Icare");
-      chrome.action.setBadgeText({ text: "?" });
-      return;
-    }
-    const workflow_items: WorkflowItem[] = JSON.parse(message.Param);
-    //console.log("workflow items received: ", workflow_items);
-    await CreateNotification(workflow_items);
+    (async ()=>{
+      if (message.Param === "?") {
+        console.log("Unable to fetch/communicate data from Icare");
+        chrome.action.setBadgeText({ text: "?" });
+        return;
+      }
+      const workflow_items: WorkflowItem[] = JSON.parse(message.Param);
+      //console.log("workflow items received: ", workflow_items);
+      await CreateNotification(workflow_items);
+    })();
   }
 });
 
 async function CreateNotification(WorkFlowItems: WorkflowItem[]) {
   const last_num = parseInt(await chrome.action.getBadgeText({}));
   console.log("current number: ", WorkFlowItems.length, "  last number: ", last_num);
-  if (last_num >= WorkFlowItems.length /*current_num*/) {
-    return false;
+  if (last_num >= WorkFlowItems.length  || WorkFlowItems.length <= 0) {
+    let item_count = "-1";
+    if(WorkFlowItems.length >= 1){
+      item_count = WorkFlowItems.length.toString();
+    }else{
+      item_count = "";
+    }
+    chrome.action.setBadgeText({ text: item_count });
+    return true;
   }
   const mapped_items = WorkFlowItems.map((item: WorkflowItem) => {
     return {
@@ -90,9 +99,6 @@ async function CreateNotification(WorkFlowItems: WorkflowItem[]) {
   };
   chrome.notifications.clear(COMMANDS.UNREAD_REPLIES);
   chrome.notifications.create(COMMANDS.UNREAD_REPLIES, options as chrome.notifications.NotificationOptions<true>);
-  // setTimeout(() => {
-  //   chrome.notifications.clear(COMMANDS.UNREAD_REPLIES);
-  // }, 9000);
   return true;
 }
 
@@ -112,7 +118,7 @@ chrome.tabs.onUpdated.addListener((tabId, changed, tab: chrome.tabs.Tab) => {
   if (url.origin == GCSS_URL) {
     chrome.sidePanel.setOptions({
       tabId,
-      path: "index.html",
+      path: "sidepanel.html",
       enabled: true,
     });
     //console.log(`sidepanel enabled for ${url.toString()}`);
@@ -122,7 +128,7 @@ chrome.tabs.onUpdated.addListener((tabId, changed, tab: chrome.tabs.Tab) => {
   } else if (url.origin == ICARE_URL) {
     chrome.sidePanel.setOptions({
       tabId,
-      path: "index.html",
+      path: "sidepanel.html",
       enabled: true,
     });
     console.log(`sidepanel enabled for ${url.toString()}`);
