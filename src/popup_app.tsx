@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useState } from "react";
 
 import Stack from "@mui/material/Stack";
@@ -14,6 +14,7 @@ function PopUpApp() {
   // Tracking number state (you might want to bind this as well)
   const [item_id_field, set_item_id_field] = useState("");
   const [is_valid, set_is_valid] = useState(true);
+  const textfield_ref = useRef<HTMLInputElement>(null);
   const tracker = new PopupTrack();
 
   const CheckValue = (target: HTMLInputElement | HTMLTextAreaElement) => {
@@ -32,12 +33,19 @@ function PopUpApp() {
     console.log("Popup sidepanel opened state:", tracker);
   };
 
+  useEffect(() => {
+    if (textfield_ref.current) {
+      textfield_ref.current.focus();
+    }
+  }, []);
+
   return (
     <Stack spacing={0} margin={5} width="300px">
       <Typography variant="h4" textAlign="center" mb="1.5rem" fontWeight="700">
         국제우편 행방조사
       </Typography>
       <StyledTextField
+        inputRef={textfield_ref}
         variant="outlined"
         label="Tracking Number"
         error={!is_valid}

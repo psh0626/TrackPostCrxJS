@@ -21,10 +21,11 @@ function SidePanelApp() {
   const [post_element, set_post_element] = useState(new PostElement());
   const [item_id_field, set_item_id_field] = useState("");
   const [is_valid, set_is_valid] = useState(true);
+  const textfield_ref = useRef<HTMLInputElement>(null);
 
-  const FetchPostItem = async () => {
-    set_post_element(new PostElement({ ItemID: item_id_field }));
-    if (item_id_field) set_post_element(await PostAPI.FetchPostElement(item_id_field)); // Update the state with the fetched PostElement
+  const FetchPostItem = async (id: string) => {
+    set_post_element(new PostElement({ ItemID: id }));
+    if (id) set_post_element(await PostAPI.FetchPostElement(id)); // Update the state with the fetched PostElement
   };
 
   const CheckValue = (target: HTMLInputElement | HTMLTextAreaElement) => {
@@ -40,32 +41,31 @@ function SidePanelApp() {
   const track_from_popup = (popup: PopupTrack) => {
     if (popup.IsTracked) {
       set_item_id_field(popup.ItemId);
-      FetchPostItem();
+      FetchPostItem(popup.ItemId);
     }
+    console.log("tracking attempt:", popup, item_id_field, post_element);
   };
 
-  let idTextField: TextFieldProps;
+  const check_popup = async () => {
+    const popup = await SendRequest<PopupTrack>(new Msg(COMMANDS.SIDEPANEL_TRACK_REQUEST));
+    console.log("response received: ", popup);
+    return popup;
+  };
+
   useEffect(() => {
-    setTimeout(async () => {
-      const popup = await SendRequest<PopupTrack>(new Msg(COMMANDS.SIDEPANEL_TRACK_REQUEST));
-      if (popup.IsTracked) {
-        track_from_popup(popup);
-        idTextField.value = popup.ItemId;
-        idTextField.focused = true;
-        idTextField.InputLabelProps!.shrink = true;
-      }
-      console.log("response received: ", popup);
-    }, 200);
+    check_popup().then((p) => track_from_popup(p));
+    if (textfield_ref.current) {
+      textfield_ref.current.focus();
+    }
   }, []);
 
   return (
     <Stack spacing={0} margin={5}>
       <StyledTextField
-        inputRef={(node) => {
-          idTextField = node;
-        }}
+        inputRef={textfield_ref}
         variant="outlined"
         label="Tracking Number"
+        value={item_id_field}
         error={!is_valid}
         onFocus={(e) => e.target.select()}
         inputProps={{
@@ -83,7 +83,7 @@ function SidePanelApp() {
         onChange={(e) => CheckValue(e.target)}
         onKeyUp={(e) => {
           if (e.key === "Enter" && is_valid) {
-            FetchPostItem();
+            FetchPostItem(item_id_field);
           }
           return true;
         }}
