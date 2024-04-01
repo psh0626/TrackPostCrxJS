@@ -12,14 +12,15 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import Button from "@mui/material/Button";
 import { InfoTextField, StyledTextField } from "./custom/components";
+import { COMMANDS, Msg, SendRequest } from "./lib/Message";
 import PopupTrack from "./lib/PopupTrack";
+import { TextFieldProps, TextFieldVariants } from "@mui/material";
 
 function SidePanelApp() {
   // State for PostElement
   const [post_element, set_post_element] = useState(new PostElement());
   const [item_id_field, set_item_id_field] = useState("");
   const [is_valid, set_is_valid] = useState(true);
-  const popup_track = useRef<PopupTrack>(new PopupTrack());
 
   const FetchPostItem = async () => {
     set_post_element(new PostElement({ ItemID: item_id_field }));
@@ -36,20 +37,33 @@ function SidePanelApp() {
     }
   };
 
+  const track_from_popup = (popup: PopupTrack) => {
+    if (popup.IsTracked) {
+      set_item_id_field(popup.ItemId);
+      FetchPostItem();
+    }
+  };
+
+  let idTextField: TextFieldProps;
   useEffect(() => {
-    popup_track.current.LoadLocal();
-    popup_track.current.OnChange(async () => {
-      if (popup_track.current.IsTracked) {
-        set_item_id_field(popup_track.current!.ItemId);
-        await FetchPostItem();
-        popup_track.current.Dispose();
+    setTimeout(async () => {
+      const popup = await SendRequest<PopupTrack>(new Msg(COMMANDS.SIDEPANEL_TRACK_REQUEST));
+      if (popup.IsTracked) {
+        track_from_popup(popup);
+        idTextField.value = popup.ItemId;
+        idTextField.focused = true;
+        idTextField.InputLabelProps!.shrink = true;
       }
-    });
+      console.log("response received: ", popup);
+    }, 200);
   }, []);
 
   return (
     <Stack spacing={0} margin={5}>
       <StyledTextField
+        inputRef={(node) => {
+          idTextField = node;
+        }}
         variant="outlined"
         label="Tracking Number"
         error={!is_valid}

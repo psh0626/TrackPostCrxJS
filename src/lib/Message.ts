@@ -3,6 +3,8 @@ export enum COMMANDS {
   FETCH_POST_ELEMENT = "FETCH_POST_ELEMENT",
   WEB_REQUEST_COMPLETE = "WEB_REQUEST_COMPLETE",
   UNREAD_REPLIES = "UNREAD_REPLIES",
+  POPUP_TRACK_SET = "POPUP_TRACK_SET",
+  SIDEPANEL_TRACK_REQUEST = "SIDEPANEL_TRACK_REQUEST",
 }
 
 export class Msg {
@@ -13,4 +15,18 @@ export class Msg {
     this.Command = command;
     this.Param = param;
   }
+}
+export async function SendRequest<T>(message: Msg, param?: any): Promise<T>;
+export async function SendRequest(message: Msg, param?: any): Promise<any>;
+export async function SendRequest<T>(message: Msg, param?: any): Promise<T | any> {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage(message, param, (response) => {
+      if (chrome.runtime.lastError) {
+        console.error("message rejected");
+        reject(new Error(chrome.runtime.lastError.message));
+      } else {
+        resolve(response);
+      }
+    });
+  });
 }

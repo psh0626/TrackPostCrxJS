@@ -7,16 +7,14 @@ import Card from "@mui/material/Card";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import { styled } from "@mui/material/styles";
 import { StyledTextField } from "./custom/components";
 import PopupTrack from "./lib/PopupTrack";
-
 
 function PopUpApp() {
   // Tracking number state (you might want to bind this as well)
   const [item_id_field, set_item_id_field] = useState("");
-
   const [is_valid, set_is_valid] = useState(true);
+  const tracker = new PopupTrack();
 
   const CheckValue = (target: HTMLInputElement | HTMLTextAreaElement) => {
     const pretty_value = target.value.trim().toUpperCase();
@@ -28,12 +26,10 @@ function PopUpApp() {
     }
   };
 
-  const OpenSidePanel = async function (itemid?: string) {
-    if (itemid) {
-      const pt = new PopupTrack();
-      pt.SetItemId(item_id_field);
-    }
+  const OpenSidePanel = () => {
+    tracker.SetItemId(item_id_field);
     chrome.windows.getCurrent((w) => chrome.sidePanel.open({ windowId: w.id! }));
+    console.log("Popup sidepanel opened state:", tracker);
   };
 
   return (
@@ -61,7 +57,7 @@ function PopUpApp() {
         onChange={(e) => CheckValue(e.target)}
         onKeyUp={(e) => {
           if (e.key === "Enter" && is_valid) {
-            OpenSidePanel(item_id_field);
+            OpenSidePanel();
           }
           return true;
         }}

@@ -1,4 +1,4 @@
-import { Msg, COMMANDS } from "../lib/Message";
+import { Msg, COMMANDS, SendRequest } from "../lib/Message";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./injectDOM/InjectUtil";
 import { IcareAPI } from "./GetUnreadReplies/IcareReplies";
@@ -236,18 +236,9 @@ import { GlobalTimer } from "./GetUnreadReplies/Timer";
     console.log("Dom Injected");
   };
 
-  async function SendCommand(message: Msg): Promise<string> {
-    console.log("sending message:", message);
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage(message, (response) => {
-        resolve(response);
-        console.log("message received:", response);
-      });
-    });
-  }
   async function FindPostElement(item_id: string): Promise<PostElement> {
-    const raw_post_element: string = await SendCommand(new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id));
+    const raw_post_element = await SendRequest<PostElement>(new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id));
 
-    return new PostElement(JSON.parse(raw_post_element));
+    return raw_post_element;
   }
 })();
