@@ -10,7 +10,7 @@
     "128": "src/ext-icon.png"
   },
   "action": {
-    "default_popup": "sidepaneltml",
+    "default_popup": "sidepanel.html",
     "default_title": "IMIC TRACKPOST V2"
   },
   "permissions": ["storage", "tabs", "sidePanel", "webRequest", "clipboardWrite", "notifications"],
