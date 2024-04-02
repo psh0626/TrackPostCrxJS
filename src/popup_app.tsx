@@ -10,11 +10,15 @@ import Button from "@mui/material/Button";
 import { StyledTextField } from "./custom/components";
 import PopupTrack from "./lib/PopupTrack";
 import { COMMANDS, Msg } from "./lib/Message";
+import { WorkflowItem } from "./background/GetUnreadReplies/DataWrapper";
+import { Checkbox, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import { OpenInBrowser } from "@mui/icons-material";
 
 function PopUpApp() {
   // Tracking number state (you might want to bind this as well)
   const [item_id_field, set_item_id_field] = useState("");
   const [is_valid, set_is_valid] = useState(true);
+  const [workflow_items, set_workflow_items] = useState([]);
   const textfield_ref = useRef<HTMLInputElement>(null);
   const tracker = new PopupTrack();
 
@@ -32,15 +36,22 @@ function PopUpApp() {
     chrome.windows.getCurrent((w) => {
       tracker.SetItemId(item_id_field);
       chrome.sidePanel.open({ windowId: w.id! });
-    }
-    );
+    });
     console.log("Popup sidepanel opened state:", tracker);
+    window.close();
   };
 
   useEffect(() => {
     if (textfield_ref.current) {
       textfield_ref.current.focus();
     }
+    chrome.storage.local.get("WORKFLOWS").then((dict) => {
+      set_workflow_items(dict.WORKFLOWS);
+      console.log("workflows loaded from storage local: ", workflow_items);
+    });
+    chrome.storage.local.onChanged.addListener((dict) => {
+      set_workflow_items(dict.WORKFLOWS.newValue);
+    });
   }, []);
 
   return (
@@ -76,6 +87,35 @@ function PopUpApp() {
       />
 
       <Divider style={{ margin: "15px 0" }} />
+
+      <List>
+        {workflow_items.map((item) => {
+          return (
+            <ListItem
+              key={(item as WorkflowItem).tracking_id}
+              secondaryAction={
+                <IconButton edge="end">
+                  {" "}
+                  <OpenInBrowser />{" "}
+                </IconButton>
+              }>
+              <ListItemButton>
+                <ListItemIcon>
+                  <Checkbox
+                    edge="start"
+                    //checked={checked.indexOf(value) !== -1}
+                    tabIndex={-1}
+                    disableRipple
+                    inputProps={{ "aria-labelledby": (item as WorkflowItem).tracking_id }}
+                  />
+                </ListItemIcon>
+                <ListItemText primary={`${(item as WorkflowItem).tracking_id}`} />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
+      </List>
+
       <Button variant="contained" onClick={() => OpenSidePanel()}>
         사이드 패널 열기
       </Button>
