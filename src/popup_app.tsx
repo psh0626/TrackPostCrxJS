@@ -11,8 +11,19 @@ import { StyledTextField } from "./custom/components";
 import PopupTrack from "./lib/PopupTrack";
 import { COMMANDS, Msg } from "./lib/Message";
 import { WorkflowItem } from "./background/GetUnreadReplies/DataWrapper";
-import { Checkbox, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
-import { OpenInBrowser } from "@mui/icons-material";
+import {
+  Accordion,
+  AccordionSummary,
+  Checkbox,
+  Icon,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
+import { ExpandMore, OpenInBrowser } from "@mui/icons-material";
 
 function PopUpApp() {
   // Tracking number state (you might want to bind this as well)
@@ -55,10 +66,7 @@ function PopUpApp() {
   }, []);
 
   return (
-    <Stack spacing={0} margin={5} width="300px">
-      <Typography variant="h4" textAlign="center" mb="1.5rem" fontWeight="700">
-        국제우편 행방조사
-      </Typography>
+    <Stack spacing={0} margin={6} marginTop={0} width="300px">
       <StyledTextField
         inputRef={textfield_ref}
         variant="outlined"
@@ -87,35 +95,47 @@ function PopUpApp() {
       />
 
       <Divider style={{ margin: "15px 0" }} />
-
-      <List>
-        {workflow_items.map((item) => {
-          return (
-            <ListItem
-              key={(item as WorkflowItem).tracking_id}
-              secondaryAction={
-                <IconButton edge="end">
-                  {" "}
-                  <OpenInBrowser />{" "}
-                </IconButton>
-              }>
-              <ListItemButton>
-                <ListItemIcon>
-                  <Checkbox
-                    edge="start"
-                    //checked={checked.indexOf(value) !== -1}
-                    tabIndex={-1}
-                    disableRipple
-                    inputProps={{ "aria-labelledby": (item as WorkflowItem).tracking_id }}
-                  />
-                </ListItemIcon>
-                <ListItemText primary={`${(item as WorkflowItem).tracking_id}`} />
-              </ListItemButton>
-            </ListItem>
-          );
-        })}
-      </List>
-
+      {workflow_items && (
+        <List>
+          <Accordion>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="body1" fontWeight="300" textAlign="center">
+                Unread Replies
+              </Typography>
+            </AccordionSummary>
+            {workflow_items.map((item) => {
+              const wf = item as WorkflowItem;
+              return (
+                <Card style={{ margin: "0 0 1px" }}>
+                  <ListItem
+                    dense={true}
+                    disablePadding={true}
+                    key={wf.tracking_id}
+                    secondaryAction={
+                      <IconButton edge="end">
+                        {" "}
+                        <OpenInBrowser />{" "}
+                      </IconButton>
+                    }>
+                    <ListItemButton>
+                      <ListItemIcon>
+                        <Checkbox
+                          edge="start"
+                          //checked={checked.indexOf(value) !== -1}
+                          tabIndex={-1}
+                          disableRipple
+                          inputProps={{ "aria-labelledby": wf.tracking_id }}
+                        />
+                      </ListItemIcon>
+                      <ListItemText primary={`L${wf.current_level} ${wf.workflow_status}`} secondary={`${wf.tracking_id}`} />
+                    </ListItemButton>
+                  </ListItem>
+                </Card>
+              );
+            })}
+          </Accordion>
+        </List>
+      )}
       <Button variant="contained" onClick={() => OpenSidePanel()}>
         사이드 패널 열기
       </Button>
