@@ -9,6 +9,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { StyledTextField } from "./custom/components";
 import PopupTrack from "./lib/PopupTrack";
+import { COMMANDS, Msg } from "./lib/Message";
 
 function PopUpApp() {
   // Tracking number state (you might want to bind this as well)
@@ -28,8 +29,11 @@ function PopUpApp() {
   };
 
   const OpenSidePanel = () => {
-    tracker.SetItemId(item_id_field);
-    chrome.windows.getCurrent((w) => chrome.sidePanel.open({ windowId: w.id! }));
+    chrome.windows.getCurrent((w) => {
+      tracker.SetItemId(item_id_field);
+      chrome.sidePanel.open({ windowId: w.id! });
+    }
+    );
     console.log("Popup sidepanel opened state:", tracker);
   };
 

@@ -35,7 +35,6 @@ import { GlobalTimer } from "./GetUnreadReplies/Timer";
     if (currentURL.origin === GCSS_URL) {
       if (currentURL.pathname.includes("/create/")) {
         const item_id: string = document.querySelector(".value")?.textContent?.trim() ?? "";
-
         if (!item_id) {
           console.log("Cannot find item_id in document classname 'value'");
           return;
@@ -44,16 +43,20 @@ import { GlobalTimer } from "./GetUnreadReplies/Timer";
           console.log("item id is invalid to fetch PostElement (must end with KR)");
           return;
         }
-
+        
         post_element = await FindPostElement(item_id);
-
         if (!post_element.ItemTracked) {
           console.log(`Item does not exist ${item_id}`);
           return;
         }
-        console.log(post_element);
-        injectGcss(post_element);
-        console.log("Dom Injected");
+
+        if(currentURL.pathname.includes("/level1/")){ 
+          console.log(post_element);
+          injectGcss(post_element);
+          console.log("Dom Injected");
+        }else{
+          injectGcssL2(post_element);
+        }
       }
     } else if (currentURL.origin === ICARE_URL) {
       if(!GlobalTimer.IsRunning){
@@ -65,9 +68,10 @@ import { GlobalTimer } from "./GetUnreadReplies/Timer";
           const param = new URLSearchParams(home);
           user_id = param.get("responsibleUser")!;
         }else{
-          const me_option = document.querySelector("select[name='responsibleUser'] > option[data-select2-id='19']")
+          const optionArr = Array.from(document.querySelectorAll("select[name='responsibleUser'] option")) as HTMLOptionElement[];
+          const me_option = optionArr.find((e) => e.text==="Me");
           if(me_option){
-            user_id = me_option.getAttribute("value")!;
+            user_id = me_option.value;
           }
         }
         if(user_id){
@@ -120,7 +124,41 @@ import { GlobalTimer } from "./GetUnreadReplies/Timer";
   function getElement<T>(cssString: string): T {
     return document.querySelector(cssString) as T;
   }
+  const injectGcssL2 = (post_element: PostElement) => {
+    const getSelect = (id: string): HTMLSelectElement => {
+      return getElement<HTMLSelectElement>(`#${id}`);
+    };
+    const getInput = (id: string): HTMLInputElement => {
+      return getElement<HTMLInputElement>(`#${id}`);
+    };
 
+    const dom = {
+      item_type: getSelect("txt_contentType"),
+      item_value: getInput("txt_itemValue"),
+      postage_paid: getInput("txt_postagePaid"),
+      indemnity_amount: getInput("txt_indemnityAmount"),
+      item_value_currency: getSelect("txt_itemValueCurrency"),
+      postage_paid_currency: getSelect("txt_postagePaidCurrency"),
+      indemnity_amount_currency: getSelect("txt_indemnityAmountCurrency"),
+    }
+    if(dom.item_value_currency.value !== "3"){
+      dom.item_value_currency.value = "3"; // SDR
+      const calc_item_value = Math.round((parseFloat(dom.item_value.value) * 1400) / 1749);
+      InjectUtil.GcssSwitchValue(dom.item_value, calc_item_value.toString());
+    }
+    if(dom.postage_paid_currency.value !== "3"){
+      dom.postage_paid_currency.value = "3"; // SDR
+      const calc_postage_paid = Math.round(parseFloat(dom.postage_paid.value) / 1749);
+      InjectUtil.GcssSwitchValue(dom.postage_paid, calc_postage_paid.toString());
+    }
+    if(dom.indemnity_amount_currency.value !== "3"){
+      dom.indemnity_amount_currency.value = "3"; // SDR
+      const calc_indemnity_amount = parseInt(dom.item_value.value) + parseInt(dom.postage_paid.value);
+      InjectUtil.GcssSwitchValue(dom.indemnity_amount, calc_indemnity_amount.toString());
+    }
+  }
+
+  
   const injectGcss = (post_element: PostElement) => {
     const getSelect = (id: string): HTMLSelectElement => {
       return getElement<HTMLSelectElement>(`#${id}`);

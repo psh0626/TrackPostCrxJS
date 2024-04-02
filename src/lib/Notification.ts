@@ -2,12 +2,13 @@ import { WorkflowItem } from "../background/GetUnreadReplies/DataWrapper";
 import { COMMANDS } from "./Message";
 
 export default async function CreateNotification(WorkFlowItems: WorkflowItem[]) {
-  const last_num = parseInt(await chrome.action.getBadgeText({}));
+  let last_num = parseInt(await chrome.action.getBadgeText({}))?? 0;
+  const current_num = WorkFlowItems.length;
   console.log("current number: ", WorkFlowItems.length, "  last number: ", last_num);
-  if (last_num >= WorkFlowItems.length || WorkFlowItems.length <= 0) {
+  if (last_num >= current_num) {
     let item_count = "-1";
-    if (WorkFlowItems.length >= 1) {
-      item_count = WorkFlowItems.length.toString();
+    if (current_num > 0) {
+      item_count = current_num.toString();
     } else {
       item_count = "";
     }

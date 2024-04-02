@@ -37,21 +37,23 @@ function SidePanelApp() {
       set_is_valid(target.validity.valid);
     }
   };
-
-  const track_from_popup = (popup: PopupTrack) => {
+  const track_from_popup = async (popup: PopupTrack) => {
+    console.log("tracking attempt:", item_id_field, popup, post_element);
+  
     if (popup.IsTracked) {
       set_item_id_field(popup.ItemId);
+      console.log("item id set", popup);
       FetchPostItem(popup.ItemId);
+      console.log("item fetched")
     }
-    console.log("tracking attempt:", popup, item_id_field, post_element);
-  };
+  }
 
   const check_popup = async () => {
     const popup = await SendRequest<PopupTrack>(new Msg(COMMANDS.SIDEPANEL_TRACK_REQUEST));
     console.log("response received: ", popup);
     return popup;
   };
-
+  
   useEffect(() => {
     check_popup().then((p) => track_from_popup(p));
     if (textfield_ref.current) {
