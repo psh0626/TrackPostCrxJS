@@ -103,14 +103,13 @@ function PopUpApp() {
                 Unread Replies
               </Typography>
             </AccordionSummary>
-            {workflow_items.map((item) => {
-              const wf = item as WorkflowItem;
+            {workflow_items.map((item: WorkflowItem) => {
               return (
                 <Card style={{ margin: "0 0 1px" }}>
                   <ListItem
                     dense={true}
                     disablePadding={true}
-                    key={wf.tracking_id}
+                    key={item.tracking_id}
                     secondaryAction={
                       <IconButton edge="end">
                         {" "}
@@ -124,10 +123,13 @@ function PopUpApp() {
                           //checked={checked.indexOf(value) !== -1}
                           tabIndex={-1}
                           disableRipple
-                          inputProps={{ "aria-labelledby": wf.tracking_id }}
+                          inputProps={{ "aria-labelledby": item.tracking_id }}
                         />
                       </ListItemIcon>
-                      <ListItemText primary={`L${wf.current_level} ${wf.workflow_status}`} secondary={`${wf.tracking_id}`} />
+                      <ListItemText
+                        primary={`L${item.current_level} ${item.workflow_status}`}
+                        secondary={`${item.tracking_id}`}
+                      />
                     </ListItemButton>
                   </ListItem>
                 </Card>
@@ -137,7 +139,7 @@ function PopUpApp() {
         </List>
       )}
       <Button variant="contained" onClick={() => OpenSidePanel()}>
-        사이드 패널 열기
+        새 탭으로 열기
       </Button>
     </Stack>
   );

@@ -26,7 +26,7 @@ const myTheme = createTheme({
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ThemeProvider theme={myTheme}>
-      <PopupHeader/>
+      <PopupHeader></PopupHeader>
       <PopUpApp />
     </ThemeProvider>
   </React.StrictMode>
