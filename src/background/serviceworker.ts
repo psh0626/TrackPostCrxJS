@@ -55,6 +55,12 @@ chrome.notifications.onClicked.addListener((id) => {
   }
 });
 
+chrome.notifications.onButtonClicked.addListener((noti_id, button_id) => { 
+  if (noti_id === COMMANDS.UNREAD_REPLIES) {
+    chrome.action.openPopup();
+  }
+});
+
 // chrome.tabs.onUpdated.addListener((tabId, changed, tab: chrome.tabs.Tab) => {
 //   if (tab.url == null) {
 //     return;

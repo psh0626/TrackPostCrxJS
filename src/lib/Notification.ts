@@ -2,7 +2,7 @@ import { WorkflowItem } from "../background/GetUnreadReplies/DataWrapper";
 import { COMMANDS } from "./Message";
 
 export default async function CreateNotification(WorkFlowItems: WorkflowItem[]) {
-  let last_num = parseInt(await chrome.action.getBadgeText({}))?? 0;
+  let last_num = parseInt(await chrome.action.getBadgeText({})) ?? 0;
   const current_num = WorkFlowItems.length;
   console.log("current number: ", WorkFlowItems.length, "  last number: ", last_num);
   if (last_num >= current_num) {
@@ -31,7 +31,7 @@ export default async function CreateNotification(WorkFlowItems: WorkflowItem[]) 
     message: `ICare 읽지 않은 메시지가 ${WorkFlowItems.length}개 있습니다.`,
     contextMessage: `Icare unread replies: ${WorkFlowItems.length}`,
     items: mapped_items,
-    buttons: [{ title: "확인" }, { title: "닫기" }],
+    buttons: [{ title: "확인" }],
   };
   chrome.notifications.clear(COMMANDS.UNREAD_REPLIES);
   chrome.notifications.create(COMMANDS.UNREAD_REPLIES, options as chrome.notifications.NotificationOptions<true>);

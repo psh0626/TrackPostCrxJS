@@ -33,7 +33,7 @@ export default function ProcessMessage(
           chrome.action.setBadgeText({ text: "?" });
           return;
         }
-        const workflow_items: WorkflowItem[] = JSON.parse(Message.Param);
+        const workflow_items: WorkflowItem[] = Message.Param;
         //console.log("workflow items received: ", workflow_items);
         await CreateNotification(workflow_items);
       })();
@@ -46,6 +46,16 @@ export default function ProcessMessage(
     case COMMANDS.SIDEPANEL_TRACK_REQUEST:
       console.log("RESPONSE SENDING: ", PopupTracker);
       SendResponse(PopupTracker);
+      return true;
+
+    case COMMANDS.SAVE_ICARE_USER_ID:
+      chrome.storage.local.set({ IcareUserId: Message.Param });
+      return;
+    case COMMANDS.LOAD_ICARE_USER_ID:
+      (async () => {
+        const user_id = chrome.storage.local.get("IcareUserId");
+        SendResponse(user_id);
+      })();
       return true;
   }
 }

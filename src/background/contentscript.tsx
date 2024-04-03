@@ -3,9 +3,9 @@ import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./injectDOM/InjectUtil";
 import { IcareAPI } from "./GetUnreadReplies/IcareReplies";
 import { GlobalTimer } from "./GetUnreadReplies/Timer";
+import GetIcareUserId from "../lib/GetIcareUserId";
 
 (() => {
-
   function getCSRFToken(): string | null {
     const csrfMetaTag = document.querySelector("head meta[name=csrf-token]") as HTMLMetaElement;
     return csrfMetaTag ? csrfMetaTag.content : null;
@@ -24,7 +24,7 @@ import { GlobalTimer } from "./GetUnreadReplies/Timer";
   if (document.readyState === "complete") main();
 
   let post_element: PostElement;
-
+  let icare_internal_userid = "";
   async function main() {
     console.log("Content script loaded");
 
@@ -33,7 +33,7 @@ import { GlobalTimer } from "./GetUnreadReplies/Timer";
 
     const currentURL = new URL(document.URL);
     if (currentURL.origin === GCSS_URL) {
-      if (currentURL.pathname.includes("/create/")) {
+      if (currentURL.pathname.includes("/create/") || currentURL.pathname.includes("/reactivate/")) {
         const item_id: string = document.querySelector(".value")?.textContent?.trim() ?? "";
         if (!item_id) {
           console.log("Cannot find item_id in document classname 'value'");
@@ -43,53 +43,43 @@ import { GlobalTimer } from "./GetUnreadReplies/Timer";
           console.log("item id is invalid to fetch PostElement (must end with KR)");
           return;
         }
-        
+
         post_element = await FindPostElement(item_id);
         if (!post_element.ItemTracked) {
           console.log(`Item does not exist ${item_id}`);
           return;
         }
 
-        if(currentURL.pathname.includes("/level1/")){ 
+        if (currentURL.pathname.includes("/level1/")) {
           console.log(post_element);
           injectGcss(post_element);
           console.log("Dom Injected");
-        }else{
+        } else {
           injectGcssL2(post_element);
         }
       }
     } else if (currentURL.origin === ICARE_URL) {
-      if(!GlobalTimer.IsRunning){
-        console.log("finding user id..");
-        
-        let user_id: string = "";
-        const home = document.querySelector("body > div.content-wrapper > main > div > div.row.row-wrap.dashboard-content > div:nth-child(3) > div > div > div:nth-child(1) > div > table > tbody > tr:nth-child(1) > td:nth-child(1) > a")?.getAttribute("href");
-        if(home){
-          const param = new URLSearchParams(home);
-          user_id = param.get("responsibleUser")!;
-        }else{
-          const optionArr = Array.from(document.querySelectorAll("select[name='responsibleUser'] option")) as HTMLOptionElement[];
-          const me_option = optionArr.find((e) => e.text==="Me");
-          if(me_option){
-            user_id = me_option.value;
+      console.log("finding user id.."); // global timer, local storage에 user id 저장 한번만 찾으면 다시 찾을 필요 없어짐, webrequest 분석해서 csrf 계속 확인하는 건 어떰?
+      (async () => {
+        if (!GlobalTimer.IsRunning) {
+          if (!icare_internal_userid) {
+            icare_internal_userid = await GetIcareUserId();
           }
-        }
-        if(user_id){
-          console.log("user id found:", user_id);
-          IcareAPI.UserId = user_id;
+
+          console.log("user id found:", icare_internal_userid);
+          IcareAPI.UserId = icare_internal_userid;
           if (csrfToken) {
             console.log("fetching replies with found csrf:", csrfToken, "\nUserID: ", IcareAPI.UserId);
-            
-            await IcareAPI.FetchUnreadReplies(csrfToken); 
-          }else{
+
+            await IcareAPI.FetchUnreadReplies(csrfToken);
+          } else {
             console.log("csrf forged and sending request. csrf: nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8");
             await IcareAPI.FetchUnreadReplies("nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8");
           }
+        } else {
+          console.log("timer is already on");
         }
-      }else{
-        console.log("timer is already on");
-        
-      }
+      })();
       const param_action = currentURL.searchParams.get("action");
       if (param_action && param_action === "new") {
         const item_id = currentURL.searchParams.get("trackingId")?.toUpperCase();
@@ -140,25 +130,29 @@ import { GlobalTimer } from "./GetUnreadReplies/Timer";
       item_value_currency: getSelect("txt_itemValueCurrency"),
       postage_paid_currency: getSelect("txt_postagePaidCurrency"),
       indemnity_amount_currency: getSelect("txt_indemnityAmountCurrency"),
-    }
-    if(dom.item_value_currency.value !== "3"){
+      pod_required_yes: getInput("txt_podRequired_1"),
+      pod_required_no: getInput("txt_podRequired_2"),
+    };
+    if (dom.item_value_currency.value !== "3") {
       dom.item_value_currency.value = "3"; // SDR
       const calc_item_value = Math.round((parseFloat(dom.item_value.value) * 1400) / 1749);
       InjectUtil.GcssSwitchValue(dom.item_value, calc_item_value.toString());
     }
-    if(dom.postage_paid_currency.value !== "3"){
+    if (dom.postage_paid_currency.value !== "3") {
       dom.postage_paid_currency.value = "3"; // SDR
       const calc_postage_paid = Math.round(parseFloat(dom.postage_paid.value) / 1749);
       InjectUtil.GcssSwitchValue(dom.postage_paid, calc_postage_paid.toString());
     }
-    if(dom.indemnity_amount_currency.value !== "3"){
+    if (dom.indemnity_amount_currency.value !== "3") {
       dom.indemnity_amount_currency.value = "3"; // SDR
       const calc_indemnity_amount = parseInt(dom.item_value.value) + parseInt(dom.postage_paid.value);
       InjectUtil.GcssSwitchValue(dom.indemnity_amount, calc_indemnity_amount.toString());
     }
-  }
+    if (!dom.pod_required_no.checked && !dom.pod_required_yes.checked) {
+      dom.pod_required_yes.checked = true;
+    }
+  };
 
-  
   const injectGcss = (post_element: PostElement) => {
     const getSelect = (id: string): HTMLSelectElement => {
       return getElement<HTMLSelectElement>(`#${id}`);

@@ -55,8 +55,7 @@ export class IcareAPI {
         const response: IcareResponse = error.response.data;
         this.LastCsrfToken = response.control.csrfToken;
         if(GlobalTimer.IsRunning){
-          //GlobalTimer.Stop();
-          GlobalTimer.Interval = 60000;
+          GlobalTimer.Stop();
         }
         chrome.runtime.sendMessage(new Msg(COMMANDS.UNREAD_REPLIES, "?"));
       });
@@ -66,9 +65,7 @@ export class IcareAPI {
     const workflow_items = response.data.content.data.map((rawdata) => new WorkflowItem(rawdata));
     console.log(`${workflow_items.length} items fetched:`, workflow_items);
 
-
-    const json_data = JSON.stringify(workflow_items);
-    chrome.runtime.sendMessage(new Msg(COMMANDS.UNREAD_REPLIES, json_data));
+    chrome.runtime.sendMessage(new Msg(COMMANDS.UNREAD_REPLIES, workflow_items));
     
     new GlobalTimer(15000, async () => { await this.FetchUnreadReplies(response.data.control.csrfToken); });
     GlobalTimer.Start();
