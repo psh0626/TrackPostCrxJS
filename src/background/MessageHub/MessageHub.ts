@@ -27,14 +27,14 @@ export default function ProcessMessage(
       return true; // true makes connection a bit longer;
 
     case COMMANDS.UNREAD_REPLIES:
-      (async () => {
         if (Message.Param === "?") {
           console.log("Unable to fetch/communicate data from Icare");
           chrome.action.setBadgeText({ text: "?" });
           return;
         }
-        const workflow_items: WorkflowItem[] = Message.Param;
-        //console.log("workflow items received: ", workflow_items);
+      const workflow_items = Message.Param as WorkflowItem[];
+      (async () => {
+        await chrome.storage.local.set({ WORKFLOWS: workflow_items });
         await CreateNotification(workflow_items);
       })();
       return; // false since we're not sending response

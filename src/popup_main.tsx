@@ -8,6 +8,7 @@ import '@fontsource/noto-sans-kr/500.css';
 import '@fontsource/noto-sans-kr/700.css';
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { deepOrange, orange } from "@mui/material/colors";
+import PopupHeader from "./popup_header";
 
 const myTheme = createTheme({
   palette: {
@@ -25,6 +26,7 @@ const myTheme = createTheme({
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ThemeProvider theme={myTheme}>
+      <PopupHeader/>
       <PopUpApp />
     </ThemeProvider>
   </React.StrictMode>

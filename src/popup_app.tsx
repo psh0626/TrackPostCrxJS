@@ -10,11 +10,26 @@ import Button from "@mui/material/Button";
 import { StyledTextField } from "./custom/components";
 import PopupTrack from "./lib/PopupTrack";
 import { COMMANDS, Msg } from "./lib/Message";
+import { WorkflowItem } from "./background/GetUnreadReplies/DataWrapper";
+import {
+  Accordion,
+  AccordionSummary,
+  Checkbox,
+  Icon,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
+import { ExpandMore, OpenInBrowser } from "@mui/icons-material";
 
 function PopUpApp() {
   // Tracking number state (you might want to bind this as well)
   const [item_id_field, set_item_id_field] = useState("");
   const [is_valid, set_is_valid] = useState(true);
+  const [workflow_items, set_workflow_items] = useState([]);
   const textfield_ref = useRef<HTMLInputElement>(null);
   const tracker = new PopupTrack();
 
@@ -32,22 +47,26 @@ function PopUpApp() {
     chrome.windows.getCurrent((w) => {
       tracker.SetItemId(item_id_field);
       chrome.sidePanel.open({ windowId: w.id! });
-    }
-    );
+    });
     console.log("Popup sidepanel opened state:", tracker);
+    window.close();
   };
 
   useEffect(() => {
     if (textfield_ref.current) {
       textfield_ref.current.focus();
     }
+    chrome.storage.local.get("WORKFLOWS").then((dict) => {
+      set_workflow_items(dict.WORKFLOWS);
+      console.log("workflows loaded from storage local: ", workflow_items);
+    });
+    chrome.storage.local.onChanged.addListener((dict) => {
+      set_workflow_items(dict.WORKFLOWS.newValue);
+    });
   }, []);
 
   return (
-    <Stack spacing={0} margin={5} width="300px">
-      <Typography variant="h4" textAlign="center" mb="1.5rem" fontWeight="700">
-        국제우편 행방조사
-      </Typography>
+    <Stack spacing={0} margin={6} marginTop={0} width="300px">
       <StyledTextField
         inputRef={textfield_ref}
         variant="outlined"
@@ -76,6 +95,47 @@ function PopUpApp() {
       />
 
       <Divider style={{ margin: "15px 0" }} />
+      {workflow_items && (
+        <List>
+          <Accordion>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="body1" fontWeight="300" textAlign="center">
+                Unread Replies
+              </Typography>
+            </AccordionSummary>
+            {workflow_items.map((item) => {
+              const wf = item as WorkflowItem;
+              return (
+                <Card style={{ margin: "0 0 1px" }}>
+                  <ListItem
+                    dense={true}
+                    disablePadding={true}
+                    key={wf.tracking_id}
+                    secondaryAction={
+                      <IconButton edge="end">
+                        {" "}
+                        <OpenInBrowser />{" "}
+                      </IconButton>
+                    }>
+                    <ListItemButton>
+                      <ListItemIcon>
+                        <Checkbox
+                          edge="start"
+                          //checked={checked.indexOf(value) !== -1}
+                          tabIndex={-1}
+                          disableRipple
+                          inputProps={{ "aria-labelledby": wf.tracking_id }}
+                        />
+                      </ListItemIcon>
+                      <ListItemText primary={`L${wf.current_level} ${wf.workflow_status}`} secondary={`${wf.tracking_id}`} />
+                    </ListItemButton>
+                  </ListItem>
+                </Card>
+              );
+            })}
+          </Accordion>
+        </List>
+      )}
       <Button variant="contained" onClick={() => OpenSidePanel()}>
         사이드 패널 열기
       </Button>

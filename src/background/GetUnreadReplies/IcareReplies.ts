@@ -62,7 +62,7 @@ export class IcareAPI {
   }
   
   private static OnSuccess(response: AxiosResponse<IcareResponse>) {
-    const workflow_items = response.data.content.data.map((rawdata) => new WorkflowItem(rawdata));
+    const workflow_items = response.data.content.data.map((rawdata: object) => new WorkflowItem(rawdata));
     console.log(`${workflow_items.length} items fetched:`, workflow_items);
 
     chrome.runtime.sendMessage(new Msg(COMMANDS.UNREAD_REPLIES, workflow_items));
