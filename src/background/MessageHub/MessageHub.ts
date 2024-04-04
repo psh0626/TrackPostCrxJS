@@ -27,11 +27,11 @@ export default function ProcessMessage(
       return true; // true makes connection a bit longer;
 
     case COMMANDS.UNREAD_REPLIES:
-        if (Message.Param === "?") {
-          console.log("Unable to fetch/communicate data from Icare");
-          chrome.action.setBadgeText({ text: "?" });
-          return;
-        }
+      if (Message.Param === "?") {
+        console.log("Unable to fetch/communicate data from Icare");
+        chrome.action.setBadgeText({ text: "?" });
+        return;
+      }
       const workflow_items = Message.Param as WorkflowItem[];
       (async () => {
         await chrome.storage.local.set({ WORKFLOWS: workflow_items });
@@ -53,8 +53,9 @@ export default function ProcessMessage(
       return;
     case COMMANDS.LOAD_ICARE_USER_ID:
       (async () => {
-        const user_id = chrome.storage.local.get("IcareUserId");
-        SendResponse(user_id);
+        const dict = await chrome.storage.local.get("IcareUserId");
+        console.log("sending response for user id: ", dict.IcareUserId);
+        SendResponse(dict.IcareUserId);
       })();
       return true;
   }
