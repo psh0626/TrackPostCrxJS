@@ -3,8 +3,9 @@ import { COMMANDS } from "./Message";
 
 export default async function CreateNotification(WorkFlowItems: WorkflowItem[]) {
   let last_num = parseInt(await chrome.action.getBadgeText({})) ?? 0;
-  const current_num = WorkFlowItems.length;
-  console.log("current number: ", WorkFlowItems.length, "  last number: ", last_num);
+  if (isNaN(last_num)) last_num = 0;
+  const current_num = Array.isArray(WorkFlowItems) ? WorkFlowItems.length : 0;
+  console.log("current number: ", current_num, "  last number: ", last_num);
   if (last_num >= current_num) {
     let item_count = "-1";
     if (current_num > 0) {

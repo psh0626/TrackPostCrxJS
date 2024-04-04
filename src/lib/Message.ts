@@ -23,12 +23,9 @@ export async function SendRequest(message: Msg, param?: any): Promise<any>;
 export async function SendRequest<T>(message: Msg, param?: any): Promise<T | any> {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage(message, param, (response) => {
-      if (chrome.runtime.lastError) {
-        console.error("message rejected");
-        reject(new Error(chrome.runtime.lastError.message));
-      } else {
+      
         resolve(response);
-      }
+      
     });
   });
 }

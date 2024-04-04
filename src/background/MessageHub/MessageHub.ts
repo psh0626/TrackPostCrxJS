@@ -41,15 +41,21 @@ export default function ProcessMessage(
 
     case COMMANDS.POPUP_TRACK_SET:
       Object.assign(PopupTracker, Message.Param);
+      chrome.storage.session.set({ PopupTrack: PopupTracker });
       console.log("popup set msg received: ", PopupTracker);
       return;
     case COMMANDS.SIDEPANEL_TRACK_REQUEST:
-      console.log("RESPONSE SENDING: ", PopupTracker);
-      SendResponse(PopupTracker);
+      (async () => {
+        const dict = await chrome.storage.session.get("PopupTrack");
+        console.log("RESPONSE SENDING: ", dict.PopupTrack);
+        SendResponse(dict.PopupTrack);
+      })();
       return true;
 
     case COMMANDS.SAVE_ICARE_USER_ID:
-      chrome.storage.local.set({ IcareUserId: Message.Param });
+      chrome.storage.local.set({ IcareUserId: Message.Param }).then((dict) => {
+        console.log("Icare User ID Saved: ", { IcareUserId: Message.Param });
+      });
       return;
     case COMMANDS.LOAD_ICARE_USER_ID:
       (async () => {

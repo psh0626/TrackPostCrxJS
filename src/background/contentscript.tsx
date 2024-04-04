@@ -62,9 +62,7 @@ import GetIcareUserId from "../lib/GetIcareUserId";
       console.log("finding user id.."); // global timer, local storage에 user id 저장 한번만 찾으면 다시 찾을 필요 없어짐, webrequest 분석해서 csrf 계속 확인하는 건 어떰?
       (async () => {
         if (!GlobalTimer.IsRunning) {
-          if (!icare_internal_userid) {
-            icare_internal_userid = await GetIcareUserId();
-          }
+          icare_internal_userid = await GetIcareUserId();
 
           console.log("user id found:", icare_internal_userid);
           IcareAPI.UserId = icare_internal_userid;

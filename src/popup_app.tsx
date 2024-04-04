@@ -95,7 +95,7 @@ function PopUpApp() {
       />
 
       <Divider style={{ margin: "15px 0" }} />
-      {workflow_items && (
+      {workflow_items.length > 0 && (
         <List>
           <Accordion>
             <AccordionSummary expandIcon={<ExpandMore />}>
@@ -135,12 +135,12 @@ function PopUpApp() {
                 </Card>
               );
             })}
+            <Button variant="contained" onClick={() => OpenSidePanel()}>
+              새 탭으로 열기
+            </Button>
           </Accordion>
         </List>
       )}
-      <Button variant="contained" onClick={() => OpenSidePanel()}>
-        새 탭으로 열기
-      </Button>
     </Stack>
   );
 }
