@@ -11,7 +11,7 @@ export default function PopupHeader({ children }: nested_component) {
       <AppBar position="fixed" color="primary">
         <Toolbar>
           <TravelExplore sx={{ mr: 1 }} />
-          <Typography variant="h6" textAlign="center" fontWeight={300}>
+          <Typography variant="h6" textAlign="center" fontWeight={700}>
             국제우편 행방조사
           </Typography>
         </Toolbar>

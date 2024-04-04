@@ -7,7 +7,7 @@ import Card from "@mui/material/Card";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import { StyledTextField } from "./custom/components";
+import { MyList, StyledTextField } from "./custom/components";
 import PopupTrack from "./lib/PopupTrack";
 import { COMMANDS, Msg } from "./lib/Message";
 import { WorkflowItem } from "./background/GetUnreadReplies/DataWrapper";
@@ -57,8 +57,12 @@ function PopUpApp() {
       textfield_ref.current.focus();
     }
     chrome.storage.local.get("WORKFLOWS").then((dict) => {
-      set_workflow_items(dict.WORKFLOWS);
-      console.log("workflows loaded from storage local: ", workflow_items);
+      if (dict.WORKFLOWS.length > 0) {
+        set_workflow_items(dict.WORKFLOWS);
+        console.log("workflows loaded from storage local: ", workflow_items);
+      } else {
+        console.log("workflows count is 0 or below");
+      }
     });
     chrome.storage.local.onChanged.addListener((dict) => {
       set_workflow_items(dict.WORKFLOWS.newValue);
@@ -95,51 +99,13 @@ function PopUpApp() {
       />
 
       <Divider style={{ margin: "15px 0" }} />
-      {workflow_items.length > 0 && (
-        <List>
-          <Accordion>
-            <AccordionSummary expandIcon={<ExpandMore />}>
-              <Typography variant="body1" fontWeight="300" textAlign="center">
-                Unread Replies
-              </Typography>
-            </AccordionSummary>
-            {workflow_items.map((item: WorkflowItem) => {
-              return (
-                <Card style={{ margin: "0 0 1px" }}>
-                  <ListItem
-                    dense={true}
-                    disablePadding={true}
-                    key={item.tracking_id}
-                    secondaryAction={
-                      <IconButton edge="end">
-                        {" "}
-                        <OpenInBrowser />{" "}
-                      </IconButton>
-                    }>
-                    <ListItemButton>
-                      <ListItemIcon>
-                        <Checkbox
-                          edge="start"
-                          //checked={checked.indexOf(value) !== -1}
-                          tabIndex={-1}
-                          disableRipple
-                          inputProps={{ "aria-labelledby": item.tracking_id }}
-                        />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={`L${item.current_level} ${item.workflow_status}`}
-                        secondary={`${item.tracking_id}`}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                </Card>
-              );
-            })}
-            <Button variant="contained" onClick={() => OpenSidePanel()}>
-              새 탭으로 열기
-            </Button>
-          </Accordion>
-        </List>
+      {workflow_items.length > 0 && MyList(workflow_items)}
+      {workflow_items.length === 0 && (
+        <Stack alignItems="center">
+          <Typography variant="subtitle2" color="initial">
+            ICare Replies: 모두 읽음 ✔️
+          </Typography>
+        </Stack>
       )}
     </Stack>
   );
