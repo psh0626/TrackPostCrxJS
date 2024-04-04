@@ -13,7 +13,16 @@
     "default_popup": "popup.html",
     "default_title": "IMIC TRACKPOST V2"
   },
-  "permissions": ["storage", "tabs", "sidePanel", "webRequest", "clipboardWrite", "notifications"],
+  "permissions": [
+    "storage",
+    "tabs",
+    "tabGroups",
+    "sidePanel",
+    "webRequest",
+    "webRequestBlocking",
+    "clipboardWrite",
+    "notifications"
+  ],
   "side_panel": {
     "default_path": "sidepanel.html"
   },

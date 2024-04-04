@@ -1,4 +1,3 @@
-
 export class WorkflowItem {
   internal_id: string = "";
   tracking_id: string = "";
@@ -56,7 +55,7 @@ export class WorkflowItem {
   // Extracts href value from an anchor element and prefixes with the domain
   private extractHrefAndPrefix(htmlString: string): string {
     const matches = htmlString.match(/href="([^"]+)"/);
-    return matches ? `https://icare.post/${matches[1]}` : "";
+    return matches ? `https://icare.post/${decodeURI(matches[1]).replaceAll("amp;", "")}` : "";
   }
 
   // Extracts inner text from HTML string

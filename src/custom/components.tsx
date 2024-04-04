@@ -67,17 +67,30 @@ export const InfoTextField: React.FC<InfoFieldType> = ({ label_text, binding_val
 };
 
 export function MyList(items: WorkflowItem[]) {
-  
-  const OpenAll = async () => {
-    let tabids: number[] = [];
-    items.forEach(async (wf) => {
-      const tab = await chrome.tabs.create({ url: wf.link });
-      tabids.push(tab.id!);
-    });
-    const new_group = await chrome.tabs.group({ tabIds: tabids });
-    await chrome.tabGroups.update(new_group, { title: "Icare Unread Replies" });
+  const OpenNewTab = async (urlLink: string) => {
+    const current_tab = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    return await chrome.tabs.create({ index: current_tab[0].index + 1, url: urlLink, active: false });
   };
-  
+
+  const OpenAll = async () => {
+    const tabPromises = items.map(async (wf) => {
+      const tab = await OpenNewTab(wf.link);
+      if (tab && tab.id) {
+        console.log("tab id push to tabids: ", tab.id);
+        return tab.id; // Return the tab ID to be collected
+      }
+      return null; // Return null for any tab that couldn't be opened
+    });
+
+    const tab_ids = (await Promise.all(tabPromises)).filter((id) => id !== null); // Filter out any nulls
+    console.log("tab ids: ", tab_ids);
+
+    if (tab_ids.length > 0) {
+      const newGroup = await chrome.tabs.group({ tabIds: tab_ids });
+      await chrome.tabGroups.update(newGroup, { title: "Icare Replies", color: "orange", collapsed: true });
+    }
+  };
+
   return (
     <List>
       <Accordion>
@@ -86,34 +99,29 @@ export function MyList(items: WorkflowItem[]) {
             Unread Replies
           </Typography>
         </AccordionSummary>
-        {items.map((item: WorkflowItem) => {
-          const primary_string = `L${item.current_level} ${item.workflow_status} (${item.requesting_op.substring(0, 2)} 🡢 ${item.replying_op.substring(0, 2)})`;
-          const ItemClicked = async () => {
-            const current_tab = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-            await chrome.tabs.create({ index: current_tab[0].index + 1, url: item.link });
-          };
-          return (
-            <Stack>
-              <AccordionDetails>
-                <Card style={{ margin: "0 0 1px" }}>
-                  <ListItem dense={true} disablePadding={true} key={item.tracking_id}>
-                    <ListItemButton onClick={ItemClicked}>
-                      <ListItemIcon>
-                        <OpenInBrowser />
-                      </ListItemIcon>
-                      <ListItemText primary={primary_string} secondary={`${item.tracking_id}`} />
-                    </ListItemButton>
-                  </ListItem>
-                </Card>
-              </AccordionDetails>
-            </Stack>
-          );
-        })}
-        <Stack alignItems="center">
-          <Button variant="outlined" onClick={OpenAll}>
-            Open All in New Tabs
+        <Stack alignItems="end">
+          <Button variant="outlined" size="small" onClick={async () => await OpenAll()} sx={{ mr: 2 }}>
+            Open All
           </Button>
         </Stack>
+        <AccordionDetails>
+          {items.map((item: WorkflowItem, id) => {
+            const primary_string = `L${item.current_level} ${item.workflow_status} (${item.requesting_op.substring(0, 2)} 🡢 ${item.replying_op.substring(0, 2)})`;
+
+            return (
+              <Card style={{ margin: "0 0 1px" }}>
+                <ListItem dense={true} disablePadding={true} key={id}>
+                  <ListItemButton onClick={async () => await OpenNewTab(item.link)}>
+                    <ListItemIcon>
+                      <OpenInBrowser />
+                    </ListItemIcon>
+                    <ListItemText primary={primary_string} secondary={`${item.tracking_id}`} />
+                  </ListItemButton>
+                </ListItem>
+              </Card>
+            );
+          })}
+        </AccordionDetails>
       </Accordion>
     </List>
   );

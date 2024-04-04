@@ -39,8 +39,8 @@ function SidePanelApp() {
   };
   const track_from_popup = async (popup: PopupTrack) => {
     console.log("tracking attempt:", item_id_field, popup, post_element);
-  
-    if (popup.IsTracked) {
+    
+    if (popup && popup.IsTracked) {
       set_item_id_field(popup.ItemId);
       console.log("item id set", popup);
       FetchPostItem(popup.ItemId);
