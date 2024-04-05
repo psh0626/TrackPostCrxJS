@@ -79,10 +79,10 @@ export function MyList(items: WorkflowItem[]) {
         console.log("tab id push to tabids: ", tab.id);
         return tab.id; // Return the tab ID to be collected
       }
-      return null; // Return null for any tab that couldn't be opened
+      return -1; // Return -1 for any tab that couldn't be opened
     });
 
-    const tab_ids = (await Promise.all(tabPromises)).filter((id) => id !== null); // Filter out any nulls
+    const tab_ids = (await Promise.all(tabPromises)).filter((id) => id !== -1); // Filter out any -1
     console.log("tab ids: ", tab_ids);
 
     if (tab_ids.length > 0) {
