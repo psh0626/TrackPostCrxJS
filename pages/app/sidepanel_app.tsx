@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { useState } from "react";
-import { PostElement, PostAPI } from "./lib/PostUtil";
+import { PostElement, PostAPI } from "../../src/lib/PostUtil";
+import PopupTrack from "../../src/lib/PopupTrack";
+import { COMMANDS, Msg, SendRequest } from "../../src/lib/Message";
 
 import Stack from "@mui/material/Stack";
 import Card from "@mui/material/Card";
@@ -11,10 +13,7 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import Button from "@mui/material/Button";
-import { InfoTextField, StyledTextField } from "./custom/components";
-import { COMMANDS, Msg, SendRequest } from "./lib/Message";
-import PopupTrack from "./lib/PopupTrack";
-import { TextFieldProps, TextFieldVariants } from "@mui/material";
+import { InfoTextField, StyledTextField } from "../custom/components";
 
 function SidePanelApp() {
   // State for PostElement
@@ -39,21 +38,21 @@ function SidePanelApp() {
   };
   const track_from_popup = async (popup: PopupTrack) => {
     console.log("tracking attempt:", item_id_field, popup, post_element);
-    
+
     if (popup && popup.IsTracked) {
       set_item_id_field(popup.ItemId);
       console.log("item id set", popup);
       FetchPostItem(popup.ItemId);
-      console.log("item fetched")
+      console.log("item fetched");
     }
-  }
+  };
 
   const check_popup = async () => {
     const popup = await SendRequest<PopupTrack>(new Msg(COMMANDS.SIDEPANEL_TRACK_REQUEST));
     console.log("response received: ", popup);
     return popup;
   };
-  
+
   useEffect(() => {
     check_popup().then((p) => track_from_popup(p));
     if (textfield_ref.current) {
@@ -113,7 +112,10 @@ function SidePanelApp() {
               </Button>
             </Stack>
           )}
-          <Accordion disableGutters expanded={post_element.ItemTracked} style={{ margin: "10px 0 0 0" }}>
+          <Accordion
+            disableGutters
+            expanded={post_element.ItemTracked}
+            style={{ margin: "10px 0 0 0" }}>
             <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
               <Typography variant="h6">Sender</Typography>
             </AccordionSummary>

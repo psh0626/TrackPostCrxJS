@@ -9,7 +9,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        sidepanel: "sidepanel.html",
+        sidepanel: "pages/sidepanel.html",
+        options: "pages/options.html",
       },
     },
   },

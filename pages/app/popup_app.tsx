@@ -7,10 +7,9 @@ import Card from "@mui/material/Card";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import { MyList, StyledTextField } from "./custom/components";
-import PopupTrack from "./lib/PopupTrack";
-import { COMMANDS, Msg } from "./lib/Message";
-import { WorkflowItem } from "./background/GetUnreadReplies/DataWrapper";
+import { MyList, StyledTextField } from "../custom/components";
+import PopupTrack from "../../src/lib/PopupTrack";
+import { WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
 import {
   Accordion,
   AccordionSummary,

@@ -9,8 +9,9 @@
     "48": "src/ext-icon.png",
     "128": "src/ext-icon.png"
   },
+  "options_page": "pages/options.html",
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "pages/popup.html",
     "default_title": "IMIC TRACKPOST V2"
   },
   "permissions": [
@@ -24,13 +25,18 @@
     "notifications"
   ],
   "side_panel": {
-    "default_path": "sidepanel.html"
+    "default_path": "pages/sidepanel.html"
   },
   "background": {
     "service_worker": "src/background/serviceworker.ts",
     "type": "module"
   },
-  "host_permissions": ["https://ems.epost.go.kr/*", "https://icare.post/*", "https://gcss.ipc.be/*", "https://sso.emsog.post/"],
+  "host_permissions": [
+    "https://ems.epost.go.kr/*",
+    "https://icare.post/*",
+    "https://gcss.ipc.be/*",
+    "https://sso.emsog.post/"
+  ],
   "content_scripts": [
     {
       "matches": ["https://icare.post/*", "https://gcss.ipc.be/*"],

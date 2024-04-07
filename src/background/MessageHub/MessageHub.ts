@@ -53,16 +53,19 @@ export default function ProcessMessage(
       return true;
 
     case COMMANDS.SAVE_ICARE_USER_ID:
-      chrome.storage.local.set({ IcareUserId: Message.Param }).then((dict) => {
+      chrome.storage.sync.set({ IcareUserId: Message.Param }).then((dict) => {
         console.log("Icare User ID Saved: ", { IcareUserId: Message.Param });
       });
       return;
     case COMMANDS.LOAD_ICARE_USER_ID:
       (async () => {
-        const dict = await chrome.storage.local.get("IcareUserId");
+        const dict = await chrome.storage.sync.get("IcareUserId");
         console.log("sending response for user id: ", dict.IcareUserId);
         SendResponse(dict.IcareUserId);
       })();
       return true;
+    
+    case COMMANDS.SAVE_OPTIONS:
+      chrome.storage.sync.set({Settings: Message.Param})
   }
 }

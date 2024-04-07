@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
-import { WorkflowItem } from "../background/GetUnreadReplies/DataWrapper";
+import { WorkflowItem } from "../../background/GetUnreadReplies/DataWrapper";
 
 export const StyledTextField = styled(TextField)({
   "& .MuiInputLabel-root": {

@@ -1,11 +1,11 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import FloatingHelper from "./DomInject";
 
 class InjectUtil {
-  private static GcssInjectFor(target_element: HTMLInputElement, val: string, manual: boolean = false) {
-    if (!target_element) {
-      console.error("No target element found for: " + target_element);
+  private static InsertReact(react_component: ReactNode, target: HTMLElement) {
+    if (!target) {
+      console.error("No target element found for: " + target);
       return;
     }
 
@@ -13,28 +13,28 @@ class InjectUtil {
     new_div.setAttribute("style", "display: flex; align-items: center;");
 
     const inject_react = createRoot(new_div);
-    inject_react.render(<FloatingHelper target={target_element} new_value={val} manual_change={manual} />);
+    inject_react.render(react_component);
 
-    (target_element.closest("div") as HTMLDivElement).style.position = "relative";
+    (target.closest("div") as HTMLDivElement).style.position = "relative";
 
-    target_element.insertAdjacentElement("afterend", new_div);
+    target.insertAdjacentElement("afterend", new_div);    
+  }
+  private static GcssInjectFor(target_element: HTMLInputElement, val: string, manual: boolean = false) {
+    this.InsertReact(<FloatingHelper target={target_element} new_value={val} manual_change={manual} />, target_element);
   }
 
   private static IcareInjectFor(target_elm: HTMLInputElement, val: string, manual: boolean = false) {
-    if (!target_elm) {
-      console.error("No target element found for: " + target_elm);
+    this.InsertReact(<FloatingHelper target={target_elm} new_value={val} manual_change={manual} for_icare={true} />, target_elm);
+  }
+
+  static InjectIcarePersonalRemarks() {
+    const target = document.querySelector("div.row.text-templates-row > div > div.input-container") as HTMLElement;
+    if (!target) {
+      console.log("cannot find: 'div.row.text-templates-row > div > div.input-container'\nunable to inject personal remarks");
       return;
     }
-
-    const new_div = document.createElement("div");
-    new_div.setAttribute("style", "display: flex; align-items: center;");
-
-    const inject_react = createRoot(new_div);
-    inject_react.render(<FloatingHelper target={target_elm} new_value={val} manual_change={manual} for_icare={true} />);
-
-    (target_elm.closest("div") as HTMLDivElement).style.position = "relative";
-
-    target_elm.insertAdjacentElement("afterend", new_div);
+    //this.InsertReact(react_component, target);
+    
   }
 
   static GcssSwitchValue(original_element: HTMLInputElement, change_to: string, manual: boolean = false) {

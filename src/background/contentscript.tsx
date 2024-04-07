@@ -263,6 +263,8 @@ import GetIcareUserId from "../lib/GetIcareUserId";
     if (dom.addr_email.value.search(`;`) !== -1 && dom.addr_email.value.length > 1) {
       InjectUtil.IcareSwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
     }
+
+    InjectUtil.InjectIcarePersonalRemarks();
     console.log("Dom Injected");
   };
 
