@@ -1,17 +1,27 @@
 import { COMMANDS, Msg, SendRequest } from "./Message";
 
-interface PersonalRemark{
-  Title: string,
-  Body: string,
+export class PersonalRemark {
+  Id: number;
+  Title: string;
+  Content: string;
+
+  constructor(title: string, content: string, id: number) {
+    this.Id = id;
+    this.Title = title;
+    this.Content = content;
+  }
 }
-export default class IMICSettings{
+export class IMICSettings {
   PersonalRemarks: PersonalRemark[] = [];
 
-  SaveOptions() {
-    chrome.storage.sync.set(this);
+  async SaveOptions() {
+    await chrome.storage.sync.set({ IMICSettings: this });
+    console.log("Options Saved as ", this);
   }
   async LoadOptions() {
-    this.PersonalRemarks = (await chrome.storage.sync.get(this.constructor.name))[this.constructor.name].PersonalRemarks;
+    this.PersonalRemarks = (await chrome.storage.sync.get(this.constructor.name))[
+      this.constructor.name
+    ].PersonalRemarks;
   }
 
   async RequestSave() {
@@ -19,6 +29,8 @@ export default class IMICSettings{
   }
 
   async RequestLoad() {
-    this.PersonalRemarks = (await SendRequest<IMICSettings>(new Msg(COMMANDS.LOAD_ICARE_PREMARKS))).PersonalRemarks;
+    this.PersonalRemarks = (
+      await SendRequest<IMICSettings>(new Msg(COMMANDS.LOAD_OPTIONS))
+    ).PersonalRemarks;
   }
 }

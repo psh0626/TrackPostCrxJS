@@ -10,7 +10,13 @@ export default function ProcessMessage(
   SendResponse: (response?: any) => void
 ) {
   const today = new Date();
-  console.log(today.toLocaleString(), "\nmessage received from sender: ", sender, "\ncontent: ", Message);
+  console.log(
+    today.toLocaleString(),
+    "\nmessage received from sender: ",
+    sender,
+    "\ncontent: ",
+    Message
+  );
 
   switch (Message.Command) {
     case COMMANDS.FETCH_POST_ELEMENT:
@@ -64,8 +70,18 @@ export default function ProcessMessage(
         SendResponse(dict.IcareUserId);
       })();
       return true;
-    
+
     case COMMANDS.SAVE_OPTIONS:
-      chrome.storage.sync.set({Settings: Message.Param})
+      (async () => {
+        chrome.storage.sync.set({ IMICSettings: Message.Param });
+      })();
+      return false;
+    case COMMANDS.LOAD_OPTIONS:
+      (async () => {
+        const dict = await chrome.storage.sync.get("IMICSettings");
+        console.log("sending response for IMIC Settings: ", dict.IMICsettings);
+        SendResponse(dict.IMICsettings);
+      })();
+      return true;
   }
 }
