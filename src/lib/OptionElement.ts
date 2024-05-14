@@ -19,9 +19,10 @@ export class IMICSettings {
     console.log("Options Saved as ", this);
   }
   async LoadOptions() {
-    this.PersonalRemarks = (await chrome.storage.sync.get(this.constructor.name))[
-      this.constructor.name
-    ].PersonalRemarks;
+    Object.assign(
+      this,
+      (await chrome.storage.sync.get(this.constructor.name))[this.constructor.name]
+    );
   }
 
   async RequestSave() {
@@ -29,8 +30,6 @@ export class IMICSettings {
   }
 
   async RequestLoad() {
-    this.PersonalRemarks = (
-      await SendRequest<IMICSettings>(new Msg(COMMANDS.LOAD_OPTIONS))
-    ).PersonalRemarks;
+    Object.assign(this, await SendRequest<IMICSettings>(new Msg(COMMANDS.LOAD_OPTIONS)));
   }
 }

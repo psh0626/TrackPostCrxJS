@@ -79,8 +79,8 @@ export default function ProcessMessage(
     case COMMANDS.LOAD_OPTIONS:
       (async () => {
         const dict = await chrome.storage.sync.get("IMICSettings");
-        console.log("sending response for IMIC Settings: ", dict.IMICsettings);
-        SendResponse(dict.IMICsettings);
+        console.log("sending response for IMIC Settings: ", dict.IMICSettings);
+        SendResponse(dict.IMICSettings);
       })();
       return true;
   }

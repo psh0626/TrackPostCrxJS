@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Add, Height, TravelExplore } from "@mui/icons-material";
+import { Add, ArrowDownward, ArrowUpward, Height, TravelExplore } from "@mui/icons-material";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
@@ -23,6 +23,9 @@ import {
   DialogActions,
   Button,
   TextField,
+  IconButton,
+  Icon,
+  Grid,
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { IMICSettings, PersonalRemark } from "../../src/lib/OptionElement";
@@ -113,6 +116,24 @@ export default function OptionsApp() {
   }
   function SortPRList() {
     set_pr_list((prev) => prev.sort((a, b) => a.Id - b.Id));
+  }
+
+  function MoveUp(index: number) {
+    if (index === 1) return; // Already at the top
+    set_pr_list((prev) => {
+      const newList = [...prev];
+      [newList[index - 2], newList[index - 1]] = [newList[index - 1], newList[index - 2]];
+      return newList.map((item, idx) => ({ ...item, Id: idx + 1 }));
+    });
+  }
+
+  function MoveDown(index: number) {
+    if (index === pr_list.length) return; // Already at the bottom
+    set_pr_list((prev) => {
+      const newList = [...prev];
+      [newList[index - 1], newList[index]] = [newList[index], newList[index - 1]];
+      return newList.map((item, idx) => ({ ...item, Id: idx + 1 }));
+    });
   }
 
   async function SaveSettings() {
@@ -231,17 +252,43 @@ export default function OptionsApp() {
               pr_list.map((pr) => {
                 return (
                   <Card key={pr.Id} sx={{ mb: 1 }}>
-                    <CardActionArea onClick={() => onCardClicked(pr)}>
-                      <CardContent sx={{ minHeight: 120 }}>
-                        <Typography gutterBottom variant="h5" component="div">
-                          {pr.Title}
-                        </Typography>
-                        <Divider sx={{ mt: 2, mb: 1 }} />
-                        <Typography variant="body2" color="text.secondary">
-                          {pr.Content}
-                        </Typography>
-                      </CardContent>
-                    </CardActionArea>
+                    <Stack direction="row">
+                      <CardActionArea onClick={() => onCardClicked(pr)}>
+                        <CardContent sx={{ minHeight: 120 }}>
+                          <Typography gutterBottom variant="h5" component="div">
+                            {pr.Title}
+                          </Typography>
+                          <Divider sx={{ mt: 3, mb: 1 }} />
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ whiteSpace: "pre-wrap" }}
+                            height={90}
+                            overflow="auto">
+                            {pr.Content}
+                          </Typography>
+                        </CardContent>
+                      </CardActionArea>
+
+                      <Stack direction="column">
+                        <Button
+                          variant="text"
+                          size="small"
+                          color="inherit"
+                          sx={{ height: "100%", minWidth: 0, padding: "12px" }}
+                          onClick={() => MoveUp(pr.Id)}>
+                          <ArrowUpward />
+                        </Button>
+                        <Button
+                          variant="text"
+                          size="small"
+                          color="inherit"
+                          sx={{ height: "100%", minWidth: 0, padding: "12px" }}
+                          onClick={() => MoveDown(pr.Id)}>
+                          <ArrowDownward />
+                        </Button>
+                      </Stack>
+                    </Stack>
                   </Card>
                 );
               })}
