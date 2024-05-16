@@ -269,7 +269,7 @@ export default function OptionsApp() {
                 onChange={onSelectChanged}>
                 <MenuItem value="REQ">Request Remarks</MenuItem>
                 <MenuItem value="REP">Reply Remarks</MenuItem>
-                {/* <MenuItem value="SUM">Update Remarks</MenuItem> */}
+                <MenuItem value="SUM">Update Remarks</MenuItem>
                 <MenuItem value="NOQ">Notification Request Remarks</MenuItem>
                 <MenuItem value="NOP">Notification Reply Remarks</MenuItem>
               </Select>

@@ -29,7 +29,7 @@ export class IMICSettings {
     //     newThis.PersonalRemarks.push(newKey);
     //   }
     // }
-    console.log("newthis: ", newThis);
+    //console.log("newthis: ", newThis);
     Object.assign(this, newThis.IMICSettings);
     console.log("this: ", this);
   }

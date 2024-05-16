@@ -21,19 +21,29 @@ export default function PersonalRemarksSelect({ type = "REQ" }: prSelectProp) {
 
   function ItemChanged(event_args: SelectChangeEvent) {
     setSelectedItem(event_args.target.value);
-    let textinput: HTMLTextAreaElement;
-    if (type === "NOP") {
-      textinput = getElement<HTMLTextAreaElement>(`textarea[name="field54"]`);
-    } else if (type === "NOQ") {
-      textinput = getElement<HTMLTextAreaElement>(`textarea[name="field47"]`);
-    } else {
-      textinput = getElement<HTMLTextAreaElement>(`textarea[name="field37"]`);
+    let field_number: string;
+    switch (type) {
+      case "NOP":
+        field_number = "field54";
+        break;
+      case "NOQ":
+        field_number = "field47";
+        break;
+      case "REP":
+        field_number = "field41";
+        break;
+      case "SUM":
+        field_number = "updateMessage";
+        break;
+      default:
+        field_number = "field37";
     }
-    textinput.value = event_args.target.value;
+    const textarea_elm = getElement<HTMLTextAreaElement>(`textarea[name="${field_number}"]`);
+    textarea_elm.value = event_args.target.value;
     setTimeout(() => {
-      textinput.focus();
+      textarea_elm.focus();
       const event = new Event("input", { bubbles: true });
-      textinput.dispatchEvent(event);
+      textarea_elm.dispatchEvent(event);
     }, 10);
   }
 
@@ -53,7 +63,8 @@ export default function PersonalRemarksSelect({ type = "REQ" }: prSelectProp) {
         id="IMIC_PERSONAL_REMARKS"
         value={selectedItem}
         onChange={ItemChanged}
-        label="문구를 선택하세요.">
+        label="문구를 선택하세요."
+        size="small">
         <MenuItem disabled value="">
           <em>문구를 선택하세요</em>
         </MenuItem>

@@ -53,13 +53,25 @@ class InjectUtil {
   }
 
   static InjectIcarePersonalRemarks(type: string = "REQ") {
-    const target = document.querySelector(
-      "div.row.text-templates-row > div > div.input-container"
-    ) as HTMLElement;
+    let selector: string;
+    switch (type) {
+      case "REQ":
+        selector =
+          "div.request-fields > div > div > div.row.text-templates-row > div > div.input-container";
+        break;
+      case "REP":
+        selector =
+          "div.reply-fields > div > div > div.row.text-templates-row > div > div.input-container";
+        break;
+      case "SUM":
+        selector = "div.update-message > form > div > div.row > div > div.input-container";
+        break;
+      default:
+        selector = "div.row.text-templates-row > div > div.input-container";
+    }
+    const target = document.querySelector(selector) as HTMLElement;
     if (!target) {
-      console.log(
-        "cannot find: 'div.row.text-templates-row > div > div.input-container'\nunable to inject personal remarks"
-      );
+      console.log("cannot find: 'div.input-container'\nunable to inject personal remarks");
       return;
     }
     const new_div = this.InsertReact(<PersonalRemarksSelect type={type} />, target, "afterbegin");

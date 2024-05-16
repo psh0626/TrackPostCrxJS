@@ -126,15 +126,21 @@ import GetIcareUserId from "../lib/GetIcareUserId";
           InjectUtil.InjectIcarePersonalRemarks("NOP");
           return;
         }
+        InjectUtil.InjectIcarePersonalRemarks("SUM");
         const dataset = (document.querySelector("div[data-tracking-id]") as HTMLDivElement).dataset;
-        const item_id = dataset.trackingId ?? "";        
-        if (item_id.slice(-2) === "KR") {
-          // l2 이상
-          InjectUtil.InjectIcarePersonalRemarks();
-        } else {
-          // 도착
-          InjectUtil.InjectIcarePersonalRemarks("REP");
-        }
+        const item_id = dataset.trackingId ?? "";
+        const remark_type = item_id.slice(-2) === "KR" ? "REQ" : "REP";
+        let port = chrome.runtime.connect();
+        port.onMessage.addListener((message: Msg) => {
+          console.log("message received: ", message);
+          if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
+            setTimeout(() => InjectUtil.InjectIcarePersonalRemarks(remark_type), 600);
+            port.disconnect();
+          }
+        });
+        port.onDisconnect.addListener((p) => {
+          port.disconnect();
+        });
       }
     }
   }

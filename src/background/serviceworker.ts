@@ -22,11 +22,32 @@ function main() {}
 
 chrome.webRequest.onCompleted.addListener(
   function (details) {
-    if (details.method === "GET" && details.url.includes("icare.post/?module=workflow&action=requestFields")) {
-      console.log("API GET request completed: ", details.url);
-      (async () => {
-        const [tab] = await chrome.tabs.query({ url: ICARE_URL + "/*" });
-        if (tab) {
+    if (details.method === "GET") {
+      if (details.url.includes("icare.post/?module=workflow&action=requestFields")) {
+        console.log("API GET request completed: ", details.url);
+        (async () => {
+          const [tab] = await chrome.tabs.query({ url: ICARE_URL + "/*" });
+          if (tab) {
+            if (!MsgPort) {
+              console.log(
+                "Message port is not open. Unable to send a message to the content script"
+              );
+              return;
+            }
+            MsgPort.postMessage(new Msg(COMMANDS.WEB_REQUEST_COMPLETE));
+            console.log("Message Sent to content script in: ", tab.title);
+            return true;
+          }
+          return false;
+        })();
+        return false;
+      } else if (details.url.includes("icare.post/?module=workflow&action=replyFields")) {
+        console.log("API GET request completed: ", details.url);
+        (async () => {
+          const [tab] = await chrome.tabs.query({ url: ICARE_URL + "/*" });
+          if (!tab) {
+            return false;
+          }
           if (!MsgPort) {
             console.log("Message port is not open. Unable to send a message to the content script");
             return;
@@ -34,10 +55,9 @@ chrome.webRequest.onCompleted.addListener(
           MsgPort.postMessage(new Msg(COMMANDS.WEB_REQUEST_COMPLETE));
           console.log("Message Sent to content script in: ", tab.title);
           return true;
-        }
+        })();
         return false;
-      })();
-      return false;
+      }
     }
   },
   { urls: ["*://icare.post/*"] }
@@ -58,7 +78,8 @@ chrome.notifications.onClicked.addListener((id) => {
 chrome.notifications.onButtonClicked.addListener((noti_id, button_id) => {
   if (noti_id === COMMANDS.UNREAD_REPLIES) {
     chrome.tabs.getCurrent((tab) => {
-      if (tab) chrome.windows.update(tab.windowId, { focused: true }, (_) => chrome.action.openPopup());
+      if (tab)
+        chrome.windows.update(tab.windowId, { focused: true }, (_) => chrome.action.openPopup());
     });
   }
 });
