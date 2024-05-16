@@ -26,6 +26,11 @@ import {
   IconButton,
   Icon,
   Grid,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { IMICSettings, PersonalRemark } from "../../src/lib/OptionElement";
@@ -65,6 +70,8 @@ export default function OptionsApp() {
   const [dl_editing, set_dl_editing] = useState(false);
   const [dl_current_id, set_dl_current_id] = useState(0);
 
+  const [sl_selected, set_sl_selected] = useState("REQ");
+
   const [pr_list, set_pr_list] = useState<PersonalRemark[]>([]);
 
   function onDlClosed() {
@@ -82,7 +89,7 @@ export default function OptionsApp() {
       return;
     }
     set_pr_list((prev) =>
-      prev.concat(new PersonalRemark(dl_title, dl_content, pr_list.length + 1))
+      prev.concat(new PersonalRemark(dl_title, dl_content, pr_list.length + 1, sl_selected))
     );
     onDlClosed();
   }
@@ -96,22 +103,26 @@ export default function OptionsApp() {
   }
 
   async function onDlRemoved() {
-    set_pr_list((prev) => prev.filter((entry) => entry.Id !== dl_current_id));
+    set_pr_list((prev) => prev.filter((entry) => entry.Section===sl_selected && entry.Id !== dl_current_id));
     RenumberPrList();
     await SaveSettings();
     onDlCancelled();
   }
 
   async function onDlEdited() {
-    set_pr_list((prev) => prev.filter((entry) => entry.Id !== dl_current_id));
-    set_pr_list((prev) => prev.concat(new PersonalRemark(dl_title, dl_content, dl_current_id)));
+    set_pr_list((prev) => prev.filter((entry) => entry.Section === sl_selected && entry.Id !== dl_current_id));
+    set_pr_list((prev) =>
+      prev.concat(new PersonalRemark(dl_title, dl_content, dl_current_id, sl_selected))
+    );
     SortPRList();
     await SaveSettings();
     onDlCancelled();
   }
   function RenumberPrList() {
     set_pr_list((prev) =>
-      prev.map((item, index) => new PersonalRemark(item.Title, item.Content, index + 1))
+      prev.map(
+        (item, index) => new PersonalRemark(item.Title, item.Content, index + 1, item.Section)
+      )
     );
   }
   function SortPRList() {
@@ -140,6 +151,10 @@ export default function OptionsApp() {
     settings.current.PersonalRemarks = pr_list;
     console.log("settings - ", settings.current, "pr list - ", pr_list);
     await settings.current.SaveOptions();
+  }
+
+  function onSelectChanged(event: SelectChangeEvent) {
+    set_sl_selected(event.target.value);
   }
 
   useEffect(() => {
@@ -233,8 +248,8 @@ export default function OptionsApp() {
               ICare Personal Remarks
             </Typography>
           </Stack>
-          <Divider sx={{ mb: 1 }} variant="fullWidth" />
-          <Stack alignItems="end">
+          <Divider sx={{ mb: 2 }} variant="fullWidth" />
+          <Stack direction="row-reverse" alignItems="end" spacing={3} marginBottom={3}>
             <Fab
               color="primary"
               variant="extended"
@@ -243,55 +258,68 @@ export default function OptionsApp() {
               onClick={() => {
                 set_dl_opened(true);
               }}>
-              <Add sx={{ mr: 1 }} />
-              <Typography sx={{ mr: 1 }} variant="body2">
-                템플릿 추가
-              </Typography>
+              <Add />
             </Fab>
+            <FormControl variant="outlined" fullWidth size="small">
+              <InputLabel>Select Section</InputLabel>
+              <Select
+                defaultValue="REQ"
+                label="Select Selection"
+                value={sl_selected}
+                onChange={onSelectChanged}>
+                <MenuItem value="REQ">Request Remarks</MenuItem>
+                <MenuItem value="REP">Reply Remarks</MenuItem>
+                {/* <MenuItem value="SUM">Update Remarks</MenuItem> */}
+                <MenuItem value="NOQ">Notification Request Remarks</MenuItem>
+                <MenuItem value="NOP">Notification Reply Remarks</MenuItem>
+              </Select>
+            </FormControl>
           </Stack>
           <Stack direction="column">
             {pr_list.length > 0 &&
               pr_list.map((pr) => {
                 return (
-                  <Card key={pr.Id} sx={{ mb: 1 }}>
-                    <Stack direction="row">
-                      <CardActionArea onClick={() => onCardClicked(pr)}>
-                        <CardContent sx={{ minHeight: 120, width: 430 }}>
-                          <Typography gutterBottom variant="h5" component="div">
-                            {pr.Title}
-                          </Typography>
-                          <Divider sx={{ mt: 3, mb: 1 }} />
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ whiteSpace: "pre-wrap" }}
-                            height={90}
-                            overflow="auto">
-                            {pr.Content}
-                          </Typography>
-                        </CardContent>
-                      </CardActionArea>
+                  pr.Section === sl_selected && (
+                    <Card key={pr.Id} sx={{ mb: 2 }}>
+                      <Stack direction="row">
+                        <CardActionArea onClick={() => onCardClicked(pr)}>
+                          <CardContent sx={{ minHeight: 120, width: 430 }}>
+                            <Typography gutterBottom variant="h6" component="div">
+                              {pr.Title}
+                            </Typography>
+                            <Divider sx={{ mt: 1, mb: 1 }} />
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+                              height={100}
+                              overflow="auto">
+                              {pr.Content}
+                            </Typography>
+                          </CardContent>
+                        </CardActionArea>
 
-                      <Stack direction="column">
-                        <Button
-                          variant="text"
-                          size="small"
-                          color="inherit"
-                          sx={{ height: "100%", minWidth: 0, padding: "12px" }}
-                          onClick={() => MoveUp(pr.Id)}>
-                          <ArrowUpward />
-                        </Button>
-                        <Button
-                          variant="text"
-                          size="small"
-                          color="inherit"
-                          sx={{ height: "100%", minWidth: 0, padding: "12px" }}
-                          onClick={() => MoveDown(pr.Id)}>
-                          <ArrowDownward />
-                        </Button>
+                        <Stack direction="column">
+                          <Button
+                            variant="text"
+                            size="small"
+                            color="inherit"
+                            sx={{ height: "100%", minWidth: 0, padding: "12px" }}
+                            onClick={() => MoveUp(pr.Id)}>
+                            <ArrowUpward />
+                          </Button>
+                          <Button
+                            variant="text"
+                            size="small"
+                            color="inherit"
+                            sx={{ height: "100%", minWidth: 0, padding: "12px" }}
+                            onClick={() => MoveDown(pr.Id)}>
+                            <ArrowDownward />
+                          </Button>
+                        </Stack>
                       </Stack>
-                    </Stack>
-                  </Card>
+                    </Card>
+                  )
                 );
               })}
           </Stack>

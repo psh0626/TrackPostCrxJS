@@ -52,7 +52,7 @@ class InjectUtil {
     );
   }
 
-  static InjectIcarePersonalRemarks() {
+  static InjectIcarePersonalRemarks(type: string = "REQ") {
     const target = document.querySelector(
       "div.row.text-templates-row > div > div.input-container"
     ) as HTMLElement;
@@ -62,7 +62,7 @@ class InjectUtil {
       );
       return;
     }
-    const new_div = this.InsertReact(<PersonalRemarksSelect />, target, "afterbegin");
+    const new_div = this.InsertReact(<PersonalRemarksSelect type={type} />, target, "afterbegin");
     new_div?.setAttribute(
       "style",
       "z-index: 1; top: 3px; position: absolute; width: 100%; background: white;"

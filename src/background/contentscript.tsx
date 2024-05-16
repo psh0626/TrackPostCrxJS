@@ -91,9 +91,12 @@ import GetIcareUserId from "../lib/GetIcareUserId";
         }
       })();
       const param_action = currentURL.searchParams.get("action");
-      if (param_action && param_action === "new") {
+      if (param_action === "new") {
+        if (currentURL.searchParams.get("module") === "notification") {
+          InjectUtil.InjectIcarePersonalRemarks("NOQ");
+          return;
+        }
         const item_id = currentURL.searchParams.get("trackingId")?.toUpperCase();
-
         if (item_id?.slice(-2) !== "KR") {
           console.log("item id is invalid to fetch PostElement (must end with KR)");
           return;
@@ -117,6 +120,21 @@ import GetIcareUserId from "../lib/GetIcareUserId";
         port.onDisconnect.addListener((p) => {
           port.disconnect();
         });
+      } else if (param_action === "view") {
+        if (currentURL.searchParams.get("module") === "notification") {
+          //noti 도착
+          InjectUtil.InjectIcarePersonalRemarks("NOP");
+          return;
+        }
+        const dataset = (document.querySelector("div[data-tracking-id]") as HTMLDivElement).dataset;
+        const item_id = dataset.trackingId ?? "";        
+        if (item_id.slice(-2) === "KR") {
+          // l2 이상
+          InjectUtil.InjectIcarePersonalRemarks();
+        } else {
+          // 도착
+          InjectUtil.InjectIcarePersonalRemarks("REP");
+        }
       }
     }
   }

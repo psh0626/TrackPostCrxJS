@@ -1,11 +1,13 @@
 import { COMMANDS, Msg, SendRequest } from "./Message";
 
 export class PersonalRemark {
+  Section: string;
   Id: number;
   Title: string;
   Content: string;
 
-  constructor(title: string, content: string, id: number) {
+  constructor(title: string, content: string, id: number, section: string = "REQ") {
+    this.Section = section;
     this.Id = id;
     this.Title = title;
     this.Content = content;
@@ -19,10 +21,17 @@ export class IMICSettings {
     console.log("Options Saved as ", this);
   }
   async LoadOptions() {
-    Object.assign(
-      this,
-      (await chrome.storage.sync.get(this.constructor.name))[this.constructor.name]
-    );
+    const newThis = await chrome.storage.sync.get("IMICSettings");
+    // for (const key in newThis) {
+    //   console.log(key);
+    //   if (key !== "PersonalRemarks") {
+    //     const newKey = new PersonalRemark(newThis.key.Title, newThis.key.Content, newThis.key.Id, "REQ");
+    //     newThis.PersonalRemarks.push(newKey);
+    //   }
+    // }
+    console.log("newthis: ", newThis);
+    Object.assign(this, newThis.IMICSettings);
+    console.log("this: ", this);
   }
 
   async RequestSave() {

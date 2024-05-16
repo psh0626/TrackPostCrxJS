@@ -5,8 +5,10 @@ import FormHelperText from "@mui/material/FormHelperText";
 import { InputLabel, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import { IMICSettings, PersonalRemark } from "../../lib/OptionElement";
 import { parseNumbers } from "xml2js/lib/processors";
-
-export default function PersonalRemarksSelect() {
+interface prSelectProp {
+  type: string;
+}
+export default function PersonalRemarksSelect({ type = "REQ" }: prSelectProp) {
   const settings = useRef(new IMICSettings());
   const initialized = useRef(false);
 
@@ -19,7 +21,14 @@ export default function PersonalRemarksSelect() {
 
   function ItemChanged(event_args: SelectChangeEvent) {
     setSelectedItem(event_args.target.value);
-    const textinput = getElement<HTMLTextAreaElement>(`textarea[name="field37"]`);
+    let textinput: HTMLTextAreaElement;
+    if (type === "NOP") {
+      textinput = getElement<HTMLTextAreaElement>(`textarea[name="field54"]`);
+    } else if (type === "NOQ") {
+      textinput = getElement<HTMLTextAreaElement>(`textarea[name="field47"]`);
+    } else {
+      textinput = getElement<HTMLTextAreaElement>(`textarea[name="field37"]`);
+    }
     textinput.value = event_args.target.value;
     setTimeout(() => {
       textinput.focus();
@@ -49,11 +58,14 @@ export default function PersonalRemarksSelect() {
           <em>문구를 선택하세요</em>
         </MenuItem>
         {pr_list.length > 0 &&
-          pr_list.map((item) => (
-            <MenuItem key={item.Title} value={item.Content}>
-              {item.Title}
-            </MenuItem>
-          ))}
+          pr_list.map(
+            (item) =>
+              item.Section === type && (
+                <MenuItem key={item.Title} value={item.Content}>
+                  {item.Title}
+                </MenuItem>
+              )
+          )}
       </Select>
     </FormControl>
   );
