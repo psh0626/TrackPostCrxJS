@@ -17,10 +17,15 @@ export default function PersonalRemarksSelect() {
     return document.querySelector(cssString) as T;
   }
 
-  function ItemChanged(event: SelectChangeEvent) {
-    setSelectedItem(event.target.value);
+  function ItemChanged(event_args: SelectChangeEvent) {
+    setSelectedItem(event_args.target.value);
     const textinput = getElement<HTMLTextAreaElement>(`textarea[name="field37"]`);
-    textinput.value = event.target.value;
+    textinput.value = event_args.target.value;
+    setTimeout(() => {
+      textinput.focus();
+      const event = new Event("input", { bubbles: true });
+      textinput.dispatchEvent(event);
+    }, 10);
   }
 
   useEffect(() => {
@@ -33,14 +38,22 @@ export default function PersonalRemarksSelect() {
   }, []);
 
   return (
-    <FormControl variant="outlined" fullWidth size="medium">
+    <FormControl variant="outlined" fullWidth size="small" sx={{ top: "4px" }}>
       <InputLabel>문구를 선택하세요.</InputLabel>
-      <Select id="IMIC_PERSONAL_REMARKS" value={selectedItem} onChange={ItemChanged}>
+      <Select
+        id="IMIC_PERSONAL_REMARKS"
+        value={selectedItem}
+        onChange={ItemChanged}
+        label="문구를 선택하세요.">
         <MenuItem disabled value="">
           <em>문구를 선택하세요</em>
         </MenuItem>
         {pr_list.length > 0 &&
-          pr_list.map((item) => <MenuItem value={item.Content}>{item.Title}</MenuItem>)}
+          pr_list.map((item) => (
+            <MenuItem key={item.Title} value={item.Content}>
+              {item.Title}
+            </MenuItem>
+          ))}
       </Select>
     </FormControl>
   );

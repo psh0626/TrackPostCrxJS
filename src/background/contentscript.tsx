@@ -33,7 +33,10 @@ import GetIcareUserId from "../lib/GetIcareUserId";
 
     const currentURL = new URL(document.URL);
     if (currentURL.origin === GCSS_URL) {
-      if (currentURL.pathname.includes("/create/") || currentURL.pathname.includes("/reactivate/")) {
+      if (
+        currentURL.pathname.includes("/create/") ||
+        currentURL.pathname.includes("/reactivate/")
+      ) {
         const item_id: string = document.querySelector(".value")?.textContent?.trim() ?? "";
         if (!item_id) {
           console.log("Cannot find item_id in document classname 'value'");
@@ -67,12 +70,21 @@ import GetIcareUserId from "../lib/GetIcareUserId";
           console.log("user id found:", icare_internal_userid);
           IcareAPI.UserId = icare_internal_userid;
           if (csrfToken) {
-            console.log("fetching replies with found csrf:", csrfToken, "\nUserID: ", IcareAPI.UserId);
+            console.log(
+              "fetching replies with found csrf:",
+              csrfToken,
+              "\nUserID: ",
+              IcareAPI.UserId
+            );
 
             await IcareAPI.FetchUnreadReplies(csrfToken);
           } else {
-            console.log("csrf forged and sending request. csrf: nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8");
-            await IcareAPI.FetchUnreadReplies("nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8");
+            console.log(
+              "csrf forged and sending request. csrf: nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8"
+            );
+            await IcareAPI.FetchUnreadReplies(
+              "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8"
+            );
           }
         } else {
           console.log("timer is already on");
@@ -143,7 +155,8 @@ import GetIcareUserId from "../lib/GetIcareUserId";
     }
     if (dom.indemnity_amount_currency.value !== "3") {
       dom.indemnity_amount_currency.value = "3"; // SDR
-      const calc_indemnity_amount = parseInt(dom.item_value.value) + parseInt(dom.postage_paid.value);
+      const calc_indemnity_amount =
+        parseInt(dom.item_value.value) + parseInt(dom.postage_paid.value);
       InjectUtil.GcssSwitchValue(dom.indemnity_amount, calc_indemnity_amount.toString());
     }
     if (!dom.pod_required_no.checked && !dom.pod_required_yes.checked) {
@@ -195,15 +208,26 @@ import GetIcareUserId from "../lib/GetIcareUserId";
     InjectUtil.GcssSwitchValue(dom.postage_paid, calc_postage_paid.toString());
     InjectUtil.GcssSwitchValue(dom.indemnity_amount, calc_indemnity_amount.toString());
 
-    InjectUtil.GcssSwitchValue(dom.addr_name, post_element.AddresseeName, true);
+    InjectUtil.GcssSwitchValue(
+      dom.addr_name,
+      post_element.AddresseeName,
+      dom.addr_name.value.length === 0 ? false : true
+    );
     InjectUtil.GcssSwitchValue(dom.addr_street, post_element.AddresseeAddress);
     InjectUtil.GcssSwitchValue(dom.addr_phone, post_element.AddresseePhone);
     if (dom.addr_email.value.search(String.raw`;`) !== -1 && dom.addr_email.value.length > 1) {
-      InjectUtil.GcssSwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
+      InjectUtil.GcssSwitchValue(
+        dom.addr_email,
+        dom.addr_email.value.toLowerCase().replace(";", "@")
+      );
     }
     InjectUtil.GcssSwitchValue(dom.addr_postcode, post_element.AddresseeZipcode);
 
-    InjectUtil.GcssSwitchValue(dom.sndr_name, post_element.SenderName, true);
+    InjectUtil.GcssSwitchValue(
+      dom.sndr_name,
+      post_element.SenderName,
+      dom.sndr_name.value.length === 0 ? false : true
+    );
     InjectUtil.GcssSwitchValue(dom.sndr_street, post_element.SenderAddress);
     InjectUtil.GcssSwitchValue(dom.sndr_phone, post_element.SenderPhone);
 
@@ -261,7 +285,10 @@ import GetIcareUserId from "../lib/GetIcareUserId";
     InjectUtil.IcareSwitchValue(dom.item_desc, post_element.Contents);
 
     if (dom.addr_email.value.search(`;`) !== -1 && dom.addr_email.value.length > 1) {
-      InjectUtil.IcareSwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
+      InjectUtil.IcareSwitchValue(
+        dom.addr_email,
+        dom.addr_email.value.toLowerCase().replace(";", "@")
+      );
     }
 
     InjectUtil.InjectIcarePersonalRemarks();
@@ -269,7 +296,9 @@ import GetIcareUserId from "../lib/GetIcareUserId";
   };
 
   async function FindPostElement(item_id: string): Promise<PostElement> {
-    const raw_post_element = await SendRequest<PostElement>(new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id));
+    const raw_post_element = await SendRequest<PostElement>(
+      new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id)
+    );
 
     return raw_post_element;
   }
