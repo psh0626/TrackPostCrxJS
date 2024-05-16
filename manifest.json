@@ -20,7 +20,6 @@
     "tabGroups",
     "sidePanel",
     "webRequest",
-    "webRequestBlocking",
     "clipboardWrite",
     "notifications"
   ],
