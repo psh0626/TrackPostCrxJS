@@ -10,6 +10,7 @@ import Button from "@mui/material/Button";
 import { MyList, StyledTextField } from "../custom/components";
 import PopupTrack from "../../src/lib/PopupTrack";
 import { WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
+import { IMICSettings } from "../../src/lib/OptionElement";
 import {
   Accordion,
   AccordionSummary,
@@ -28,8 +29,11 @@ function PopUpApp() {
   // Tracking number state (you might want to bind this as well)
   const [item_id_field, set_item_id_field] = useState("");
   const [is_valid, set_is_valid] = useState(true);
-  const [workflow_items, set_workflow_items] = useState([]);
+  const [workflow_items, set_workflow_items] = useState<WorkflowItem[]>([]);
+  const [icare_req_items, set_icare_req] = useState<WorkflowItem[]>([]);
+  const [chk_req, set_chkreq] = useState(false);
   const textfield_ref = useRef<HTMLInputElement>(null);
+  const settings = useRef(new IMICSettings());
   const tracker = new PopupTrack();
 
   const CheckValue = (target: HTMLInputElement | HTMLTextAreaElement) => {
@@ -55,17 +59,28 @@ function PopUpApp() {
     if (textfield_ref.current) {
       textfield_ref.current.focus();
     }
-    chrome.storage.local.get("WORKFLOWS").then((dict) => {
-      if (dict.WORKFLOWS.length > 0) {
-        set_workflow_items(dict.WORKFLOWS);
-        console.log("workflows loaded from storage local: ", workflow_items);
+
+    (async () => {
+      await settings.current.LoadOptions();
+      set_chkreq(settings.current.IcareUnreadRequests);
+
+      const dict = await chrome.storage.local.get("ICARE_UNREAD_REPLIES");
+      if (dict.ICARE_UNREAD_REPLIES.length > 0) {
+        set_workflow_items(dict.ICARE_UNREAD_REPLIES as WorkflowItem[]);
+        console.log("workflows loaded from storage local: ", dict.ICARE_UNREAD_REPLIES);
       } else {
         console.log("workflows count is 0 or below");
       }
-    });
-    chrome.storage.local.onChanged.addListener((dict) => {
-      set_workflow_items(dict.WORKFLOWS.newValue);
-    });
+
+      if (settings.current.IcareUnreadRequests) {
+        const req_dict = await chrome.storage.local.get("ICARE_UNREAD_REQUESTS");
+        set_icare_req(req_dict.ICARE_UNREAD_REQUESTS);
+      }
+
+      chrome.storage.local.onChanged.addListener((dict) => {
+        set_workflow_items(dict.ICARE_UNREAD_REPLIES.newValue as WorkflowItem[]);
+      });
+    })();
   }, []);
 
   return (
@@ -98,10 +113,13 @@ function PopUpApp() {
       />
 
       <Divider style={{ margin: "15px 0" }} />
-      {workflow_items.length > 0 ? MyList(workflow_items) : (
+      {chk_req ? icare_req_items.length > 0 && MyList(icare_req_items, "REQ") : ""}
+      {workflow_items.length > 0 ? (
+        MyList(workflow_items)
+      ) : (
         <Stack alignItems="center">
           <Typography variant="subtitle2" color="initial">
-            ICare Replies: 모두 읽음 ✔️
+            ICare 발송 회신: 모두 읽음 ✔️
           </Typography>
         </Stack>
       )}

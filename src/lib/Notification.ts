@@ -33,7 +33,7 @@ export default async function CreateNotification() {
   const mapped_items = WorkFlowItems.map((item: WorkflowItem) => {
     return {
       title: `L${item.current_level} ${item.workflow_status === "Replied" ? "발송" : "도착"}`,
-      message: `${item.tracking_id} ${item.tracking_id.slice(-2) === "KR" && "(" + item.replying_op.substring(0, 2) + ")"}`,
+      message: `${item.tracking_id} ${item.tracking_id.slice(-2) === "KR" ? "(" + item.replying_op.substring(0, 2) + ")" : ""}`,
     } as chrome.notifications.ItemOptions;
   });
   chrome.action.setBadgeText({ text: `${WorkFlowItems.length}` });
