@@ -32,18 +32,25 @@ export default function ProcessMessage(
       })();
       return true; // true makes connection a bit longer;
 
-    case COMMANDS.UNREAD_REPLIES:
+    case COMMANDS.ICARE_UNREAD_REPLIES:
       if (Message.Param === "?") {
         console.log("Unable to fetch/communicate data from Icare");
         chrome.action.setBadgeText({ text: "?" });
         return;
       }
-      const workflow_items = Message.Param as WorkflowItem[];
+      const replies = Message.Param as WorkflowItem[];
       (async () => {
-        await chrome.storage.local.set({ WORKFLOWS: workflow_items });
-        await CreateNotification(workflow_items);
+        await chrome.storage.local.set({ ICARE_UNREAD_REPLIES: replies });
+        await CreateNotification();
       })();
       return; // false since we're not sending response
+    case COMMANDS.ICARE_UNREAD_REQUESTS:
+      const requests = Message.Param as WorkflowItem[];
+      (async () => {
+        await chrome.storage.local.set({ ICARE_UNREAD_REQUESTS: requests });
+        await CreateNotification();
+      })();
+      return;
 
     case COMMANDS.POPUP_TRACK_SET:
       Object.assign(PopupTracker, Message.Param);

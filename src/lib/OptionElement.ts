@@ -14,6 +14,7 @@ export class PersonalRemark {
   }
 }
 export class IMICSettings {
+  IcareUnreadRequests: boolean = false;
   PersonalRemarks: PersonalRemark[] = [];
 
   async SaveOptions() {

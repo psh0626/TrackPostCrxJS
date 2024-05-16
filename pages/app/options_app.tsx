@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ChangeEvent } from "react";
 
 import { Add, ArrowDownward, ArrowUpward, Height, TravelExplore } from "@mui/icons-material";
 import AppBar from "@mui/material/AppBar";
@@ -31,6 +31,8 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { IMICSettings, PersonalRemark } from "../../src/lib/OptionElement";
@@ -73,6 +75,7 @@ export default function OptionsApp() {
   const [sl_selected, set_sl_selected] = useState("REQ");
 
   const [pr_list, set_pr_list] = useState<PersonalRemark[]>([]);
+  const [chk_icare_req, set_icare_req] = useState(false);
 
   function onDlClosed() {
     set_dl_title("");
@@ -103,14 +106,18 @@ export default function OptionsApp() {
   }
 
   async function onDlRemoved() {
-    set_pr_list((prev) => prev.filter((entry) => entry.Section===sl_selected && entry.Id !== dl_current_id));
+    set_pr_list((prev) =>
+      prev.filter((entry) => entry.Section === sl_selected && entry.Id !== dl_current_id)
+    );
     RenumberPrList();
     await SaveSettings();
     onDlCancelled();
   }
 
   async function onDlEdited() {
-    set_pr_list((prev) => prev.filter((entry) => entry.Section === sl_selected && entry.Id !== dl_current_id));
+    set_pr_list((prev) =>
+      prev.filter((entry) => entry.Section === sl_selected && entry.Id !== dl_current_id)
+    );
     set_pr_list((prev) =>
       prev.concat(new PersonalRemark(dl_title, dl_content, dl_current_id, sl_selected))
     );
@@ -148,8 +155,9 @@ export default function OptionsApp() {
   }
 
   async function SaveSettings() {
+    settings.current.IcareUnreadRequests = chk_icare_req;
     settings.current.PersonalRemarks = pr_list;
-    console.log("settings - ", settings.current, "pr list - ", pr_list);
+    console.log("settings - ", settings.current);
     await settings.current.SaveOptions();
   }
 
@@ -157,10 +165,15 @@ export default function OptionsApp() {
     set_sl_selected(event.target.value);
   }
 
+  async function onCheckboxChanged(event: ChangeEvent, checked: boolean) {
+    set_icare_req(checked);
+  }
+
   useEffect(() => {
     (async () => {
       await settings.current.LoadOptions();
       set_pr_list(settings.current.PersonalRemarks);
+      set_icare_req(settings.current.IcareUnreadRequests);
       setTimeout(() => {
         initialized.current = true;
       }, 1000);
@@ -169,7 +182,7 @@ export default function OptionsApp() {
 
   useEffect(() => {
     if (initialized.current) SaveSettings();
-  }, [pr_list]);
+  }, [pr_list, chk_icare_req]);
 
   return (
     <Paper>
@@ -239,12 +252,32 @@ export default function OptionsApp() {
           onChange={(_e, n) => set_tab_value(n)}
           orientation="vertical"
           sx={{ borderRight: 1, borderColor: "divider" }}>
+          <Tab label="General" />
           <Tab label="Personal Remarks" />
           <Tab label="Info" />
         </Tabs>
         <TabPanel value={tab_value} index={0}>
           <Stack spacing={2} padding={1} direction="row" alignItems="end" sx={{ mb: 2 }}>
-            <Typography variant="h4" fontWeight={700} color="initial" sx={{ width: 500 }}>
+            <Typography variant="h4" fontWeight={500} color="initial" sx={{ width: 500 }}>
+              기본 설정
+            </Typography>
+          </Stack>
+          <Divider sx={{ mb: 2 }} variant="fullWidth" />
+          <Grid container width={"100%"}>
+            <Grid item xs>
+              <FormControlLabel
+                label="ICare 도착 문의 알림"
+                control={
+                  <Checkbox checked={chk_icare_req} onChange={onCheckboxChanged} color="primary" />
+                }
+              />
+            </Grid>
+            <Grid item xs></Grid>
+          </Grid>
+        </TabPanel>
+        <TabPanel value={tab_value} index={1}>
+          <Stack spacing={2} padding={1} direction="row" alignItems="end" sx={{ mb: 2 }}>
+            <Typography variant="h4" fontWeight={500} color="initial" sx={{ width: 500 }}>
               ICare Personal Remarks
             </Typography>
           </Stack>
@@ -324,7 +357,7 @@ export default function OptionsApp() {
               })}
           </Stack>
         </TabPanel>
-        <TabPanel value={tab_value} index={1}></TabPanel>
+        <TabPanel value={tab_value} index={2}></TabPanel>
       </Box>
     </Paper>
   );

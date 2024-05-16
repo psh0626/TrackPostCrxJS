@@ -70,13 +70,13 @@ chrome.runtime.onConnect.addListener((port) => {
 chrome.runtime.onMessage.addListener(ProcessMessage);
 
 chrome.notifications.onClicked.addListener((id) => {
-  if (id === COMMANDS.UNREAD_REPLIES) {
+  if (id === COMMANDS.ICARE_UNREAD_REPLIES) {
     chrome.notifications.clear(id);
   }
 });
 
 chrome.notifications.onButtonClicked.addListener((noti_id, button_id) => {
-  if (noti_id === COMMANDS.UNREAD_REPLIES) {
+  if (noti_id === COMMANDS.ICARE_UNREAD_REPLIES) {
     chrome.tabs.getCurrent((tab) => {
       if (tab)
         chrome.windows.update(tab.windowId, { focused: true }, (_) => chrome.action.openPopup());
