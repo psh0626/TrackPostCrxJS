@@ -43,8 +43,8 @@ function PopUpApp() {
   };
 
   const OpenSidePanel = () => {
-    chrome.windows.getCurrent((w) => {
-      tracker.SetItemId(item_id_field);
+    chrome.windows.getCurrent(async (w) => {
+      await tracker.SetItemId(item_id_field);
       chrome.sidePanel.open({ windowId: w.id! });
     });
     console.log("Popup sidepanel opened state:", tracker);
@@ -98,8 +98,7 @@ function PopUpApp() {
       />
 
       <Divider style={{ margin: "15px 0" }} />
-      {workflow_items.length > 0 && MyList(workflow_items)}
-      {workflow_items.length === 0 && (
+      {workflow_items.length > 0 ? MyList(workflow_items) : (
         <Stack alignItems="center">
           <Typography variant="subtitle2" color="initial">
             ICare Replies: 모두 읽음 ✔️
