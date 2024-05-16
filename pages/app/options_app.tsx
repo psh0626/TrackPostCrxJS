@@ -146,7 +146,9 @@ export default function OptionsApp() {
     (async () => {
       await settings.current.LoadOptions();
       set_pr_list(settings.current.PersonalRemarks);
-      initialized.current = true;
+      setTimeout(() => {
+        initialized.current = true;
+      }, 1000);
     })();
   }, []);
 
@@ -254,7 +256,7 @@ export default function OptionsApp() {
                   <Card key={pr.Id} sx={{ mb: 1 }}>
                     <Stack direction="row">
                       <CardActionArea onClick={() => onCardClicked(pr)}>
-                        <CardContent sx={{ minHeight: 120 }}>
+                        <CardContent sx={{ minHeight: 120, width: 430 }}>
                           <Typography gutterBottom variant="h5" component="div">
                             {pr.Title}
                           </Typography>

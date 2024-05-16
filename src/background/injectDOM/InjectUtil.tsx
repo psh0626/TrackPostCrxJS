@@ -65,7 +65,7 @@ class InjectUtil {
     const new_div = this.InsertReact(<PersonalRemarksSelect />, target, "afterbegin");
     new_div?.setAttribute(
       "style",
-      "z-index: 999; top: 3px; position: absolute; width: 300px; background: white;"
+      "z-index: 1; top: 3px; position: absolute; width: 100%; background: white;"
     );
   }
 
