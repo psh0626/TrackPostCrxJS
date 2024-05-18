@@ -1,10 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import PopUpApp from "../app/popup_app";
-import "@fontsource/noto-sans-kr/300.css";
-import "@fontsource/noto-sans-kr/400.css";
-import "@fontsource/noto-sans-kr/500.css";
-import "@fontsource/noto-sans-kr/700.css";
+// import "@fontsource/noto-sans-kr/300.css";
+// import "@fontsource/noto-sans-kr/400.css";
+// import "@fontsource/noto-sans-kr/500.css";
+// import "@fontsource/noto-sans-kr/700.css";
+import "@fontsource/noto-sans-kr";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { deepOrange, orange } from "@mui/material/colors";
 import PopupHeader from "../app/popup_header";
