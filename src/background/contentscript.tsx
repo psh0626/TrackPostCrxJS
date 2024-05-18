@@ -33,6 +33,13 @@ import GetIcareUserId from "../lib/GetIcareUserId";
 
     const currentURL = new URL(document.URL);
     if (currentURL.origin === GCSS_URL) {
+      window.addEventListener("hashchange", (e) => {
+        if (e.newURL.includes("/query")) {
+          setTimeout(() => {
+            InjectUtil.InjectGcssQueryInput();
+          }, 100);
+        }
+      })
       if (
         currentURL.pathname.includes("/create/") ||
         currentURL.pathname.includes("/reactivate/")
@@ -60,6 +67,8 @@ import GetIcareUserId from "../lib/GetIcareUserId";
         } else {
           injectGcssL2(post_element);
         }
+      } else if (currentURL.toString().includes("/query")) {
+        InjectUtil.InjectGcssQueryInput();
       }
     } else if (currentURL.origin === ICARE_URL) {
       console.log("finding user id.."); // global timer, local storage에 user id 저장 한번만 찾으면 다시 찾을 필요 없어짐, webrequest 분석해서 csrf 계속 확인하는 건 어떰?

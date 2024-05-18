@@ -40,14 +40,14 @@ export default function ProcessMessage(
       }
       const replies = Message.Param as WorkflowItem[];
       (async () => {
-        await chrome.storage.local.set({ ICARE_UNREAD_REPLIES: replies });
+        await chrome.storage.session.set({ ICARE_UNREAD_REPLIES: replies });
         await CreateNotification();
       })();
       return; // false since we're not sending response
     case COMMANDS.ICARE_UNREAD_REQUESTS:
       const requests = Message.Param as WorkflowItem[];
       (async () => {
-        await chrome.storage.local.set({ ICARE_UNREAD_REQUESTS: requests });
+        await chrome.storage.session.set({ ICARE_UNREAD_REQUESTS: requests });
         await CreateNotification();
       })();
       return;

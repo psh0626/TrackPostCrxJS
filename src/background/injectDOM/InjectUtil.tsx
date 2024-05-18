@@ -1,7 +1,8 @@
-import React, { ReactNode } from "react";
+import React, { ChangeEvent, ChangeEventHandler, ReactNode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import FloatingHelper from "./DomInject";
 import PersonalRemarksSelect from "./PersonalRemarks";
+import { Input, TextField } from "@mui/material";
 
 class InjectUtil {
   private static InsertReact(
@@ -50,6 +51,24 @@ class InjectUtil {
       />,
       target_elm
     );
+  }
+
+  static InjectGcssQueryInput() {
+    const old_input = document.querySelector("input[name='itemId']") as HTMLInputElement;
+    const form = document.querySelector("form:has(input[name='itemId'])") as HTMLFormElement;
+
+    old_input.setAttribute("pattern", String.raw`[A-Z]{2}\d{9}[A-Z]{2}`);
+    old_input.setAttribute("title", "EB123456789KR");
+    old_input.classList.add("uppercase");
+    old_input.onkeyup = (e) => {
+      old_input.value = old_input.value.toUpperCase();
+    }
+    form.onsubmit = (e) => {
+      old_input.value = old_input.value.toUpperCase();
+    };
+    // const target = old_input?.closest("div") as HTMLDivElement;
+    // const new_div = this.InsertReact(<DomTextField old_input={old_input}/>, target, "beforebegin");
+    // new_div?.setAttribute("style", "z-index: 1; position: absolute; width: 100%");
   }
 
   static InjectIcarePersonalRemarks(type: string = "REQ") {

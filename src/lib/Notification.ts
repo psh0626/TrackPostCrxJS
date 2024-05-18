@@ -8,11 +8,11 @@ export default async function CreateNotification() {
 
   let WorkFlowItems: WorkflowItem[] = [];
 
-  let dict = await chrome.storage.local.get("ICARE_UNREAD_REPLIES");
+  let dict = await chrome.storage.session.get("ICARE_UNREAD_REPLIES");
   WorkFlowItems = dict.ICARE_UNREAD_REPLIES as WorkflowItem[];
 
   if (settings.IcareUnreadRequests) {
-    dict = await chrome.storage.local.get("ICARE_UNREAD_REQUESTS");
+    dict = await chrome.storage.session.get("ICARE_UNREAD_REQUESTS");
     WorkFlowItems = WorkFlowItems.concat(dict.ICARE_UNREAD_REQUESTS as WorkflowItem[]);
   }
 
