@@ -1,4 +1,67 @@
-export interface GcssItem {
+export function TrimObject(obj: any): any {
+  if (typeof obj !== "object" || obj === null) {
+    // If it's not an object or it's null, return it as is
+    return obj;
+  }
+
+  // Iterate over all properties of the object
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const value = obj[key];
+
+      if (typeof value === "string") {
+        // Trim the string value
+        obj[key] = value.trim();
+      } else if (typeof value === "object") {
+        // Recursively trim nested objects
+        TrimObject(value);
+      }
+    }
+  }
+
+  return obj;
+}
+export class GcssItem {
+  OriginCountry = "";
+  DestinationCountry = "";
+  ItemId = "";
+  WorkflowLevel = "";
+  ServiceType = "";
+  ReadStatus = "";
+  RequestAuthor = "";
+  ReplyAuthor = "";
+  InternalItemId = -1;
+  InternalMessageId = -1;
+  InternalTaskId = -1;
+  WorkflowLink = "";
+
+  constructor(data?: Partial<GcssItem>) {
+    if (data) Object.assign(this, data);
+    this.WorkflowLink =
+      `https://gcss.ipc.be/CSS/gcss/${this.ServiceType}` +
+      `/reply/show/message/${this.InternalMessageId}` +
+      `/item/${this.InternalItemId}` +
+      `/task/${this.InternalTaskId}`;
+  }
+
+  public static FromRawItem(rawItem: GcssRawItem): GcssItem {
+    const gcssItem = new GcssItem({
+      OriginCountry: rawItem.origCountry,
+      DestinationCountry: rawItem.destCountry,
+      ItemId: rawItem.itemId,
+      WorkflowLevel: rawItem.taskDescription,
+      ServiceType: rawItem.productName,
+      ReadStatus: rawItem.readStatus,
+      RequestAuthor: rawItem.requestAuthor,
+      ReplyAuthor: rawItem.replyAuthor,
+      InternalItemId: rawItem.itemPk,
+      InternalMessageId: rawItem.messageId,
+      InternalTaskId: rawItem.taskId,
+    });
+    return gcssItem;
+  }
+}
+export interface GcssRawItem {
   itemId: string;
   productName: string;
   taskDescription: string;

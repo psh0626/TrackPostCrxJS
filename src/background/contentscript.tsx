@@ -4,6 +4,7 @@ import InjectUtil from "./injectDOM/InjectUtil";
 import { IcareAPI } from "./GetUnreadReplies/IcareReplies";
 import { GlobalTimer } from "./GetUnreadReplies/Timer";
 import GetIcareUserId from "../lib/GetIcareUserId";
+import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
 
 (() => {
   function getCSRFToken(): string | null {
@@ -39,7 +40,8 @@ import GetIcareUserId from "../lib/GetIcareUserId";
             InjectUtil.InjectGcssQueryInput();
           }, 100);
         }
-      })
+      });
+      GcssAPI.FetchReplies();
       if (
         currentURL.pathname.includes("/create/") ||
         currentURL.pathname.includes("/reactivate/")
