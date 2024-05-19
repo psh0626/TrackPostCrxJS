@@ -28,6 +28,11 @@ export class GcssAPI {
       )
       .map((item) => GcssItem.FromRawItem(item));
     console.log("GCSS REPLIES FILTERED: ", unread_msgs);
+    const test_sums = fetched_obj.filter(
+      (item) =>
+        item.numberOfSum > 0 && item.requestAuthor.toLowerCase().includes(this.user_name.toLowerCase())
+    ).map(item=>GcssItem.FromRawItem(item));
+    console.log("GCSS SUM > 0: ", test_sums);
     // item link: https://gcss.ipc.be/CSS/gcss/EMS/reply/show/message/${messageId}/item/${itemPk}/task/${taskId}
   }
 }

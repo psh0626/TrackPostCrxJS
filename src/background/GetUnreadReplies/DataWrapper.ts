@@ -34,6 +34,7 @@ export class GcssItem {
   InternalMessageId = -1;
   InternalTaskId = -1;
   WorkflowLink = "";
+  numberOfSum = -1;
 
   constructor(data?: Partial<GcssItem>) {
     if (data) Object.assign(this, data);
@@ -57,6 +58,7 @@ export class GcssItem {
       InternalItemId: rawItem.itemPk,
       InternalMessageId: rawItem.messageId,
       InternalTaskId: rawItem.taskId,
+      numberOfSum: rawItem.numberOfSum,
     });
     return gcssItem;
   }
