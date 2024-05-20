@@ -29,6 +29,7 @@ export class GcssItem {
   ServiceType = "";
   ReadStatus = "";
   RequestAuthor = "";
+  RequestType = "";
   ReplyAuthor = "";
   InternalItemId = -1;
   InternalMessageId = -1;
@@ -54,6 +55,7 @@ export class GcssItem {
       ServiceType: rawItem.productName,
       ReadStatus: rawItem.readStatus,
       RequestAuthor: rawItem.requestAuthor,
+      RequestType: rawItem.requestTypeMnemonic,
       ReplyAuthor: rawItem.replyAuthor,
       InternalItemId: rawItem.itemPk,
       InternalMessageId: rawItem.messageId,
@@ -157,7 +159,7 @@ export class WorkflowItem {
       this.due_date = this.extractInnerText(data[6]);
       this.current_level = parseInt(data[7]);
       this.duration = parseInt(data[8]);
-      this.request_type = data[9];
+      this.request_type = this.convertRequestType(data[9]);
       this.workflow_status = data[10];
       this.requesting_op = data[11];
       this.replying_op = data[12];
@@ -172,6 +174,29 @@ export class WorkflowItem {
   private isRawData(data: any): data is RawData {
     // Simple check to determine if data is RawData - adjust according to your data structure
     return typeof data[0] === "string" || typeof data[1] === "string";
+  }
+
+  private convertRequestType(reqTypeString: string) {
+    switch (reqTypeString) {
+      case "Update/confirmation item status":
+        return "Status";
+      case "Written proof of delivery":
+        return "WPOD";
+      case "Disputed delivery":
+        return "Disputed";
+      case "Request for change":
+        return "CN17";
+      case "Damaged/missing contents":
+        return "Damaged/missing";
+      case "Missent/redirected/transit":
+        return "Missent";
+      case "Customs investigation":
+        return "Customs";
+      case "COD amount not received":
+        return "COD";
+      default:
+        return reqTypeString; // or return a default value if you prefer
+    }
   }
 
   private extractNameAttribute(htmlString: string): string {

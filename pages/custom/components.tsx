@@ -76,7 +76,7 @@ export function MyList(
   type: "replies" | "requests" = "replies",
   service: "GCSS" | "iCare" = "iCare"
 ) {
-  const list_title = type === "replies" ? service + " - 발송 회신" : " - 도착 문의";
+  const list_title = type === "replies" ? service + " - 발송 회신" : service + " - 도착 문의";
 
   const OpenNewTab = async (urlLink: string) => {
     const current_tab = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
@@ -134,10 +134,11 @@ export function MyList(
           {items.map((item, id) => {
             let primary_string: string;
             if (service === "iCare") {
-              primary_string = `L${item.current_level} ${item.workflow_status === "Replied" ? "발송" : "도착"} ${item.tracking_id.slice(-2) === "KR" ? "(" + item.replying_op.substring(0, 2) + ")" : ""}`;
+              const i = item as WorkflowItem;
+              primary_string = `${i.tracking_id.slice(-2) === "KR" ? i.replying_op.substring(0, 2) : i.requesting_op.substring(0, 2)} - L${i.current_level}\n${i.request_type}`;
             } else {
               const i = item as GcssItem;
-              primary_string = `${i.WorkflowLevel} ${i.OriginCountry === "KR" ? "발송 " + `${i.DestinationCountry}` : "도착"}`;
+              primary_string = `${i.OriginCountry === "KR" ? `${i.DestinationCountry}` : ""} - ${i.WorkflowLevel} ${i.RequestType}`;
             }
 
             return (

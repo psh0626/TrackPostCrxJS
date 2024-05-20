@@ -4,6 +4,8 @@ import { GcssItem, GcssRawItem, TrimObject } from "./DataWrapper";
 
 export class GcssAPI {
   static user_name = "sunghoon";
+  static settings = new IMICSettings();
+  static settings_loaded = false;
 
   static ScheduleAnotherFetch() {
     setTimeout(() => {
@@ -11,8 +13,10 @@ export class GcssAPI {
     }, 15000);
   }
   static async FetchReplies() {
-    const settings = new IMICSettings();
-    await settings.RequestLoad();
+    if (!this.settings_loaded){
+      await this.settings.RequestLoad();      
+      this.settings_loaded = true;
+    }
 
     const response = await fetch("https://gcss.ipc.be/CSS/gcss/list-tasks", {
       headers: {
@@ -26,7 +30,7 @@ export class GcssAPI {
     });
     if (!response.ok) {
       console.error(response.status);
-      if (settings.GcssUnreadReplies)
+      if (this.settings.GcssUnreadReplies)
         chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, "?"));
       this.ScheduleAnotherFetch();
       return;
@@ -34,10 +38,15 @@ export class GcssAPI {
     const fetched_obj = TrimObject(await response.json()) as GcssRawItem[];
     console.log("GCSS REPLIES FETCHED: ", fetched_obj);
 
+    const my_msgs = fetched_obj.filter((item) =>
+      item.requestAuthor.toLowerCase().includes(this.user_name.toLowerCase())
+    );
+    console.log("My Messages: ", my_msgs);
+
     const unread_msgs = fetched_obj
       .filter(
         (item) =>
-          item.readStatus === "UNREAD" &&
+          (item.readStatus === "UNREAD" || item.readStatus === "MARKED_UNREAD") &&
           item.requestAuthor.toLowerCase().includes(this.user_name.toLowerCase())
       )
       .map((item) => GcssItem.FromRawItem(item));

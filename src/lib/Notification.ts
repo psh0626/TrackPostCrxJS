@@ -11,10 +11,6 @@ export default async function CreateNotification() {
 
   let dict = await chrome.storage.session.get("ICARE_UNREAD_REPLIES");
   WorkFlowItems = dict.ICARE_UNREAD_REPLIES as WorkflowItem[];
-
-  dict = await chrome.storage.session.get("GCSS_UNREAD_REPLIES");
-  GcssItems = dict.GCSS_UNREAD_REPLIES as GcssItem[];
-
   if (settings.IcareUnreadRequests) {
     dict = await chrome.storage.session.get("ICARE_UNREAD_REQUESTS");
     WorkFlowItems = WorkFlowItems.concat(dict.ICARE_UNREAD_REQUESTS as WorkflowItem[]);
@@ -22,8 +18,17 @@ export default async function CreateNotification() {
 
   let last_num = parseInt(await chrome.action.getBadgeText({})) ?? 0;
   if (isNaN(last_num)) last_num = 0;
-  const current_num = Array.isArray(WorkFlowItems) && Array.isArray(GcssItems) ? WorkFlowItems.length + GcssItems.length : 0;
+
+  let current_num = Array.isArray(WorkFlowItems) ? WorkFlowItems.length : 0;
+
+  if (settings.GcssUnreadReplies) {
+    dict = await chrome.storage.session.get("GCSS_UNREAD_REPLIES");
+    GcssItems = dict.GCSS_UNREAD_REPLIES as GcssItem[];
+    current_num += Array.isArray(GcssItems) ? GcssItems.length : 0;
+  }
+
   console.log("current number: ", current_num, "  last number: ", last_num);
+
   if (last_num >= current_num) {
     let item_count = "-1";
     if (current_num > 0) {
@@ -34,22 +39,32 @@ export default async function CreateNotification() {
     chrome.action.setBadgeText({ text: item_count });
     return;
   }
-  
+
   chrome.action.setBadgeText({ text: `${current_num}` });
-  
-  const mapped_items = WorkFlowItems.map((item: WorkflowItem) => {
-    return {
-      title: `L${item.current_level} ${item.workflow_status === "Replied" ? "발송" : "도착"}`,
-      message: `${item.tracking_id} ${item.tracking_id.slice(-2) === "KR" ? "(" + item.replying_op.substring(0, 2) + ")" : ""}`,
-    } as chrome.notifications.ItemOptions;
-  });
-  const gcss_mapped_items = GcssItems.map((item) => {
-    return {
-      title: `L${item.WorkflowLevel} ${item.OriginCountry === "KR" ? "발송" : "도착"}`,
-      message: `${item.ItemId} ${item.DestinationCountry === "KR" ? "(" + item.OriginCountry + ")" : ""}`,
-    } as chrome.notifications.ItemOptions;    
-  });
-  const combined = [...gcss_mapped_items, ...mapped_items];
+
+  let mapped_items: chrome.notifications.ItemOptions[] = [];
+  let gcss_mapped_items: chrome.notifications.ItemOptions[] = [];
+
+  if (Array.isArray(WorkFlowItems)) {
+    mapped_items = WorkFlowItems.map((item) => {
+      return {
+        title: `L${item.current_level} ${item.workflow_status === "Replied" ? "발송" : "도착"}`,
+        message: `${item.tracking_id} ${item.tracking_id.slice(-2) === "KR" ? "(" + item.replying_op.substring(0, 2) + ")" : ""}`,
+      } as chrome.notifications.ItemOptions;
+    });
+  }
+  if (Array.isArray(GcssItems)) {
+    gcss_mapped_items = GcssItems.map((item) => {
+      return {
+        title: `${item.WorkflowLevel} ${item.OriginCountry === "KR" ? "발송" : "도착"}`,
+        message: `${item.ItemId} ${item.DestinationCountry === "KR" ? "(" + item.OriginCountry + ")" : ""}`,
+      } as chrome.notifications.ItemOptions;
+    });
+  }
+  const combined = [
+    ...(Array.isArray(gcss_mapped_items) ? gcss_mapped_items : []),
+    ...(Array.isArray(mapped_items) ? mapped_items : []),
+  ];
 
   const options = {
     type: "list",

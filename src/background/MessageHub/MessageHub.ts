@@ -13,7 +13,7 @@ export default function ProcessMessage(
   console.log(
     today.toLocaleString(),
     "\nmessage received from sender: ",
-    sender,
+    sender.tab?.url,
     "\ncontent: ",
     Message
   );
@@ -39,20 +39,21 @@ export default function ProcessMessage(
         chrome.action.setBadgeText({ text: "?" });
         return;
       }
+
       let replies;
       if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES)
         replies = Message.Param as WorkflowItem[];
-      else
-        replies = Message.Param as GcssItem[];
+      else replies = Message.Param as GcssItem[];
+      
       (async () => {
-        if(Message.Command === COMMANDS.ICARE_UNREAD_REPLIES)
+        if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES)
           await chrome.storage.session.set({ ICARE_UNREAD_REPLIES: replies });
-        else
-          await chrome.storage.session.set({ GCSS_UNREAD_REPLIES: replies });
-          
+        else await chrome.storage.session.set({ GCSS_UNREAD_REPLIES: replies });
+
         await CreateNotification();
       })();
       return; // false since we're not sending response
+
     case COMMANDS.ICARE_UNREAD_REQUESTS:
       const requests = Message.Param as WorkflowItem[];
       (async () => {

@@ -29,7 +29,7 @@ function PopUpApp() {
   // Tracking number state (you might want to bind this as well)
   const [item_id_field, set_item_id_field] = useState("");
   const [is_valid, set_is_valid] = useState(true);
-  
+
   const [workflow_items, set_workflow_items] = useState<WorkflowItem[]>([]);
   const [icare_req_items, set_icare_req] = useState<WorkflowItem[]>([]);
   const [gcss_items, set_gcss_items] = useState<GcssItem[]>([]);
@@ -70,26 +70,31 @@ function PopUpApp() {
       set_chkreq(settings.current.IcareUnreadRequests);
       set_chk_gcssrep(settings.current.GcssUnreadReplies);
 
-      const dict = await chrome.storage.session.get("ICARE_UNREAD_REPLIES");
-      if (dict.ICARE_UNREAD_REPLIES.length > 0) {
-        set_workflow_items(dict.ICARE_UNREAD_REPLIES as WorkflowItem[]);
-        console.log("workflows loaded from storage local: ", dict.ICARE_UNREAD_REPLIES);
+      const dict = (await chrome.storage.session.get("ICARE_UNREAD_REPLIES"))
+        .ICARE_UNREAD_REPLIES as WorkflowItem[];
+
+      if (typeof dict !== "undefined" && dict.length > 0) {
+        set_workflow_items(dict);
+        console.log("workflows loaded from storage local: ", dict);
       } else {
         console.log("workflows count is 0 or below");
       }
 
       if (settings.current.IcareUnreadRequests) {
-        const req_dict = await chrome.storage.session.get("ICARE_UNREAD_REQUESTS");
-        set_icare_req(req_dict.ICARE_UNREAD_REQUESTS as WorkflowItem[]);
+        const dict = (await chrome.storage.session.get("ICARE_UNREAD_REQUESTS"))
+          .ICARE_UNREAD_REQUESTS as WorkflowItem[];
+        if (typeof dict !== "undefined" && dict.length > 0) set_icare_req(dict);
       }
 
       if (settings.current.GcssUnreadReplies) {
-        const req_dict = await chrome.storage.session.get("GCSS_UNREAD_REPLIES");
-        set_gcss_items(req_dict.GCSS_UNREAD_REPLIES as GcssItem[]);
+        const dict = (await chrome.storage.session.get("GCSS_UNREAD_REPLIES"))
+          .GCSS_UNREAD_REPLIES as GcssItem[];
+        if (typeof dict !== "undefined" && dict.length > 0) set_gcss_items(dict);
       }
 
       chrome.storage.session.onChanged.addListener((dict) => {
         set_workflow_items(dict.ICARE_UNREAD_REPLIES.newValue as WorkflowItem[]);
+        set_gcss_items(dict.GCSS_UNREAD_REPLIES.newValue as GcssItem[]);
       });
     })();
   }, []);
@@ -124,14 +129,38 @@ function PopUpApp() {
       />
 
       <Divider style={{ margin: "15px 0" }} />
-      {chk_gcss_rep ? gcss_items.length > 0 && MyList(gcss_items, "replies", "GCSS") : ""}
-      {chk_req ? icare_req_items.length > 0 && MyList(icare_req_items, "requests") : ""}
+      {chk_gcss_rep ? (
+        gcss_items.length > 0 ? (
+          MyList(gcss_items, "replies", "GCSS")
+        ) : (
+          <Stack alignItems="center">
+            <Typography variant="subtitle2" color="initial">
+              GCSS 발송 회신: 모두 읽음 ✔️
+            </Typography>
+          </Stack>
+        )
+      ) : (
+        ""
+      )}
+      {chk_req ? (
+        icare_req_items.length > 0 ? (
+          MyList(icare_req_items, "requests")
+        ) : (
+          <Stack alignItems="center">
+            <Typography variant="subtitle2" color="initial">
+              ICare 도착 문의: 모두 읽음 ✔️
+            </Typography>
+          </Stack>
+        )
+      ) : (
+        ""
+      )}
       {workflow_items.length > 0 ? (
         MyList(workflow_items)
       ) : (
         <Stack alignItems="center">
           <Typography variant="subtitle2" color="initial">
-            ICare 발송 회신: 모두 읽음 ✔️
+            iCare 발송 회신: 모두 읽음 ✔️
           </Typography>
         </Stack>
       )}
