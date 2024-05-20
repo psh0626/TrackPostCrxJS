@@ -4,6 +4,7 @@ import InjectUtil from "./injectDOM/InjectUtil";
 import { IcareAPI } from "./GetUnreadReplies/IcareReplies";
 import { GlobalTimer } from "./GetUnreadReplies/Timer";
 import GetIcareUserId from "../lib/GetIcareUserId";
+import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
 
 (() => {
   function getCSRFToken(): string | null {
@@ -33,7 +34,18 @@ import GetIcareUserId from "../lib/GetIcareUserId";
 
     const currentURL = new URL(document.URL);
     if (currentURL.origin === GCSS_URL) {
-      if (currentURL.pathname.includes("/create/") || currentURL.pathname.includes("/reactivate/")) {
+      window.addEventListener("hashchange", (e) => {
+        if (e.newURL.includes("/query")) {
+          setTimeout(() => {
+            InjectUtil.InjectGcssQueryInput();
+          }, 100);
+        }
+      });
+      GcssAPI.FetchReplies();
+      if (
+        currentURL.pathname.includes("/create/") ||
+        currentURL.pathname.includes("/reactivate/")
+      ) {
         const item_id: string = document.querySelector(".value")?.textContent?.trim() ?? "";
         if (!item_id) {
           console.log("Cannot find item_id in document classname 'value'");
@@ -57,6 +69,8 @@ import GetIcareUserId from "../lib/GetIcareUserId";
         } else {
           injectGcssL2(post_element);
         }
+      } else if (currentURL.toString().includes("/query")) {
+        InjectUtil.InjectGcssQueryInput();
       }
     } else if (currentURL.origin === ICARE_URL) {
       console.log("finding user id.."); // global timer, local storage에 user id 저장 한번만 찾으면 다시 찾을 필요 없어짐, webrequest 분석해서 csrf 계속 확인하는 건 어떰?
@@ -67,21 +81,33 @@ import GetIcareUserId from "../lib/GetIcareUserId";
           console.log("user id found:", icare_internal_userid);
           IcareAPI.UserId = icare_internal_userid;
           if (csrfToken) {
-            console.log("fetching replies with found csrf:", csrfToken, "\nUserID: ", IcareAPI.UserId);
+            console.log(
+              "fetching replies with found csrf:",
+              csrfToken,
+              "\nUserID: ",
+              IcareAPI.UserId
+            );
 
             await IcareAPI.FetchUnreadReplies(csrfToken);
           } else {
-            console.log("csrf forged and sending request. csrf: nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8");
-            await IcareAPI.FetchUnreadReplies("nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8");
+            console.log(
+              "csrf forged and sending request. csrf: nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8"
+            );
+            await IcareAPI.FetchUnreadReplies(
+              "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8"
+            );
           }
         } else {
           console.log("timer is already on");
         }
       })();
       const param_action = currentURL.searchParams.get("action");
-      if (param_action && param_action === "new") {
+      if (param_action === "new") {
+        if (currentURL.searchParams.get("module") === "notification") {
+          InjectUtil.InjectIcarePersonalRemarks("NOQ");
+          return;
+        }
         const item_id = currentURL.searchParams.get("trackingId")?.toUpperCase();
-
         if (item_id?.slice(-2) !== "KR") {
           console.log("item id is invalid to fetch PostElement (must end with KR)");
           return;
@@ -99,6 +125,27 @@ import GetIcareUserId from "../lib/GetIcareUserId";
           console.log("message received: ", message);
           if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
             setTimeout(() => InjectIcare(post_element), 600);
+            port.disconnect();
+          }
+        });
+        port.onDisconnect.addListener((p) => {
+          port.disconnect();
+        });
+      } else if (param_action === "view") {
+        if (currentURL.searchParams.get("module") === "notification") {
+          //noti 도착
+          InjectUtil.InjectIcarePersonalRemarks("NOP");
+          return;
+        }
+        InjectUtil.InjectIcarePersonalRemarks("SUM");
+        const dataset = (document.querySelector("div[data-tracking-id]") as HTMLDivElement).dataset;
+        const item_id = dataset.trackingId ?? "";
+        const remark_type = item_id.slice(-2) === "KR" ? "REQ" : "REP";
+        let port = chrome.runtime.connect();
+        port.onMessage.addListener((message: Msg) => {
+          console.log("message received: ", message);
+          if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
+            setTimeout(() => InjectUtil.InjectIcarePersonalRemarks(remark_type), 600);
             port.disconnect();
           }
         });
@@ -143,7 +190,8 @@ import GetIcareUserId from "../lib/GetIcareUserId";
     }
     if (dom.indemnity_amount_currency.value !== "3") {
       dom.indemnity_amount_currency.value = "3"; // SDR
-      const calc_indemnity_amount = parseInt(dom.item_value.value) + parseInt(dom.postage_paid.value);
+      const calc_indemnity_amount =
+        parseInt(dom.item_value.value) + parseInt(dom.postage_paid.value);
       InjectUtil.GcssSwitchValue(dom.indemnity_amount, calc_indemnity_amount.toString());
     }
     if (!dom.pod_required_no.checked && !dom.pod_required_yes.checked) {
@@ -195,15 +243,26 @@ import GetIcareUserId from "../lib/GetIcareUserId";
     InjectUtil.GcssSwitchValue(dom.postage_paid, calc_postage_paid.toString());
     InjectUtil.GcssSwitchValue(dom.indemnity_amount, calc_indemnity_amount.toString());
 
-    InjectUtil.GcssSwitchValue(dom.addr_name, post_element.AddresseeName, true);
+    InjectUtil.GcssSwitchValue(
+      dom.addr_name,
+      post_element.AddresseeName,
+      dom.addr_name.value.length === 0 ? false : true
+    );
     InjectUtil.GcssSwitchValue(dom.addr_street, post_element.AddresseeAddress);
     InjectUtil.GcssSwitchValue(dom.addr_phone, post_element.AddresseePhone);
     if (dom.addr_email.value.search(String.raw`;`) !== -1 && dom.addr_email.value.length > 1) {
-      InjectUtil.GcssSwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
+      InjectUtil.GcssSwitchValue(
+        dom.addr_email,
+        dom.addr_email.value.toLowerCase().replace(";", "@")
+      );
     }
     InjectUtil.GcssSwitchValue(dom.addr_postcode, post_element.AddresseeZipcode);
 
-    InjectUtil.GcssSwitchValue(dom.sndr_name, post_element.SenderName, true);
+    InjectUtil.GcssSwitchValue(
+      dom.sndr_name,
+      post_element.SenderName,
+      dom.sndr_name.value.length === 0 ? false : true
+    );
     InjectUtil.GcssSwitchValue(dom.sndr_street, post_element.SenderAddress);
     InjectUtil.GcssSwitchValue(dom.sndr_phone, post_element.SenderPhone);
 
@@ -261,7 +320,10 @@ import GetIcareUserId from "../lib/GetIcareUserId";
     InjectUtil.IcareSwitchValue(dom.item_desc, post_element.Contents);
 
     if (dom.addr_email.value.search(`;`) !== -1 && dom.addr_email.value.length > 1) {
-      InjectUtil.IcareSwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
+      InjectUtil.IcareSwitchValue(
+        dom.addr_email,
+        dom.addr_email.value.toLowerCase().replace(";", "@")
+      );
     }
 
     InjectUtil.InjectIcarePersonalRemarks();
@@ -269,7 +331,9 @@ import GetIcareUserId from "../lib/GetIcareUserId";
   };
 
   async function FindPostElement(item_id: string): Promise<PostElement> {
-    const raw_post_element = await SendRequest<PostElement>(new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id));
+    const raw_post_element = await SendRequest<PostElement>(
+      new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id)
+    );
 
     return raw_post_element;
   }

@@ -17,7 +17,8 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
-import { WorkflowItem } from "../../background/GetUnreadReplies/DataWrapper";
+import { WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
+import React from "react";
 
 export const StyledTextField = styled(TextField)({
   "& .MuiInputLabel-root": {
@@ -47,7 +48,12 @@ interface InfoFieldType {
   binding_shrink: boolean;
   multiline?: boolean;
 }
-export const InfoTextField: React.FC<InfoFieldType> = ({ label_text, binding_value, binding_shrink, multiline }) => {
+export const InfoTextField: React.FC<InfoFieldType> = ({
+  label_text,
+  binding_value,
+  binding_shrink,
+  multiline,
+}) => {
   const TextFieldFocused = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.select();
     navigator.clipboard.writeText(e.target.value);
@@ -66,10 +72,16 @@ export const InfoTextField: React.FC<InfoFieldType> = ({ label_text, binding_val
   );
 };
 
-export function MyList(items: WorkflowItem[]) {
+export function MyList(items: WorkflowItem[], type: string = "ICARE_UNREAD_REPLIES") {
+  const list_title = type === "ICARE_UNREAD_REPLIES" ? "iCare - 발송 회신" : "iCare - 도착 문의";
+
   const OpenNewTab = async (urlLink: string) => {
     const current_tab = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-    return await chrome.tabs.create({ index: current_tab[0].index + 1, url: urlLink, active: false });
+    return await chrome.tabs.create({
+      index: current_tab[0].index + 1,
+      url: urlLink,
+      active: false,
+    });
   };
 
   const OpenAll = async () => {
@@ -87,7 +99,11 @@ export function MyList(items: WorkflowItem[]) {
 
     if (tab_ids.length > 0) {
       const newGroup = await chrome.tabs.group({ tabIds: tab_ids });
-      await chrome.tabGroups.update(newGroup, { title: "Icare Replies", color: "orange", collapsed: true });
+      await chrome.tabGroups.update(newGroup, {
+        title: list_title,
+        color: "orange",
+        collapsed: true,
+      });
     }
   };
 
@@ -95,18 +111,22 @@ export function MyList(items: WorkflowItem[]) {
     <List>
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMore />}>
-          <Typography variant="body1" fontWeight="300" textAlign="center">
-            Unread Replies
+          <Typography variant="body1" fontWeight="600" textAlign="center">
+            {list_title + `: ${items.length}건`}
           </Typography>
         </AccordionSummary>
         <Stack alignItems="end">
-          <Button variant="outlined" size="small" onClick={async () => await OpenAll()} sx={{ mr: 2 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={async () => await OpenAll()}
+            sx={{ mr: 2 }}>
             Open All
           </Button>
         </Stack>
         <AccordionDetails>
           {items.map((item: WorkflowItem, id) => {
-            const primary_string = `L${item.current_level} ${item.workflow_status} (${item.requesting_op.substring(0, 2)} 🡢 ${item.replying_op.substring(0, 2)})`;
+            const primary_string = `L${item.current_level} ${item.workflow_status === "Replied" ? "발송" : "도착"} ${item.tracking_id.slice(-2) === "KR" ? "(" + item.replying_op.substring(0, 2) + ")" : ""}`;
 
             return (
               <Card style={{ margin: "0 0 1px" }}>

@@ -4,17 +4,17 @@ export default class PopupTrack {
   ItemId: string = "";
   IsTracked: boolean = false;
   
-  SetItemId(id: string) {
+  async SetItemId(id: string) {
     this.ItemId = id;
     this.IsTracked = true;
-    this.PassToBackground();
+    await this.PassToBackground();
   }
   Reset() {
     this.ItemId = "";
     this.IsTracked = false;
     this.PassToBackground();
   }
-  private PassToBackground() {
-    chrome.runtime.sendMessage(new Msg(COMMANDS.POPUP_TRACK_SET, this));
+  private async PassToBackground() {
+    await chrome.runtime.sendMessage(new Msg(COMMANDS.POPUP_TRACK_SET, this));
   }
 }

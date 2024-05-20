@@ -10,7 +10,13 @@ export default function ProcessMessage(
   SendResponse: (response?: any) => void
 ) {
   const today = new Date();
-  console.log(today.toLocaleString(), "\nmessage received from sender: ", sender, "\ncontent: ", Message);
+  console.log(
+    today.toLocaleString(),
+    "\nmessage received from sender: ",
+    sender,
+    "\ncontent: ",
+    Message
+  );
 
   switch (Message.Command) {
     case COMMANDS.FETCH_POST_ELEMENT:
@@ -26,18 +32,25 @@ export default function ProcessMessage(
       })();
       return true; // true makes connection a bit longer;
 
-    case COMMANDS.UNREAD_REPLIES:
+    case COMMANDS.ICARE_UNREAD_REPLIES:
       if (Message.Param === "?") {
         console.log("Unable to fetch/communicate data from Icare");
         chrome.action.setBadgeText({ text: "?" });
         return;
       }
-      const workflow_items = Message.Param as WorkflowItem[];
+      const replies = Message.Param as WorkflowItem[];
       (async () => {
-        await chrome.storage.local.set({ WORKFLOWS: workflow_items });
-        await CreateNotification(workflow_items);
+        await chrome.storage.session.set({ ICARE_UNREAD_REPLIES: replies });
+        await CreateNotification();
       })();
       return; // false since we're not sending response
+    case COMMANDS.ICARE_UNREAD_REQUESTS:
+      const requests = Message.Param as WorkflowItem[];
+      (async () => {
+        await chrome.storage.session.set({ ICARE_UNREAD_REQUESTS: requests });
+        await CreateNotification();
+      })();
+      return;
 
     case COMMANDS.POPUP_TRACK_SET:
       Object.assign(PopupTracker, Message.Param);
@@ -64,8 +77,18 @@ export default function ProcessMessage(
         SendResponse(dict.IcareUserId);
       })();
       return true;
-    
+
     case COMMANDS.SAVE_OPTIONS:
-      chrome.storage.sync.set({Settings: Message.Param})
+      (async () => {
+        chrome.storage.sync.set({ IMICSettings: Message.Param });
+      })();
+      return false;
+    case COMMANDS.LOAD_OPTIONS:
+      (async () => {
+        const dict = await chrome.storage.sync.get("IMICSettings");
+        console.log("sending response for IMIC Settings: ", dict.IMICSettings);
+        SendResponse(dict.IMICSettings);
+      })();
+      return true;
   }
 }
