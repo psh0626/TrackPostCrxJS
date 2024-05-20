@@ -64,7 +64,7 @@ function PopUpApp() {
       await settings.current.LoadOptions();
       set_chkreq(settings.current.IcareUnreadRequests);
 
-      const dict = await chrome.storage.local.get("ICARE_UNREAD_REPLIES");
+      const dict = await chrome.storage.session.get("ICARE_UNREAD_REPLIES");
       if (dict.ICARE_UNREAD_REPLIES.length > 0) {
         set_workflow_items(dict.ICARE_UNREAD_REPLIES as WorkflowItem[]);
         console.log("workflows loaded from storage local: ", dict.ICARE_UNREAD_REPLIES);
@@ -73,11 +73,11 @@ function PopUpApp() {
       }
 
       if (settings.current.IcareUnreadRequests) {
-        const req_dict = await chrome.storage.local.get("ICARE_UNREAD_REQUESTS");
+        const req_dict = await chrome.storage.session.get("ICARE_UNREAD_REQUESTS");
         set_icare_req(req_dict.ICARE_UNREAD_REQUESTS);
       }
 
-      chrome.storage.local.onChanged.addListener((dict) => {
+      chrome.storage.session.onChanged.addListener((dict) => {
         set_workflow_items(dict.ICARE_UNREAD_REPLIES.newValue as WorkflowItem[]);
       });
     })();
