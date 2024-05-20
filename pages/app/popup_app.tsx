@@ -50,6 +50,7 @@ function PopUpApp() {
     chrome.windows.getCurrent(async (w) => {
       await tracker.SetItemId(item_id_field);
       chrome.sidePanel.open({ windowId: w.id! });
+      window.close();
     });
     console.log("Popup sidepanel opened state:", tracker);
   };
