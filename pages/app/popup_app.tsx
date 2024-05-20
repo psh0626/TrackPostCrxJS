@@ -52,7 +52,6 @@ function PopUpApp() {
       chrome.sidePanel.open({ windowId: w.id! });
     });
     console.log("Popup sidepanel opened state:", tracker);
-    window.close();
   };
 
   useEffect(() => {
