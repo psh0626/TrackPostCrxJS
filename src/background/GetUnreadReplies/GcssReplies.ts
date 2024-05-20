@@ -1,7 +1,14 @@
+import { COMMANDS, Msg } from "../../lib/Message";
 import { GcssItem, GcssRawItem, TrimObject } from "./DataWrapper";
 
 export class GcssAPI {
   static user_name = "sunghoon";
+
+  static ScheduleAnotherFetch() {
+    setTimeout(() => {
+      this.FetchReplies();
+    }, 15000);    
+  }
   static async FetchReplies() {
     const response = await fetch("https://gcss.ipc.be/CSS/gcss/list-tasks", {
       headers: {
@@ -15,6 +22,8 @@ export class GcssAPI {
     });
     if (!response.ok) {
       console.error(response.status);
+      chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, "?"));
+      this.ScheduleAnotherFetch();
       return;
     }
     const fetched_obj = TrimObject(await response.json()) as GcssRawItem[];
@@ -28,11 +37,20 @@ export class GcssAPI {
       )
       .map((item) => GcssItem.FromRawItem(item));
     console.log("GCSS REPLIES FILTERED: ", unread_msgs);
+
     const test_sums = fetched_obj.filter(
       (item) =>
         item.numberOfSum > 0 && item.requestAuthor.toLowerCase().includes(this.user_name.toLowerCase())
     ).map(item=>GcssItem.FromRawItem(item));
     console.log("GCSS SUM > 0: ", test_sums);
-    // item link: https://gcss.ipc.be/CSS/gcss/EMS/reply/show/message/${messageId}/item/${itemPk}/task/${taskId}
+
+    const combined = [...unread_msgs, ...test_sums];
+    const uniqueCombined = Array.from(new Set(combined.map((item) => item.ItemId))).map((id) =>
+      combined.find((item) => item.ItemId === id)
+    );
+
+    chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, uniqueCombined));
+    
+    this.ScheduleAnotherFetch();
   }
 }

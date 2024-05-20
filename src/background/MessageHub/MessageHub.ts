@@ -1,6 +1,6 @@
 import { COMMANDS, Msg } from "../../lib/Message";
 import { PostAPI } from "../../lib/PostUtil";
-import { WorkflowItem } from "../GetUnreadReplies/DataWrapper";
+import { GcssItem, WorkflowItem } from "../GetUnreadReplies/DataWrapper";
 import { PopupTracker } from "../serviceworker";
 import CreateNotification from "../../lib/Notification";
 
@@ -32,15 +32,24 @@ export default function ProcessMessage(
       })();
       return true; // true makes connection a bit longer;
 
+    case COMMANDS.GCSS_UNREAD_REPLIES:
     case COMMANDS.ICARE_UNREAD_REPLIES:
       if (Message.Param === "?") {
         console.log("Unable to fetch/communicate data from Icare");
         chrome.action.setBadgeText({ text: "?" });
         return;
       }
-      const replies = Message.Param as WorkflowItem[];
+      let replies;
+      if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES)
+        replies = Message.Param as WorkflowItem[];
+      else
+        replies = Message.Param as GcssItem[];
       (async () => {
-        await chrome.storage.session.set({ ICARE_UNREAD_REPLIES: replies });
+        if(Message.Command === COMMANDS.ICARE_UNREAD_REPLIES)
+          await chrome.storage.session.set({ ICARE_UNREAD_REPLIES: replies });
+        else
+          await chrome.storage.session.set({ GCSS_UNREAD_REPLIES: replies });
+          
         await CreateNotification();
       })();
       return; // false since we're not sending response

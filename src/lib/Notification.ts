@@ -1,4 +1,4 @@
-import { WorkflowItem } from "../background/GetUnreadReplies/DataWrapper";
+import { GcssItem, WorkflowItem } from "../background/GetUnreadReplies/DataWrapper";
 import { COMMANDS } from "./Message";
 import { IMICSettings } from "./OptionElement";
 
@@ -7,9 +7,13 @@ export default async function CreateNotification() {
   await settings.LoadOptions();
 
   let WorkFlowItems: WorkflowItem[] = [];
+  let GcssItems: GcssItem[] = [];
 
   let dict = await chrome.storage.session.get("ICARE_UNREAD_REPLIES");
   WorkFlowItems = dict.ICARE_UNREAD_REPLIES as WorkflowItem[];
+
+  dict = await chrome.storage.session.get("GCSS_UNREAD_REPLIES");
+  GcssItems = dict.GCSS_UNREAD_REPLIES as GcssItem[];
 
   if (settings.IcareUnreadRequests) {
     dict = await chrome.storage.session.get("ICARE_UNREAD_REQUESTS");
