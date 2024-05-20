@@ -169,7 +169,7 @@ function SidePanelApp() {
           {post_element.ItemTracked && (
             <Typography variant="body2" textAlign="center" margin="12px 0">
               접 수 일: {post_element.ApplicationDate} <br />
-              배달완료종적: {post_element.DeliveryResult ? "있음" : "없음"} <br />
+              {/* 배달완료종적: {post_element.DeliveryResult ? "있음" : "없음"} <br /> */}
               조사청구여부: {post_element.InquiryRequested ? "청구함" : "미청구"} <br />
             </Typography>
           )}
