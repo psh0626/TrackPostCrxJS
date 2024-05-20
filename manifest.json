@@ -33,8 +33,7 @@
   "host_permissions": [
     "https://ems.epost.go.kr/*",
     "https://icare.post/*",
-    "https://gcss.ipc.be/*",
-    "https://sso.emsog.post/"
+    "https://gcss.ipc.be/*"
   ],
   "content_scripts": [
     {
