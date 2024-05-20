@@ -16,6 +16,9 @@ export class PersonalRemark {
 export class IMICSettings {
   IcareUnreadRequests: boolean = false;
   PersonalRemarks: PersonalRemark[] = [];
+  GcssUnreadReplies = false;
+  GcssUnreadRequests = false;
+  GcssAuthor = "";
 
   async SaveOptions() {
     await chrome.storage.sync.set({ IMICSettings: this });

@@ -9,7 +9,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { MyList, StyledTextField } from "../custom/components";
 import PopupTrack from "../../src/lib/PopupTrack";
-import { WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
+import { GcssItem, WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
 import { IMICSettings } from "../../src/lib/OptionElement";
 import {
   Accordion,
@@ -29,9 +29,14 @@ function PopUpApp() {
   // Tracking number state (you might want to bind this as well)
   const [item_id_field, set_item_id_field] = useState("");
   const [is_valid, set_is_valid] = useState(true);
+  
   const [workflow_items, set_workflow_items] = useState<WorkflowItem[]>([]);
   const [icare_req_items, set_icare_req] = useState<WorkflowItem[]>([]);
+  const [gcss_items, set_gcss_items] = useState<GcssItem[]>([]);
+
   const [chk_req, set_chkreq] = useState(false);
+  const [chk_gcss_rep, set_chk_gcssrep] = useState(false);
+
   const textfield_ref = useRef<HTMLInputElement>(null);
   const settings = useRef(new IMICSettings());
   const tracker = new PopupTrack();
@@ -63,6 +68,7 @@ function PopUpApp() {
     (async () => {
       await settings.current.LoadOptions();
       set_chkreq(settings.current.IcareUnreadRequests);
+      set_chk_gcssrep(settings.current.GcssUnreadReplies);
 
       const dict = await chrome.storage.session.get("ICARE_UNREAD_REPLIES");
       if (dict.ICARE_UNREAD_REPLIES.length > 0) {
@@ -74,7 +80,12 @@ function PopUpApp() {
 
       if (settings.current.IcareUnreadRequests) {
         const req_dict = await chrome.storage.session.get("ICARE_UNREAD_REQUESTS");
-        set_icare_req(req_dict.ICARE_UNREAD_REQUESTS);
+        set_icare_req(req_dict.ICARE_UNREAD_REQUESTS as WorkflowItem[]);
+      }
+
+      if (settings.current.GcssUnreadReplies) {
+        const req_dict = await chrome.storage.session.get("GCSS_UNREAD_REPLIES");
+        set_gcss_items(req_dict.GCSS_UNREAD_REPLIES as GcssItem[]);
       }
 
       chrome.storage.session.onChanged.addListener((dict) => {
@@ -113,7 +124,8 @@ function PopUpApp() {
       />
 
       <Divider style={{ margin: "15px 0" }} />
-      {chk_req ? icare_req_items.length > 0 && MyList(icare_req_items, "REQ") : ""}
+      {chk_gcss_rep ? gcss_items.length > 0 && MyList(gcss_items, "replies", "GCSS") : ""}
+      {chk_req ? icare_req_items.length > 0 && MyList(icare_req_items, "requests") : ""}
       {workflow_items.length > 0 ? (
         MyList(workflow_items)
       ) : (

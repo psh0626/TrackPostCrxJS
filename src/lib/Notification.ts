@@ -22,7 +22,7 @@ export default async function CreateNotification() {
 
   let last_num = parseInt(await chrome.action.getBadgeText({})) ?? 0;
   if (isNaN(last_num)) last_num = 0;
-  const current_num = Array.isArray(WorkFlowItems) ? WorkFlowItems.length : 0;
+  const current_num = Array.isArray(WorkFlowItems) && Array.isArray(GcssItems) ? WorkFlowItems.length + GcssItems.length : 0;
   console.log("current number: ", current_num, "  last number: ", last_num);
   if (last_num >= current_num) {
     let item_count = "-1";
@@ -34,22 +34,32 @@ export default async function CreateNotification() {
     chrome.action.setBadgeText({ text: item_count });
     return;
   }
+  
+  chrome.action.setBadgeText({ text: `${current_num}` });
+  
   const mapped_items = WorkFlowItems.map((item: WorkflowItem) => {
     return {
       title: `L${item.current_level} ${item.workflow_status === "Replied" ? "발송" : "도착"}`,
       message: `${item.tracking_id} ${item.tracking_id.slice(-2) === "KR" ? "(" + item.replying_op.substring(0, 2) + ")" : ""}`,
     } as chrome.notifications.ItemOptions;
   });
-  chrome.action.setBadgeText({ text: `${WorkFlowItems.length}` });
+  const gcss_mapped_items = GcssItems.map((item) => {
+    return {
+      title: `L${item.WorkflowLevel} ${item.OriginCountry === "KR" ? "발송" : "도착"}`,
+      message: `${item.ItemId} ${item.DestinationCountry === "KR" ? "(" + item.OriginCountry + ")" : ""}`,
+    } as chrome.notifications.ItemOptions;    
+  });
+  const combined = [...gcss_mapped_items, ...mapped_items];
+
   const options = {
     type: "list",
     priority: 2,
     requireInteraction: true,
     iconUrl: "src/ext-icon.png",
-    title: `IMIC 알림: ${WorkFlowItems.length}개 메시지 대기`,
-    message: `ICare 읽지 않은 메시지가 ${WorkFlowItems.length}개 있습니다.`,
-    contextMessage: `Icare unread replies: ${WorkFlowItems.length}`,
-    items: mapped_items,
+    title: `IMIC 알림: ${current_num}개 메시지 대기`,
+    message: `GCSS/iCare 읽지 않은 메시지가 ${current_num}개 있습니다.`,
+    contextMessage: `GCSS/Icare unread replies: ${current_num}`,
+    items: combined,
     buttons: [{ title: "확인" }],
   };
   chrome.notifications.clear(COMMANDS.ICARE_UNREAD_REPLIES);

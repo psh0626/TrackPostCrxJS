@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
-import { WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
+import { GcssItem, WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
 import React from "react";
 
 export const StyledTextField = styled(TextField)({
@@ -71,9 +71,12 @@ export const InfoTextField: React.FC<InfoFieldType> = ({
     />
   );
 };
-
-export function MyList(items: WorkflowItem[], type: string = "ICARE_UNREAD_REPLIES") {
-  const list_title = type === "ICARE_UNREAD_REPLIES" ? "iCare - 발송 회신" : "iCare - 도착 문의";
+export function MyList(
+  items: WorkflowItem[] | GcssItem[],
+  type: "replies" | "requests" = "replies",
+  service: "GCSS" | "iCare" = "iCare"
+) {
+  const list_title = type === "replies" ? service + " - 발송 회신" : " - 도착 문의";
 
   const OpenNewTab = async (urlLink: string) => {
     const current_tab = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
@@ -86,7 +89,10 @@ export function MyList(items: WorkflowItem[], type: string = "ICARE_UNREAD_REPLI
 
   const OpenAll = async () => {
     const tabPromises = items.map(async (wf) => {
-      const tab = await OpenNewTab(wf.link);
+      let tab: chrome.tabs.Tab;
+      if (service === "GCSS") tab = await OpenNewTab((wf as GcssItem).WorkflowLink);
+      else tab = await OpenNewTab(wf.link);
+
       if (tab && tab.id) {
         console.log("tab id push to tabids: ", tab.id);
         return tab.id; // Return the tab ID to be collected
@@ -125,17 +131,31 @@ export function MyList(items: WorkflowItem[], type: string = "ICARE_UNREAD_REPLI
           </Button>
         </Stack>
         <AccordionDetails>
-          {items.map((item: WorkflowItem, id) => {
-            const primary_string = `L${item.current_level} ${item.workflow_status === "Replied" ? "발송" : "도착"} ${item.tracking_id.slice(-2) === "KR" ? "(" + item.replying_op.substring(0, 2) + ")" : ""}`;
+          {items.map((item, id) => {
+            let primary_string: string;
+            if (service === "iCare") {
+              primary_string = `L${item.current_level} ${item.workflow_status === "Replied" ? "발송" : "도착"} ${item.tracking_id.slice(-2) === "KR" ? "(" + item.replying_op.substring(0, 2) + ")" : ""}`;
+            } else {
+              const i = item as GcssItem;
+              primary_string = `${i.WorkflowLevel} ${i.OriginCountry === "KR" ? "발송 " + `${i.DestinationCountry}` : "도착"}`;
+            }
 
             return (
               <Card style={{ margin: "0 0 1px" }}>
                 <ListItem dense={true} disablePadding={true} key={id}>
-                  <ListItemButton onClick={async () => await OpenNewTab(item.link)}>
+                  <ListItemButton
+                    onClick={async () =>
+                      service === "iCare"
+                        ? await OpenNewTab(item.link)
+                        : await OpenNewTab(item.WorkflowLink)
+                    }>
                     <ListItemIcon>
                       <OpenInBrowser />
                     </ListItemIcon>
-                    <ListItemText primary={primary_string} secondary={`${item.tracking_id}`} />
+                    <ListItemText
+                      primary={primary_string}
+                      secondary={service === "iCare" ? `${item.tracking_id}` : `${item.ItemId}`}
+                    />
                   </ListItemButton>
                 </ListItem>
               </Card>

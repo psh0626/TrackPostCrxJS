@@ -35,7 +35,7 @@ export default function ProcessMessage(
     case COMMANDS.GCSS_UNREAD_REPLIES:
     case COMMANDS.ICARE_UNREAD_REPLIES:
       if (Message.Param === "?") {
-        console.log("Unable to fetch/communicate data from Icare");
+        console.log("Unable to fetch/communicate data from Gcss or iCare");
         chrome.action.setBadgeText({ text: "?" });
         return;
       }
