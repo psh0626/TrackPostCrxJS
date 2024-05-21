@@ -133,7 +133,7 @@ function PopUpApp() {
         gcss_items.length > 0 ? (
           MyList(gcss_items, "replies", "GCSS")
         ) : (
-          <Stack alignItems="center">
+          <Stack alignItems="start" sx={{ ml: 2 }}>
             <Typography variant="subtitle2" color="initial">
               GCSS 발송 회신: 모두 읽음 ✔️
             </Typography>
@@ -146,7 +146,7 @@ function PopUpApp() {
         icare_req_items.length > 0 ? (
           MyList(icare_req_items, "requests")
         ) : (
-          <Stack alignItems="center">
+          <Stack alignItems="start" sx={{ ml: 2 }}>
             <Typography variant="subtitle2" color="initial">
               ICare 도착 문의: 모두 읽음 ✔️
             </Typography>
@@ -158,7 +158,7 @@ function PopUpApp() {
       {workflow_items.length > 0 ? (
         MyList(workflow_items)
       ) : (
-        <Stack alignItems="center">
+        <Stack alignItems="start" sx={{ ml: 2 }}>
           <Typography variant="subtitle2" color="initial">
             iCare 발송 회신: 모두 읽음 ✔️
           </Typography>

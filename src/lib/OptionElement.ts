@@ -26,16 +26,8 @@ export class IMICSettings {
   }
   async LoadOptions() {
     const newThis = await chrome.storage.sync.get("IMICSettings");
-    // for (const key in newThis) {
-    //   console.log(key);
-    //   if (key !== "PersonalRemarks") {
-    //     const newKey = new PersonalRemark(newThis.key.Title, newThis.key.Content, newThis.key.Id, "REQ");
-    //     newThis.PersonalRemarks.push(newKey);
-    //   }
-    // }
-    //console.log("newthis: ", newThis);
     Object.assign(this, newThis.IMICSettings);
-    console.log("this: ", this);
+    console.log("Options loaded this: ", this);
   }
 
   async RequestSave() {

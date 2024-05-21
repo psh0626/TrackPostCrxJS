@@ -145,11 +145,12 @@ export function MyList(
               <Card style={{ margin: "0 0 1px" }}>
                 <ListItem dense={true} disablePadding={true} key={id}>
                   <ListItemButton
-                    onClick={async () =>
-                      service === "iCare"
-                        ? await OpenNewTab(item.link)
-                        : await OpenNewTab(item.WorkflowLink)
-                    }>
+                    onClick={async () =>{
+                      if(service === "iCare")
+                        await OpenNewTab(item.link)
+                      else
+                        await OpenNewTab(item.WorkflowLink);
+                    }}>
                     <ListItemIcon>
                       <OpenInBrowser />
                     </ListItemIcon>

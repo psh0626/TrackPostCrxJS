@@ -13,7 +13,7 @@ import { TabPanel } from "./TabPanel";
 import { IMICSettings } from "../../../src/lib/OptionElement";
 
 interface GeneralSettingsProps {
-  settings: React.MutableRefObject<IMICSettings>;
+  settings: React.MutableRefObject<IMICSettings>
 }
 
 export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) => {
@@ -25,6 +25,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
 
   useEffect(() => {
     if (!initialized.current) {
+      console.log("GENERAL SETTINGS INITIALIZING: ", initialized);
       setChkIcareReq(settings.current.IcareUnreadRequests);
       setChkGcssRep(settings.current.GcssUnreadReplies);
       setChkGcssReq(settings.current.GcssUnreadRequests);
@@ -33,8 +34,11 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
   }, []);
 
   useEffect(() => {
-    if (initialized.current) SaveSettings();
-    else initialized.current = true;
+    console.log("CHECK ICARE REQ", chkIcareReq);
+    if (initialized.current) {
+      SaveSettings();
+      console.log("GENERALSETTINGS SAVE SETTINGS: ", initialized.current);
+    } else initialized.current = true;
   }, [chkIcareReq, chkGcssRep, chkIcareReq, gcssAuthor]);
 
   async function SaveSettings() {

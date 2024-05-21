@@ -13,7 +13,11 @@ export default async function CreateNotification() {
   WorkFlowItems = dict.ICARE_UNREAD_REPLIES as WorkflowItem[];
   if (settings.IcareUnreadRequests) {
     dict = await chrome.storage.session.get("ICARE_UNREAD_REQUESTS");
-    WorkFlowItems = WorkFlowItems.concat(dict.ICARE_UNREAD_REQUESTS as WorkflowItem[]);
+    const reqs = dict.ICARE_UNREAD_REQUESTS as WorkflowItem[];
+    WorkFlowItems = [
+      ...(Array.isArray(WorkFlowItems) ? WorkFlowItems : []),
+      ...(Array.isArray(reqs) ? reqs : []),
+    ];
   }
 
   let last_num = parseInt(await chrome.action.getBadgeText({})) ?? 0;
