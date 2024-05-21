@@ -90,12 +90,12 @@ export default function ProcessMessage(
 
     case COMMANDS.SAVE_OPTIONS:
       (async () => {
-        chrome.storage.sync.set({ IMICSettings: Message.Param });
+        chrome.storage.local.set({ IMICSettings: Message.Param });
       })();
       return false;
     case COMMANDS.LOAD_OPTIONS:
       (async () => {
-        const dict = await chrome.storage.sync.get("IMICSettings");
+        const dict = await chrome.storage.local.get("IMICSettings");
         console.log("sending response for IMIC Settings: ", dict.IMICSettings);
         SendResponse(dict.IMICSettings);
       })();

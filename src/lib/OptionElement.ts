@@ -21,11 +21,11 @@ export class IMICSettings {
   GcssAuthor = "";
 
   async SaveOptions() {
-    await chrome.storage.sync.set({ IMICSettings: this });
+    await chrome.storage.local.set({ IMICSettings: this });
     console.log("Options Saved as ", this);
   }
   async LoadOptions() {
-    const newThis = await chrome.storage.sync.get("IMICSettings");
+    const newThis = await chrome.storage.local.get("IMICSettings");
     Object.assign(this, newThis.IMICSettings);
     console.log("Options loaded this: ", this);
   }
