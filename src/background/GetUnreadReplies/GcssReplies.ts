@@ -3,7 +3,7 @@ import { IMICSettings } from "../../lib/OptionElement";
 import { GcssItem, GcssRawItem, TrimObject } from "./DataWrapper";
 
 export class GcssAPI {
-  static user_name = "sunghoon";
+  static user_name = "";
   static settings = new IMICSettings();
   static settings_loaded = false;
 
@@ -13,8 +13,9 @@ export class GcssAPI {
     }, 15000);
   }
   static async FetchReplies() {
-    if (!this.settings_loaded){
-      await this.settings.RequestLoad();      
+    if (!this.settings_loaded) {
+      await this.settings.RequestLoad();
+      this.user_name = this.settings.GcssAuthor;
       this.settings_loaded = true;
     }
 
