@@ -61,6 +61,15 @@ export default function ProcessMessage(
         await CreateNotification();
       })();
       return;
+  
+    case COMMANDS.GCSS_UNREAD_REQUESTS:
+      const reqs = Message.Param as GcssItem[];
+      (async () => {
+        await chrome.storage.session.set({ GCSS_UNREAD_REQUESTS: reqs });
+        console.log("MESSAGE HUB SESSION SET - GCSS UNREAD REQUESTS");
+        await CreateNotification();
+      })();
+      return;
 
     case COMMANDS.POPUP_TRACK_SET:
       Object.assign(PopupTracker, Message.Param);

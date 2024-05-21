@@ -33,9 +33,11 @@ function PopUpApp() {
   const [workflow_items, set_workflow_items] = useState<WorkflowItem[]>([]);
   const [icare_req_items, set_icare_req] = useState<WorkflowItem[]>([]);
   const [gcss_items, set_gcss_items] = useState<GcssItem[]>([]);
+  const [gcss_req_items, set_gcss_req] = useState<GcssItem[]>([]);
 
   const [chk_req, set_chkreq] = useState(false);
   const [chk_gcss_rep, set_chk_gcssrep] = useState(false);
+  const [chk_gcss_req, set_chk_gcssreq] = useState(false);
 
   const textfield_ref = useRef<HTMLInputElement>(null);
   const settings = useRef(new IMICSettings());
@@ -69,6 +71,7 @@ function PopUpApp() {
       await settings.current.LoadOptions();
       set_chkreq(settings.current.IcareUnreadRequests);
       set_chk_gcssrep(settings.current.GcssUnreadReplies);
+      set_chk_gcssreq(settings.current.GcssUnreadRequests);
 
       const dict = (await chrome.storage.session.get("ICARE_UNREAD_REPLIES"))
         .ICARE_UNREAD_REPLIES as WorkflowItem[];
@@ -92,10 +95,16 @@ function PopUpApp() {
         if (typeof dict !== "undefined" && dict.length > 0) set_gcss_items(dict);
       }
 
-      chrome.storage.session.onChanged.addListener((dict) => {
-        set_workflow_items(dict.ICARE_UNREAD_REPLIES.newValue as WorkflowItem[]);
-        set_gcss_items(dict.GCSS_UNREAD_REPLIES.newValue as GcssItem[]);
-      });
+      if (settings.current.GcssUnreadRequests) {
+        const dict = (await chrome.storage.session.get("GCSS_UNREAD_REQUESTS"))
+          .GCSS_UNREAD_REQUESTS as GcssItem[];
+        if (typeof dict !== "undefined" && dict.length > 0) set_gcss_req(dict);
+      }
+
+      // chrome.storage.session.onChanged.addListener((dict) => {
+      //   set_workflow_items(dict.ICARE_UNREAD_REPLIES.newValue as WorkflowItem[]);
+      //   set_gcss_items(dict.GCSS_UNREAD_REPLIES.newValue as GcssItem[]);
+      // });
     })();
   }, []);
 
@@ -129,11 +138,24 @@ function PopUpApp() {
       />
 
       <Divider style={{ margin: "15px 0" }} />
+      {chk_gcss_req ? (
+        gcss_req_items.length > 0 ? (
+          MyList(gcss_req_items, "requests", "GCSS")
+        ) : (
+          <Stack alignItems="center">
+            <Typography variant="subtitle2" color="initial">
+              GCSS 도착 문의: 모두 읽음 ✔️
+            </Typography>
+          </Stack>
+        )
+      ) : (
+        ""
+      )}
       {chk_gcss_rep ? (
         gcss_items.length > 0 ? (
           MyList(gcss_items, "replies", "GCSS")
         ) : (
-          <Stack alignItems="start" sx={{ ml: 2 }}>
+          <Stack alignItems="center">
             <Typography variant="subtitle2" color="initial">
               GCSS 발송 회신: 모두 읽음 ✔️
             </Typography>
@@ -146,7 +168,7 @@ function PopUpApp() {
         icare_req_items.length > 0 ? (
           MyList(icare_req_items, "requests")
         ) : (
-          <Stack alignItems="start" sx={{ ml: 2 }}>
+          <Stack alignItems="center">
             <Typography variant="subtitle2" color="initial">
               ICare 도착 문의: 모두 읽음 ✔️
             </Typography>
@@ -158,7 +180,7 @@ function PopUpApp() {
       {workflow_items.length > 0 ? (
         MyList(workflow_items)
       ) : (
-        <Stack alignItems="start" sx={{ ml: 2 }}>
+        <Stack alignItems="center">
           <Typography variant="subtitle2" color="initial">
             iCare 발송 회신: 모두 읽음 ✔️
           </Typography>

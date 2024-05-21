@@ -138,7 +138,7 @@ export function MyList(
               primary_string = `${i.tracking_id.slice(-2) === "KR" ? i.replying_op.substring(0, 2) : i.requesting_op.substring(0, 2)} - L${i.current_level}\n${i.request_type}`;
             } else {
               const i = item as GcssItem;
-              primary_string = `${i.OriginCountry === "KR" ? `${i.DestinationCountry}` : ""} - ${i.WorkflowLevel} ${i.RequestType}`;
+              primary_string = `${i.OriginCountry === "KR" ? `${i.DestinationCountry}` : `${i.OriginCountry}`} - ${i.WorkflowLevel} ${i.RequestType}`;
             }
 
             return (

@@ -30,6 +30,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
       setChkGcssRep(settings.current.GcssUnreadReplies);
       setChkGcssReq(settings.current.GcssUnreadRequests);
       setGcssAuthor(settings.current.GcssAuthor);
+      initialized.current = true;
     }
   }, []);
 

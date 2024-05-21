@@ -12,6 +12,37 @@ export class GcssAPI {
       this.FetchReplies();
     }, 15000);
   }
+  private static async PostFetch(
+    folder: "RPLYRCVD" | "TODO" = "RPLYRCVD",
+    serviceType: "EMS" = "EMS"
+  ) {
+    return await fetch("https://gcss.ipc.be/CSS/gcss/list-tasks", {
+      headers: {
+        accept: "application/json, text/plain, */*",
+        "content-type": "application/json;charset=UTF-8",
+      },
+      referrer: "https://gcss.ipc.be/CSS/gcss/product-view/EMS",
+      body: `{"folder":"${folder}","products":["${serviceType}"],"refresh":true}`,
+      method: "POST",
+      credentials: "include",
+    });
+  }
+  private static async FetchRequests() {
+    const response = await this.PostFetch("TODO", "EMS");
+    if (!response.ok) {
+      console.error(response.status);
+      return;
+    }
+    const trimmed = TrimObject(await response.json()) as GcssRawItem[];
+    console.log("GCSS REQUESTS FETCHED: ", trimmed);
+
+    const unread = trimmed
+      .filter((item) => item.readStatus === "UNREAD" || item.readStatus === "MARKED_UNREAD")
+      .map((item) => GcssItem.FromRawItem(item));
+    console.log("GCSS REQUESTS FILTERED: ", unread);
+
+    chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REQUESTS, unread));
+  }
   static async FetchReplies() {
     if (!this.settings_loaded) {
       await this.settings.RequestLoad();
@@ -19,16 +50,7 @@ export class GcssAPI {
       this.settings_loaded = true;
     }
 
-    const response = await fetch("https://gcss.ipc.be/CSS/gcss/list-tasks", {
-      headers: {
-        accept: "application/json, text/plain, */*",
-        "content-type": "application/json;charset=UTF-8",
-      },
-      referrer: "https://gcss.ipc.be/CSS/gcss/product-view/EMS",
-      body: '{"folder":"RPLYRCVD","products":["EMS"],"refresh":true}',
-      method: "POST",
-      credentials: "include",
-    });
+    const response = await this.PostFetch("RPLYRCVD", "EMS");
     if (!response.ok) {
       console.error(response.status);
       if (this.settings.GcssUnreadReplies)
@@ -53,21 +75,9 @@ export class GcssAPI {
       .map((item) => GcssItem.FromRawItem(item));
     console.log("GCSS REPLIES FILTERED: ", unread_msgs);
 
-    const test_sums = fetched_obj
-      .filter(
-        (item) =>
-          item.numberOfSum > 0 &&
-          item.requestAuthor.toLowerCase().includes(this.user_name.toLowerCase())
-      )
-      .map((item) => GcssItem.FromRawItem(item));
-    console.log("GCSS SUM > 0: ", test_sums);
-
-    const combined = [...unread_msgs, ...test_sums];
-    const uniqueCombined = Array.from(new Set(combined.map((item) => item.ItemId))).map((id) =>
-      combined.find((item) => item.ItemId === id)
-    );
-
     chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, unread_msgs));
+
+    this.FetchRequests();
 
     this.ScheduleAnotherFetch();
   }
