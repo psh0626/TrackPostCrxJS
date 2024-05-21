@@ -21,7 +21,8 @@
     "sidePanel",
     "webRequest",
     "clipboardWrite",
-    "notifications"
+    "notifications",
+    "unlimitedStorage"
   ],
   "side_panel": {
     "default_path": "pages/sidepanel.html"
