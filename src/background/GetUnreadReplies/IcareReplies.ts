@@ -82,19 +82,16 @@ export class IcareAPI {
         this.AcceptAll
       )
       .then((response: AxiosResponse<IcareResponse>) => {
-
         this.LastCsrfToken = response.data.control.csrfToken;
         const request_items = response.data.content.data.map((data) => new WorkflowItem(data));
         console.log("unread requests fetched!", request_items);
 
         chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REQUESTS, request_items));
-
-      }).catch((err) => {
-
+      })
+      .catch((err) => {
         console.error("unread requests failed to fetch", err);
         const response: IcareResponse = err.response.data;
         this.LastCsrfToken = response.control.csrfToken;
-
       });
   }
 

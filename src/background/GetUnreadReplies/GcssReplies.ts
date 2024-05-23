@@ -43,7 +43,7 @@ export class GcssAPI {
 
     chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REQUESTS, unread));
   }
-  static async FetchReplies() {
+  static async FetchReplies(repeat: boolean = true) {
     if (!this.settings_loaded) {
       await this.settings.RequestLoad();
       this.user_name = this.settings.GcssAuthor;
@@ -77,8 +77,8 @@ export class GcssAPI {
 
     chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, unread_msgs));
 
-    this.FetchRequests();
+    if(this.settings.GcssUnreadRequests) this.FetchRequests();
 
-    this.ScheduleAnotherFetch();
+    if(repeat) this.ScheduleAnotherFetch();
   }
 }

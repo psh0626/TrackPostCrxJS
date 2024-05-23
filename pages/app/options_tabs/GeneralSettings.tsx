@@ -40,7 +40,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
       SaveSettings();
       console.log("GENERALSETTINGS SAVE SETTINGS: ", initialized.current);
     } else initialized.current = true;
-  }, [chkIcareReq, chkGcssRep, chkIcareReq, gcssAuthor]);
+  }, [chkIcareReq, chkGcssRep, chkGcssReq, gcssAuthor]);
 
   async function SaveSettings() {
     settings.current.IcareUnreadRequests = chkIcareReq;

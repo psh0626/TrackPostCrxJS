@@ -41,6 +41,7 @@ import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
           }, 100);
         }
       });
+      
       GcssAPI.FetchReplies();
       if (
         currentURL.pathname.includes("/create/") ||
@@ -74,6 +75,12 @@ import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
       }
     } else if (currentURL.origin === ICARE_URL) {
       console.log("finding user id.."); // global timer, local storage에 user id 저장 한번만 찾으면 다시 찾을 필요 없어짐, webrequest 분석해서 csrf 계속 확인하는 건 어떰?
+      
+      chrome.runtime.sendMessage(
+        new Msg(COMMANDS.NULL, "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8")
+      );
+      return;
+
       (async () => {
         if (!GlobalTimer.IsRunning) {
           icare_internal_userid = await GetIcareUserId();

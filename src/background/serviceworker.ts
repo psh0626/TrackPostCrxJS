@@ -84,6 +84,7 @@ chrome.notifications.onButtonClicked.addListener((noti_id, button_id) => {
   }
 });
 
+
 // chrome.tabs.onUpdated.addListener((tabId, changed, tab: chrome.tabs.Tab) => {
 //   if (tab.url == null) {
 //     return;

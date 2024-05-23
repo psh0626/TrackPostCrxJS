@@ -3,6 +3,8 @@ import { PostAPI } from "../../lib/PostUtil";
 import { GcssItem, WorkflowItem } from "../GetUnreadReplies/DataWrapper";
 import { PopupTracker } from "../serviceworker";
 import CreateNotification from "../../lib/Notification";
+import { GcssAPI } from "../GetUnreadReplies/GcssReplies";
+import { IcareAPI } from "../GetUnreadReplies/IcareReplies";
 
 export default function ProcessMessage(
   Message: Msg,
@@ -19,6 +21,9 @@ export default function ProcessMessage(
   );
 
   switch (Message.Command) {
+    case COMMANDS.NULL:
+      IcareAPI.FetchUnreadReplies(Message.Param);
+      return;
     case COMMANDS.FETCH_POST_ELEMENT:
       (async () => {
         if (!Message.Param) {
@@ -44,7 +49,7 @@ export default function ProcessMessage(
       if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES)
         replies = Message.Param as WorkflowItem[];
       else replies = Message.Param as GcssItem[];
-      
+
       (async () => {
         if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES)
           await chrome.storage.session.set({ ICARE_UNREAD_REPLIES: replies });
@@ -61,7 +66,7 @@ export default function ProcessMessage(
         await CreateNotification();
       })();
       return;
-  
+
     case COMMANDS.GCSS_UNREAD_REQUESTS:
       const reqs = Message.Param as GcssItem[];
       (async () => {
