@@ -66,9 +66,6 @@ export class IcareAPI {
         console.error("axios.post request finally failed:", error); // 여기까지 오면 보통 로그아웃된 경우일 듯.
         const response: IcareResponse = error.response.data;
         this.LastCsrfToken = response.control.csrfToken;
-        if (GlobalTimer.IsRunning) {
-          GlobalTimer.Stop();
-        }
         chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?"));
       });
   }
@@ -102,11 +99,6 @@ export class IcareAPI {
     console.log(`${workflow_items.length} items fetched:`, workflow_items);
 
     chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, workflow_items));
-
-    new GlobalTimer(15000, async () => {
-      await this.FetchUnreadReplies(response.data.control.csrfToken);
-    });
-    GlobalTimer.Start();
 
     const today = new Date();
     console.log(today.toLocaleString(), "\nworkflows sent");

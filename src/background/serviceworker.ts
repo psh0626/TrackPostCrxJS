@@ -4,6 +4,7 @@ import { WorkflowItem } from "./GetUnreadReplies/DataWrapper";
 import PopupTrack from "../lib/PopupTrack";
 import CreateNotification from "../lib/Notification";
 import ProcessMessage from "./MessageHub/MessageHub";
+import { GlobalTimer } from "./GetUnreadReplies/Timer";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
 chrome.action.setBadgeBackgroundColor({ color: "#424242" });
@@ -18,7 +19,43 @@ export const PopupTracker = new PopupTrack();
 
 main();
 
-function main() {}
+function main() {
+  GlobalTimer.Callback = APICalls;
+  GlobalTimer.Interval = 15000;
+  GlobalTimer.Start();
+}
+
+async function APICalls() {
+  const [work_tabs] = await chrome.tabs.query({
+    url: ["https://icare.post/*", "https://gcss.ipc.be/*"],
+    active: true,
+    status: "complete",
+  });
+  if (!work_tabs) {
+    return;
+  }
+  if (Array.isArray(work_tabs)) {
+    const icare_tab = work_tabs.filter((item: chrome.tabs.Tab) =>
+      item.url!.includes("icare.post")
+    )[0] as chrome.tabs.Tab;
+    const gcss_tab = work_tabs.filter((item: chrome.tabs.Tab) =>
+      item.url!.includes("gcss.ipc.be")
+    )[0] as chrome.tabs.Tab;
+
+    chrome.tabs.sendMessage(icare_tab.id!, new Msg(COMMANDS.ICARE_UNREAD_REPLIES));
+    chrome.tabs.sendMessage(gcss_tab.id!, new Msg(COMMANDS.GCSS_UNREAD_REPLIES));
+    console.log("icare & gcss ticked");
+  } else {
+    console.log("WORK TABS: ", work_tabs);
+    if (work_tabs.url?.includes("icare.post")) {
+      chrome.tabs.sendMessage(work_tabs.id!, new Msg(COMMANDS.ICARE_UNREAD_REPLIES));
+      console.log("icare ticked");
+    } else {
+      chrome.tabs.sendMessage(work_tabs.id!, new Msg(COMMANDS.GCSS_UNREAD_REPLIES));
+      console.log("gcss ticked");
+    }
+  }
+}
 
 chrome.webRequest.onCompleted.addListener(
   function (details) {
@@ -83,7 +120,6 @@ chrome.notifications.onButtonClicked.addListener((noti_id, button_id) => {
     });
   }
 });
-
 
 // chrome.tabs.onUpdated.addListener((tabId, changed, tab: chrome.tabs.Tab) => {
 //   if (tab.url == null) {

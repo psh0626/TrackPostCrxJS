@@ -21,9 +21,6 @@ export default function ProcessMessage(
   );
 
   switch (Message.Command) {
-    case COMMANDS.NULL:
-      IcareAPI.FetchUnreadReplies(Message.Param);
-      return;
     case COMMANDS.FETCH_POST_ELEMENT:
       (async () => {
         if (!Message.Param) {

@@ -2,11 +2,11 @@ import { Msg, COMMANDS, SendRequest } from "../lib/Message";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./injectDOM/InjectUtil";
 import { IcareAPI } from "./GetUnreadReplies/IcareReplies";
-import { GlobalTimer } from "./GetUnreadReplies/Timer";
 import GetIcareUserId from "../lib/GetIcareUserId";
 import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
 
 (() => {
+
   function getCSRFToken(): string | null {
     const csrfMetaTag = document.querySelector("head meta[name=csrf-token]") as HTMLMetaElement;
     return csrfMetaTag ? csrfMetaTag.content : null;
@@ -16,10 +16,23 @@ import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
     console.log("CSRF Token found:", csrfToken);
     // You can now use the CSRF token for your requests or initialization logic here
   } else {
-    console.log("CSRF Token not found");
+    csrfToken = "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8";
+    console.log("CSRF Token not found, forged randomly", csrfToken);
   }
+  
 
   window.addEventListener("load", main, false);
+  
+  chrome.runtime.onMessage.addListener((message: Msg, sender, response) => {
+    switch (message.Command) {
+      case COMMANDS.GCSS_UNREAD_REPLIES:
+        GcssAPI.FetchReplies(false);
+        break;
+      case COMMANDS.ICARE_UNREAD_REPLIES:
+        IcareAPI.FetchUnreadReplies(csrfToken);
+        break;
+    }
+  });
 
   console.log("Content script loaded at: " + document.readyState);
   if (document.readyState === "complete") main();
@@ -41,8 +54,8 @@ import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
           }, 100);
         }
       });
-      
-      GcssAPI.FetchReplies();
+
+      GcssAPI.FetchReplies(false);
       if (
         currentURL.pathname.includes("/create/") ||
         currentURL.pathname.includes("/reactivate/")
@@ -74,40 +87,17 @@ import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
         InjectUtil.InjectGcssQueryInput();
       }
     } else if (currentURL.origin === ICARE_URL) {
-      console.log("finding user id.."); // global timer, local storage에 user id 저장 한번만 찾으면 다시 찾을 필요 없어짐, webrequest 분석해서 csrf 계속 확인하는 건 어떰?
-      
-      chrome.runtime.sendMessage(
-        new Msg(COMMANDS.NULL, "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8")
-      );
-      return;
-
       (async () => {
-        if (!GlobalTimer.IsRunning) {
-          icare_internal_userid = await GetIcareUserId();
+        console.log("finding user id.."); // global timer, local storage에 user id 저장 한번만 찾으면 다시 찾을 필요 없어짐, webrequest 분석해서 csrf 계속 확인하는 건 어떰?
+        icare_internal_userid = await GetIcareUserId();
 
-          console.log("user id found:", icare_internal_userid);
-          IcareAPI.UserId = icare_internal_userid;
-          if (csrfToken) {
-            console.log(
-              "fetching replies with found csrf:",
-              csrfToken,
-              "\nUserID: ",
-              IcareAPI.UserId
-            );
+        console.log("user id found:", icare_internal_userid);
+        IcareAPI.UserId = icare_internal_userid;
+        console.log("fetching replies with found csrf:", csrfToken, "\nUserID: ", IcareAPI.UserId);
 
-            await IcareAPI.FetchUnreadReplies(csrfToken);
-          } else {
-            console.log(
-              "csrf forged and sending request. csrf: nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8"
-            );
-            await IcareAPI.FetchUnreadReplies(
-              "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8"
-            );
-          }
-        } else {
-          console.log("timer is already on");
-        }
+        await IcareAPI.FetchUnreadReplies(csrfToken!);
       })();
+
       const param_action = currentURL.searchParams.get("action");
       if (param_action === "new") {
         if (currentURL.searchParams.get("module") === "notification") {
@@ -120,7 +110,7 @@ import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
           return;
         }
 
-        post_element = await FindPostElement(item_id);
+        post_element = await FindPostElement(item_id!);
 
         if (!post_element.ItemTracked) {
           console.log(`Item does not exist ${item_id}`);
