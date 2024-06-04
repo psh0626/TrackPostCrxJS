@@ -5,7 +5,6 @@ import { GcssItem, GcssRawItem, TrimObject } from "./DataWrapper";
 export class GcssAPI {
   static user_name = "";
   static settings = new IMICSettings();
-  static settings_loaded = false;
 
   static ScheduleAnotherFetch() {
     setTimeout(() => {
@@ -44,11 +43,6 @@ export class GcssAPI {
     chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REQUESTS, unread));
   }
   static async FetchReplies(repeat: boolean = true) {
-    if (!this.settings_loaded) {
-      await this.settings.RequestLoad();
-      this.user_name = this.settings.GcssAuthor;
-      this.settings_loaded = true;
-    }
 
     const response = await this.PostFetch("RPLYRCVD", "EMS");
     if (!response.ok) {

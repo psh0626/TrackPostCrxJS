@@ -4,13 +4,15 @@ import InjectUtil from "./injectDOM/InjectUtil";
 import { IcareAPI } from "./GetUnreadReplies/IcareReplies";
 import GetIcareUserId from "../lib/GetIcareUserId";
 import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
+import { IMICSettings } from "../lib/OptionElement";
 
-(() => {
+(async () => {
 
-  function getCSRFToken(): string | null {
-    const csrfMetaTag = document.querySelector("head meta[name=csrf-token]") as HTMLMetaElement;
-    return csrfMetaTag ? csrfMetaTag.content : null;
-  }
+  const settings = new IMICSettings();
+  await settings.RequestLoad();
+  GcssAPI.settings = settings;
+  IcareAPI.settings = settings;    
+  
   let csrfToken = "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8";
   // if (csrfToken) {
   //   console.log("CSRF Token found:", csrfToken);
@@ -30,6 +32,11 @@ import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
         break;
       case COMMANDS.ICARE_UNREAD_REPLIES:
         IcareAPI.FetchUnreadReplies(csrfToken);
+        break;
+      case COMMANDS.SETTINGS_CHANGED:
+        settings.RequestLoad();
+        GcssAPI.settings = settings;
+        IcareAPI.settings = settings;
         break;
     }
   });

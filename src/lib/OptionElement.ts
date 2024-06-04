@@ -19,10 +19,29 @@ export class IMICSettings {
   GcssUnreadReplies = false;
   GcssUnreadRequests = false;
   GcssAuthor = "";
-
+  SavingFinished: NodeJS.Timeout | null = null;
+  private async NotifyTabs() {
+    const work_tabs = await chrome.tabs.query({
+      url: ["https://icare.post/*", "https://gcss.ipc.be/*"],
+      status: "complete",
+    });
+    if (!work_tabs || !Array.isArray(work_tabs)) {
+      return;
+    }
+    work_tabs.forEach((tab) => {
+      if (tab.id) chrome.tabs.sendMessage(tab.id, new Msg(COMMANDS.SETTINGS_CHANGED));
+    });
+  }
   async SaveOptions() {
     await chrome.storage.local.set({ IMICSettings: this });
     console.log("Options Saved as ", this);
+    
+    if (this.SavingFinished) clearTimeout(this.SavingFinished);
+    this.SavingFinished = setTimeout(() => {
+      (async () => {
+        await this.NotifyTabs();
+      })();
+    }, 5000);
   }
   async LoadOptions() {
     const newThis = await chrome.storage.local.get("IMICSettings");

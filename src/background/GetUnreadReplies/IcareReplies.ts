@@ -2,10 +2,12 @@ import axios, { AxiosResponse, AxiosRequestConfig } from "axios";
 import { IcareResponse, WorkflowItem } from "./DataWrapper";
 import { Msg, COMMANDS } from "../../lib/Message";
 import { GlobalTimer } from "./Timer";
+import { IMICSettings } from "../../lib/OptionElement";
 
 export class IcareAPI {
   static LastCsrfToken: string = "";
   static UserId: string = "";
+  static settings = new IMICSettings();
   private static JsonOnly = {
     headers: {
       Accept: "application/json, text/javascript; q=0.01",
@@ -35,7 +37,7 @@ export class IcareAPI {
         const a = response.data.control;
         this.LastCsrfToken = response.data.control.csrfToken;
         console.log(response.data);
-        this.FetchUnreadRequests(this.LastCsrfToken);
+        if (this.settings.IcareUnreadRequests) this.FetchUnreadRequests(this.LastCsrfToken);
         this.OnSuccess(response);
       })
       .catch((error) => {
