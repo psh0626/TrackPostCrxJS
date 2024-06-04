@@ -11,7 +11,7 @@ import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
     const csrfMetaTag = document.querySelector("head meta[name=csrf-token]") as HTMLMetaElement;
     return csrfMetaTag ? csrfMetaTag.content : null;
   }
-  let csrfToken = "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8";;
+  let csrfToken = "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8";
   // if (csrfToken) {
   //   console.log("CSRF Token found:", csrfToken);
   //   // You can now use the CSRF token for your requests or initialization logic here
