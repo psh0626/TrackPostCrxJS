@@ -26,14 +26,14 @@ function main() {
 }
 
 async function APICalls() {
-  const [work_tabs] = await chrome.tabs.query({
+  const work_tabs = await chrome.tabs.query({
     url: ["https://icare.post/*", "https://gcss.ipc.be/*"],
-    active: true,
     status: "complete",
   });
   if (!work_tabs) {
     return;
   }
+  console.log("WORK TABS: ", work_tabs);
   if (Array.isArray(work_tabs)) {
     const icare_tab = work_tabs.filter((item: chrome.tabs.Tab) =>
       item.url!.includes("icare.post")
@@ -42,16 +42,12 @@ async function APICalls() {
       item.url!.includes("gcss.ipc.be")
     )[0] as chrome.tabs.Tab;
 
-    chrome.tabs.sendMessage(icare_tab.id!, new Msg(COMMANDS.ICARE_UNREAD_REPLIES));
-    chrome.tabs.sendMessage(gcss_tab.id!, new Msg(COMMANDS.GCSS_UNREAD_REPLIES));
-    console.log("icare & gcss ticked");
-  } else {
-    console.log("WORK TABS: ", work_tabs);
-    if (work_tabs.url?.includes("icare.post")) {
-      chrome.tabs.sendMessage(work_tabs.id!, new Msg(COMMANDS.ICARE_UNREAD_REPLIES));
+    if (icare_tab) {
+      chrome.tabs.sendMessage(icare_tab.id!, new Msg(COMMANDS.ICARE_UNREAD_REPLIES));
       console.log("icare ticked");
-    } else {
-      chrome.tabs.sendMessage(work_tabs.id!, new Msg(COMMANDS.GCSS_UNREAD_REPLIES));
+    }
+    if (gcss_tab) {
+      chrome.tabs.sendMessage(gcss_tab.id!, new Msg(COMMANDS.GCSS_UNREAD_REPLIES));
       console.log("gcss ticked");
     }
   }
