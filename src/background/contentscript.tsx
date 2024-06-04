@@ -11,14 +11,14 @@ import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
     const csrfMetaTag = document.querySelector("head meta[name=csrf-token]") as HTMLMetaElement;
     return csrfMetaTag ? csrfMetaTag.content : null;
   }
-  let csrfToken = getCSRFToken();
-  if (csrfToken) {
-    console.log("CSRF Token found:", csrfToken);
-    // You can now use the CSRF token for your requests or initialization logic here
-  } else {
-    csrfToken = "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8";
-    console.log("CSRF Token not found, forged randomly", csrfToken);
-  }
+  let csrfToken = "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8";;
+  // if (csrfToken) {
+  //   console.log("CSRF Token found:", csrfToken);
+  //   // You can now use the CSRF token for your requests or initialization logic here
+  // } else {
+  //   csrfToken = "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8";
+  //   console.log("CSRF Token not found, forged randomly", csrfToken);
+  // }
   
 
   window.addEventListener("load", main, false);
