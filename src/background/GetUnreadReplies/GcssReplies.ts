@@ -3,8 +3,7 @@ import { IMICSettings } from "../../lib/OptionElement";
 import { GcssItem, GcssRawItem, TrimObject } from "./DataWrapper";
 
 export class GcssAPI {
-  static user_name = "";
-  static settings = new IMICSettings();
+  static settings: IMICSettings;
 
   static ScheduleAnotherFetch() {
     setTimeout(() => {
@@ -43,36 +42,32 @@ export class GcssAPI {
     chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REQUESTS, unread));
   }
   static async FetchReplies(repeat: boolean = true) {
-
+    console.log("fetching GCSS replies with settings: ", this.settings);
     const response = await this.PostFetch("RPLYRCVD", "EMS");
     if (!response.ok) {
       console.error(response.status);
       if (this.settings.GcssUnreadReplies)
         chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, "?"));
-      this.ScheduleAnotherFetch();
+      //this.ScheduleAnotherFetch();
       return;
     }
     const fetched_obj = TrimObject(await response.json()) as GcssRawItem[];
     console.log("GCSS REPLIES FETCHED: ", fetched_obj);
 
     const my_msgs = fetched_obj.filter((item) =>
-      item.requestAuthor.toLowerCase().includes(this.user_name.toLowerCase())
+      item.requestAuthor.toLowerCase().includes(this.settings.GcssAuthor.toLowerCase())
     );
     console.log("My Messages: ", my_msgs);
 
     const unread_msgs = fetched_obj
-      .filter(
-        (item) =>
-          (item.readStatus === "UNREAD" || item.readStatus === "MARKED_UNREAD") &&
-          item.requestAuthor.toLowerCase().includes(this.user_name.toLowerCase())
-      )
+      .filter((item) => item.readStatus === "UNREAD" || item.readStatus === "MARKED_UNREAD")
       .map((item) => GcssItem.FromRawItem(item));
     console.log("GCSS REPLIES FILTERED: ", unread_msgs);
 
     chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, unread_msgs));
 
-    if(this.settings.GcssUnreadRequests) this.FetchRequests();
+    if (this.settings.GcssUnreadRequests) this.FetchRequests();
 
-    if(repeat) this.ScheduleAnotherFetch();
+    if (repeat) this.ScheduleAnotherFetch();
   }
 }

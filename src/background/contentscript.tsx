@@ -7,12 +7,11 @@ import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
 import { IMICSettings } from "../lib/OptionElement";
 
 (async () => {
-
   const settings = new IMICSettings();
   await settings.RequestLoad();
   GcssAPI.settings = settings;
-  IcareAPI.settings = settings;    
-  
+  IcareAPI.settings = settings;
+
   let csrfToken = "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8";
   // if (csrfToken) {
   //   console.log("CSRF Token found:", csrfToken);
@@ -21,10 +20,9 @@ import { IMICSettings } from "../lib/OptionElement";
   //   csrfToken = "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8";
   //   console.log("CSRF Token not found, forged randomly", csrfToken);
   // }
-  
 
   window.addEventListener("load", main, false);
-  
+
   chrome.runtime.onMessage.addListener((message: Msg, sender, response) => {
     switch (message.Command) {
       case COMMANDS.GCSS_UNREAD_REPLIES:
@@ -34,9 +32,12 @@ import { IMICSettings } from "../lib/OptionElement";
         IcareAPI.FetchUnreadReplies(csrfToken);
         break;
       case COMMANDS.SETTINGS_CHANGED:
-        settings.RequestLoad();
-        GcssAPI.settings = settings;
-        IcareAPI.settings = settings;
+        (async () => {
+          await settings.RequestLoad();
+          GcssAPI.settings = settings;
+          IcareAPI.settings = settings;
+          console.log("Settings Reloaded", settings, GcssAPI.settings, IcareAPI.settings);
+        })();
         break;
     }
   });
