@@ -61,7 +61,7 @@ export class IcareAPI {
         console.log("axios.post request success (second attempt)");
         console.log(response.data);
         this.LastCsrfToken = response.data.control.csrfToken;
-        this.FetchUnreadRequests(this.LastCsrfToken);
+        if (this.settings.IcareUnreadRequests) this.FetchUnreadRequests(this.LastCsrfToken);
         this.OnSuccess(response);
       })
       .catch((error) => {
