@@ -59,7 +59,7 @@ export class GcssAPI {
     );
     console.log("My Messages: ", my_msgs);
 
-    const unread_msgs = fetched_obj
+    const unread_msgs = my_msgs
       .filter((item) => item.readStatus === "UNREAD" || item.readStatus === "MARKED_UNREAD")
       .map((item) => GcssItem.FromRawItem(item));
     console.log("GCSS REPLIES FILTERED: ", unread_msgs);
