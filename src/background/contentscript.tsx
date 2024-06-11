@@ -161,6 +161,28 @@ import { IMICSettings } from "../lib/OptionElement";
     }
   }
 
+  function getExchangeRate(currency_value: string) {
+    let rate = 1400; // USD
+
+    switch (currency_value) {
+      case "2": // EUR
+        rate = 1600;
+        break;
+      case "89": // KRW
+        rate = 1;
+        break;
+      case "111": // GBP
+        rate = 1800;
+        break;
+      case "87": // JPY
+        rate = 1000;
+        break;
+      case "80": // CNY
+        rate = 200;
+        break;
+    }
+    return rate;
+  }
   function getElement<T>(cssString: string): T {
     return document.querySelector(cssString) as T;
   }
@@ -213,7 +235,10 @@ import { IMICSettings } from "../lib/OptionElement";
     };
 
     const dom = {
-      item_type: getSelect("txt_contentType"),
+      physical_desc: getInput("txt_physicalDescription"),
+      item_type: getSelect("txt_itemType"),
+      posting_date: getInput("txt_dateOfPosting"),
+      content_type: getSelect("txt_contentType"),
       item_contents: getInput("txt_contents"),
       item_value: getInput("txt_itemValue"),
       postage_paid: getInput("txt_postagePaid"),
@@ -234,19 +259,42 @@ import { IMICSettings } from "../lib/OptionElement";
       sndr_city: getInput("txt_senderCity"),
       sndr_phone: getInput("txt_senderTelephone"),
     };
-    dom.item_type.value = "Other/various";
-    dom.item_value_currency.value = "3"; // SDR
-    dom.postage_paid_currency.value = "3"; // SDR
-    dom.indemnity_amount_currency.value = "3"; // SDR
+    if (dom.physical_desc) dom.physical_desc.value = "Packet";
+    if (dom.item_type) dom.item_type.value = "Packet";
+
+    if (dom.posting_date.value === "") {
+      const converted_date = `${post_element.ApplicationDate.substring(5, 6)}/${post_element.ApplicationDate.substring(3, 4)}/${post_element.ApplicationDate.substring(0, 4)}`;
+      dom.posting_date.value = converted_date;
+    }
+    
+    dom.content_type.value = "Other/various";
+
+    if (dom.item_value_currency.value !== "3") {
+      if (dom.item_value.value !== "") {
+        const calc_item_value = Math.round(
+          (parseFloat(dom.item_value.value) * getExchangeRate(dom.item_value_currency.value)) / 1749
+        );
+        InjectUtil.GcssSwitchValue(dom.item_value, calc_item_value.toString());
+      }
+      dom.item_value_currency.value = "3"; // SDR
+    }
+    if (dom.postage_paid_currency.value !== "3") {
+      if (dom.postage_paid.value !== "") {
+        const calc_postage_paid = Math.round(parseFloat(dom.postage_paid.value) / 1749);
+        InjectUtil.GcssSwitchValue(dom.postage_paid, calc_postage_paid.toString());
+      }
+      dom.postage_paid_currency.value = "3"; // SDR
+    }
+    if (dom.indemnity_amount_currency.value !== "3") {
+      if (dom.item_value.value !== "" || dom.postage_paid.value !== "") {
+        const calc_indemnity_amount =
+          parseInt(dom.item_value.value) + parseInt(dom.postage_paid.value);
+        InjectUtil.GcssSwitchValue(dom.indemnity_amount, calc_indemnity_amount.toString());
+      }
+      dom.indemnity_amount_currency.value = "3"; // SDR
+    }
     dom.pod_required_no.checked = true;
     InjectUtil.GcssSwitchValue(dom.item_contents, post_element.Contents);
-
-    const calc_item_value = Math.round((parseFloat(dom.item_value.value) * 1400) / 1749);
-    const calc_postage_paid = Math.round(parseFloat(dom.postage_paid.value) / 1749);
-    const calc_indemnity_amount = calc_item_value + calc_postage_paid;
-    InjectUtil.GcssSwitchValue(dom.item_value, calc_item_value.toString());
-    InjectUtil.GcssSwitchValue(dom.postage_paid, calc_postage_paid.toString());
-    InjectUtil.GcssSwitchValue(dom.indemnity_amount, calc_indemnity_amount.toString());
 
     InjectUtil.GcssSwitchValue(
       dom.addr_name,
