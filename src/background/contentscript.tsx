@@ -258,18 +258,27 @@ import { IMICSettings } from "../lib/OptionElement";
       sndr_street: getInput("txt_senderStreet"),
       sndr_city: getInput("txt_senderCity"),
       sndr_phone: getInput("txt_senderTelephone"),
+      sndr_postcode: getInput("txt_senderPostcode"),
     };
-    if (dom.physical_desc) dom.physical_desc.value = "Packet";
-    if (dom.item_type) dom.item_type.value = "Packet";
 
+    // 등기 Packet 입력
+    if (post_element.ItemID.startsWith("L") || post_element.ItemID.startsWith("R")) {
+      dom.physical_desc.value = "Packet";
+      dom.item_type.value = "Packet";
+    }
+
+    // Date of Posting 빈 칸일 경우 입력
     if (dom.posting_date.value === "") {
       const converted_date = `${post_element.ApplicationDate.substring(5, 6)}/${post_element.ApplicationDate.substring(3, 4)}/${post_element.ApplicationDate.substring(0, 4)}`;
       dom.posting_date.value = converted_date;
     }
-    
+
+    // Content type
     dom.content_type.value = "Other/various";
 
+    // Item value
     if (dom.item_value_currency.value !== "3") {
+      // 이미 SDR이 지정되지 않은 경우에만
       if (dom.item_value.value !== "") {
         const calc_item_value = Math.round(
           (parseFloat(dom.item_value.value) * getExchangeRate(dom.item_value_currency.value)) / 1749
@@ -278,14 +287,20 @@ import { IMICSettings } from "../lib/OptionElement";
       }
       dom.item_value_currency.value = "3"; // SDR
     }
+
+    // Postage paid
     if (dom.postage_paid_currency.value !== "3") {
+      // 이미 SDR이 지정되지 않은 경우에만
       if (dom.postage_paid.value !== "") {
         const calc_postage_paid = Math.round(parseFloat(dom.postage_paid.value) / 1749);
         InjectUtil.GcssSwitchValue(dom.postage_paid, calc_postage_paid.toString());
       }
       dom.postage_paid_currency.value = "3"; // SDR
     }
+
+    // Indemnity amount
     if (dom.indemnity_amount_currency.value !== "3") {
+      // 이미 SDR이 지정되지 않은 경우에만
       if (dom.item_value.value !== "" || dom.postage_paid.value !== "") {
         const calc_indemnity_amount =
           parseInt(dom.item_value.value) + parseInt(dom.postage_paid.value);
@@ -293,14 +308,20 @@ import { IMICSettings } from "../lib/OptionElement";
       }
       dom.indemnity_amount_currency.value = "3"; // SDR
     }
+
+    // POD required
     dom.pod_required_no.checked = true;
+
+    // Contents
     InjectUtil.GcssSwitchValue(dom.item_contents, post_element.Contents);
 
+    // Addressee name
     InjectUtil.GcssSwitchValue(
       dom.addr_name,
       post_element.AddresseeName,
       dom.addr_name.value.length === 0 ? false : true
     );
+
     InjectUtil.GcssSwitchValue(dom.addr_street, post_element.AddresseeAddress);
     InjectUtil.GcssSwitchValue(dom.addr_phone, post_element.AddresseePhone);
     if (dom.addr_email.value.search(String.raw`;`) !== -1 && dom.addr_email.value.length > 1) {
@@ -311,6 +332,9 @@ import { IMICSettings } from "../lib/OptionElement";
     }
     InjectUtil.GcssSwitchValue(dom.addr_postcode, post_element.AddresseeZipcode);
 
+    if (dom.addr_city.value === "") dom.addr_city.value = ".";
+
+    // Sender Name
     InjectUtil.GcssSwitchValue(
       dom.sndr_name,
       post_element.SenderName,
@@ -318,6 +342,9 @@ import { IMICSettings } from "../lib/OptionElement";
     );
     InjectUtil.GcssSwitchValue(dom.sndr_street, post_element.SenderAddress);
     InjectUtil.GcssSwitchValue(dom.sndr_phone, post_element.SenderPhone);
+
+    if (dom.sndr_city.value === "") dom.sndr_city.value = ".";
+    if (dom.sndr_postcode.value === "") dom.sndr_postcode.value = ".";
 
     console.log("dom injected");
   };
