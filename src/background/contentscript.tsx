@@ -283,7 +283,11 @@ import { IMICSettings } from "../lib/OptionElement";
         const calc_item_value = Math.round(
           (parseFloat(dom.item_value.value) * getExchangeRate(dom.item_value_currency.value)) / 1749
         );
-        InjectUtil.GcssSwitchValue(dom.item_value, calc_item_value.toString());
+        InjectUtil.GcssSwitchValueForCurrency(
+          dom.item_value,
+          dom.item_value_currency,
+          calc_item_value.toString()
+        );
       }
       dom.item_value_currency.value = "3"; // SDR
     }
@@ -293,7 +297,11 @@ import { IMICSettings } from "../lib/OptionElement";
       // 이미 SDR이 지정되지 않은 경우에만
       if (dom.postage_paid.value !== "") {
         const calc_postage_paid = Math.round(parseFloat(dom.postage_paid.value) / 1749);
-        InjectUtil.GcssSwitchValue(dom.postage_paid, calc_postage_paid.toString());
+        InjectUtil.GcssSwitchValueForCurrency(
+          dom.postage_paid,
+          dom.postage_paid_currency,
+          calc_postage_paid.toString()
+        );
       }
       dom.postage_paid_currency.value = "3"; // SDR
     }
@@ -304,7 +312,11 @@ import { IMICSettings } from "../lib/OptionElement";
       if (dom.item_value.value !== "" || dom.postage_paid.value !== "") {
         const calc_indemnity_amount =
           parseInt(dom.item_value.value) + parseInt(dom.postage_paid.value);
-        InjectUtil.GcssSwitchValue(dom.indemnity_amount, calc_indemnity_amount.toString());
+        InjectUtil.GcssSwitchValueForCurrency(
+          dom.indemnity_amount,
+          dom.indemnity_amount_currency,
+          calc_indemnity_amount.toString()
+        );
       }
       dom.indemnity_amount_currency.value = "3"; // SDR
     }

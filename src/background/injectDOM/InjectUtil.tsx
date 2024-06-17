@@ -62,7 +62,7 @@ class InjectUtil {
     old_input.classList.add("uppercase");
     old_input.onkeyup = (e) => {
       old_input.value = old_input.value.toUpperCase();
-    }
+    };
     form.onsubmit = (e) => {
       old_input.value = old_input.value.toUpperCase();
     };
@@ -100,6 +100,36 @@ class InjectUtil {
     );
   }
 
+  static GcssSwitchValueForCurrency(
+    original_element: HTMLInputElement,
+    currency_element: HTMLSelectElement,
+    change_to: string,
+    manual: boolean = false
+  ) {
+    if (!change_to) manual = true;
+    if (manual) {
+      this.InsertReact(
+        <FloatingHelper
+          target={original_element}
+          new_value={`${change_to} SDR`}
+          manual_change={manual}
+          currency_target={currency_element}
+        />,
+        original_element
+      );
+    } else {
+      this.InsertReact(
+        <FloatingHelper
+          target={original_element}
+          new_value={`${original_element.value} ${currency_element.selectedOptions[0].text}`}
+          manual_change={manual}
+          currency_target={currency_element}
+        />,
+        original_element
+      );
+      original_element.value = change_to;
+    }
+  }
   static GcssSwitchValue(
     original_element: HTMLInputElement,
     change_to: string,
