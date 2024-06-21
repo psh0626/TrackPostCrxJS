@@ -41,6 +41,9 @@ export class GcssAPI {
 
     chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REQUESTS, unread));
   }
+  private static IncludesOneOf(target: string, search_strings: string[]) {
+    return search_strings.some((item) => target.toLowerCase().includes(item.toLowerCase()));
+  }
   static async FetchReplies(repeat: boolean = true) {
     console.log("fetching GCSS replies with settings: ", this.settings);
     const response = await this.PostFetch("RPLYRCVD", "EMS");
@@ -55,7 +58,7 @@ export class GcssAPI {
     console.log("GCSS REPLIES FETCHED: ", fetched_obj);
 
     const my_msgs = fetched_obj.filter((item) =>
-      item.requestAuthor.toLowerCase().includes(this.settings.GcssAuthor.toLowerCase())
+      this.IncludesOneOf(item.requestAuthor, this.settings.GcssAuthor)
     );
     console.log("My Messages: ", my_msgs);
 

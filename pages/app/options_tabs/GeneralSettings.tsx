@@ -20,7 +20,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
   const [chkIcareReq, setChkIcareReq] = useState(false);
   const [chkGcssReq, setChkGcssReq] = useState(false);
   const [chkGcssRep, setChkGcssRep] = useState(false);
-  const [gcssAuthor, setGcssAuthor] = useState("");
+  const [gcssAuthor, setGcssAuthor] = useState<string[]>([]);
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -52,6 +52,11 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
 
   function onCheckboxChanged(event: React.ChangeEvent<HTMLInputElement>, checked: boolean) {
     setChkIcareReq(checked);
+  }
+
+  function TrimArray(str_arr: string[]) {
+    const result = str_arr.map(item => item.trim());
+    return result;
   }
 
   return (
@@ -129,8 +134,8 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                     label="author"
                     size="small"
                     variant="standard"
-                    value={gcssAuthor}
-                    onChange={(e) => setGcssAuthor(e.target.value)}
+                    value={gcssAuthor.join(", ")}
+                    onChange={(e) => setGcssAuthor(TrimArray(e.target.value.split(",")))}
                   />
                 </Stack>
                 <Typography textAlign="end" fontWeight={100} sx={{ mt: 2 }} variant="subtitle2">

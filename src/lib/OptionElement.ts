@@ -18,7 +18,7 @@ export class IMICSettings {
   PersonalRemarks: PersonalRemark[] = [];
   GcssUnreadReplies = false;
   GcssUnreadRequests = false;
-  GcssAuthor = "";
+  GcssAuthor: string[] = [];
   SavingFinished: NodeJS.Timeout | null = null;
   private async NotifyTabs() {
     const work_tabs = await chrome.tabs.query({
