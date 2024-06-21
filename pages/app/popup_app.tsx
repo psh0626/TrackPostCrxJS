@@ -26,6 +26,7 @@ import {
 import { ExpandMore, OpenInBrowser } from "@mui/icons-material";
 
 function PopUpApp() {
+  // TODO: GCSS Author Name Separation.
   // Tracking number state (you might want to bind this as well)
   const [item_id_field, set_item_id_field] = useState("");
   const [is_valid, set_is_valid] = useState(true);
