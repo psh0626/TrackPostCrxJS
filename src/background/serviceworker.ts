@@ -20,12 +20,15 @@ export const PopupTracker = new PopupTrack();
 main();
 
 function main() {
-  GlobalTimer.Callback = APICalls;
+  let count = 0;
+  GlobalTimer.Callback = async () => await APICalls(count++);
   GlobalTimer.Interval = 15000;
   GlobalTimer.Start();
 }
-
-async function APICalls() {
+async function APICalls(count: number) {
+  if (count % 12 === 0) {
+    CreateNotification();
+  }
   const work_tabs = await chrome.tabs.query({
     url: ["https://icare.post/*", "https://gcss.ipc.be/*"],
     status: "complete",
@@ -41,6 +44,11 @@ async function APICalls() {
     const gcss_tab = work_tabs.filter((item: chrome.tabs.Tab) =>
       item.url!.includes("gcss.ipc.be")
     )[0] as chrome.tabs.Tab;
+
+    if (!icare_tab || !gcss_tab) {
+      chrome.action.setBadgeText({ text: "?" });
+      return;
+    }
 
     if (icare_tab) {
       chrome.tabs.sendMessage(icare_tab.id!, new Msg(COMMANDS.ICARE_UNREAD_REPLIES));
