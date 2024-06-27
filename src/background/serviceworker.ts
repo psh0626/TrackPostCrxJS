@@ -26,8 +26,10 @@ function main() {
   GlobalTimer.Start();
 }
 async function APICalls(count: number) {
+  console.log("Ticking Global Timer: ", count, " times");
   if (count % 12 === 0) {
-    CreateNotification();
+    console.log("CreateNotification invoking..")
+    CreateNotification(true);
   }
   const work_tabs = await chrome.tabs.query({
     url: ["https://icare.post/*", "https://gcss.ipc.be/*"],

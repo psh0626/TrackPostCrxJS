@@ -2,7 +2,7 @@ import { GcssItem, WorkflowItem } from "../background/GetUnreadReplies/DataWrapp
 import { COMMANDS } from "./Message";
 import { IMICSettings } from "./OptionElement";
 
-export default async function CreateNotification() {
+export default async function CreateNotification(force_update = false) {
   const settings = new IMICSettings();
   await settings.LoadOptions();
 
@@ -51,10 +51,9 @@ export default async function CreateNotification() {
       item_count = "";
     }
     chrome.action.setBadgeText({ text: item_count });
-    return;
-  }
 
-  chrome.action.setBadgeText({ text: `${current_num}` });
+    if (!force_update) return;
+  } else chrome.action.setBadgeText({ text: `${current_num}` });
 
   let mapped_items: chrome.notifications.ItemOptions[] = [];
   let gcss_mapped_items: chrome.notifications.ItemOptions[] = [];
