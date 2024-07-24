@@ -186,6 +186,68 @@ import { IMICSettings } from "../lib/OptionElement";
   function getElement<T>(cssString: string): T {
     return document.querySelector(cssString) as T;
   }
+
+  const SetItemValueCurrency = (
+    item_value_currency: HTMLSelectElement,
+    item_value: HTMLInputElement
+  ) => {
+    // Item value
+    if (item_value_currency.value !== "3") {
+      // 이미 SDR이 지정되지 않은 경우에만
+      if (item_value.value !== "") {
+        const calc_item_value = Math.round(
+          (parseFloat(item_value.value) * getExchangeRate(item_value_currency.value)) / 1749
+        );
+        InjectUtil.GcssSwitchValueForCurrency(
+          item_value,
+          item_value_currency,
+          calc_item_value.toString()
+        );
+      }
+      item_value_currency.value = "3"; // SDR
+    }
+  };
+
+  const SetPostagePaidCurrency = (
+    postage_paid_currency: HTMLSelectElement,
+    postage_paid: HTMLInputElement
+  ) => {
+    // Postage paid
+    if (postage_paid_currency.value !== "3") {
+      // 이미 SDR이 지정되지 않은 경우에만
+      if (postage_paid.value !== "") {
+        const calc_postage_paid = Math.round(parseFloat(postage_paid.value) / 1749);
+        InjectUtil.GcssSwitchValueForCurrency(
+          postage_paid,
+          postage_paid_currency,
+          calc_postage_paid.toString()
+        );
+      }
+      postage_paid_currency.value = "3"; // SDR
+    }
+  };
+
+  const SetIndemnityCurrency = (
+    indemnity_amount_currency: HTMLSelectElement,
+    indemnity_amount: HTMLInputElement,
+    item_value: HTMLInputElement,
+    postage_paid: HTMLInputElement
+  ) => {
+    // Indemnity amount
+    if (indemnity_amount_currency.value !== "3") {
+      // 이미 SDR이 지정되지 않은 경우에만
+      if (item_value.value !== "" || postage_paid.value !== "") {
+        const calc_indemnity_amount = parseInt(item_value.value) + parseInt(postage_paid.value);
+        InjectUtil.GcssSwitchValueForCurrency(
+          indemnity_amount,
+          indemnity_amount_currency,
+          calc_indemnity_amount.toString()
+        );
+      }
+      indemnity_amount_currency.value = "3"; // SDR
+    }
+  };
+
   const injectGcssL2 = (post_element: PostElement) => {
     const getSelect = (id: string): HTMLSelectElement => {
       return getElement<HTMLSelectElement>(`#${id}`);
@@ -205,22 +267,20 @@ import { IMICSettings } from "../lib/OptionElement";
       pod_required_yes: getInput("txt_podRequired_1"),
       pod_required_no: getInput("txt_podRequired_2"),
     };
-    if (dom.item_value_currency.value !== "3") {
-      dom.item_value_currency.value = "3"; // SDR
-      const calc_item_value = Math.round((parseFloat(dom.item_value.value) * 1400) / 1749);
-      InjectUtil.GcssSwitchValue(dom.item_value, calc_item_value.toString());
+
+    // Content type
+    if (dom.item_type.value === "") {
+      dom.item_type.value = "Other/various";
     }
-    if (dom.postage_paid_currency.value !== "3") {
-      dom.postage_paid_currency.value = "3"; // SDR
-      const calc_postage_paid = Math.round(parseFloat(dom.postage_paid.value) / 1749);
-      InjectUtil.GcssSwitchValue(dom.postage_paid, calc_postage_paid.toString());
-    }
-    if (dom.indemnity_amount_currency.value !== "3") {
-      dom.indemnity_amount_currency.value = "3"; // SDR
-      const calc_indemnity_amount =
-        parseInt(dom.item_value.value) + parseInt(dom.postage_paid.value);
-      InjectUtil.GcssSwitchValue(dom.indemnity_amount, calc_indemnity_amount.toString());
-    }
+    SetItemValueCurrency(dom.item_value_currency, dom.item_value);
+    SetPostagePaidCurrency(dom.postage_paid_currency, dom.postage_paid);
+    SetIndemnityCurrency(
+      dom.indemnity_amount_currency,
+      dom.indemnity_amount,
+      dom.item_value,
+      dom.postage_paid
+    );
+
     if (!dom.pod_required_no.checked && !dom.pod_required_yes.checked) {
       dom.pod_required_yes.checked = true;
     }
@@ -236,6 +296,7 @@ import { IMICSettings } from "../lib/OptionElement";
 
     const dom = {
       physical_desc: getInput("txt_physicalDescription"),
+      dest_postcode: getInput("txt_destinationPostcode"),
       item_type: getSelect("txt_itemType"),
       posting_date: getInput("txt_dateOfPosting"),
       content_type: getSelect("txt_contentType"),
@@ -267,6 +328,8 @@ import { IMICSettings } from "../lib/OptionElement";
       dom.item_type.value = "Packet";
     }
 
+    if (dom.dest_postcode.value === "") dom.dest_postcode.value = post_element.AddresseeZipcode;
+
     // Date of Posting 빈 칸일 경우 입력
     if (dom.posting_date.value === "") {
       const converted_date = `${post_element.ApplicationDate.substring(5, 6)}/${post_element.ApplicationDate.substring(3, 4)}/${post_element.ApplicationDate.substring(0, 4)}`;
@@ -276,53 +339,17 @@ import { IMICSettings } from "../lib/OptionElement";
     // Content type
     dom.content_type.value = "Other/various";
 
-    // Item value
-    if (dom.item_value_currency.value !== "3") {
-      // 이미 SDR이 지정되지 않은 경우에만
-      if (dom.item_value.value !== "") {
-        const calc_item_value = Math.round(
-          (parseFloat(dom.item_value.value) * getExchangeRate(dom.item_value_currency.value)) / 1749
-        );
-        InjectUtil.GcssSwitchValueForCurrency(
-          dom.item_value,
-          dom.item_value_currency,
-          calc_item_value.toString()
-        );
-      }
-      dom.item_value_currency.value = "3"; // SDR
-    }
-
-    // Postage paid
-    if (dom.postage_paid_currency.value !== "3") {
-      // 이미 SDR이 지정되지 않은 경우에만
-      if (dom.postage_paid.value !== "") {
-        const calc_postage_paid = Math.round(parseFloat(dom.postage_paid.value) / 1749);
-        InjectUtil.GcssSwitchValueForCurrency(
-          dom.postage_paid,
-          dom.postage_paid_currency,
-          calc_postage_paid.toString()
-        );
-      }
-      dom.postage_paid_currency.value = "3"; // SDR
-    }
-
-    // Indemnity amount
-    if (dom.indemnity_amount_currency.value !== "3") {
-      // 이미 SDR이 지정되지 않은 경우에만
-      if (dom.item_value.value !== "" || dom.postage_paid.value !== "") {
-        const calc_indemnity_amount =
-          parseInt(dom.item_value.value) + parseInt(dom.postage_paid.value);
-        InjectUtil.GcssSwitchValueForCurrency(
-          dom.indemnity_amount,
-          dom.indemnity_amount_currency,
-          calc_indemnity_amount.toString()
-        );
-      }
-      dom.indemnity_amount_currency.value = "3"; // SDR
-    }
+    SetItemValueCurrency(dom.item_value_currency, dom.item_value);
+    SetPostagePaidCurrency(dom.postage_paid_currency, dom.postage_paid);
+    SetIndemnityCurrency(
+      dom.indemnity_amount_currency,
+      dom.indemnity_amount,
+      dom.item_value,
+      dom.postage_paid
+    );
 
     // POD required
-    dom.pod_required_no.checked = true;
+    dom.pod_required_yes.checked = true;
 
     // Contents
     InjectUtil.GcssSwitchValue(dom.item_contents, post_element.Contents);
