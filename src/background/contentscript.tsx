@@ -257,7 +257,8 @@ import { IMICSettings } from "../lib/OptionElement";
     };
 
     const dom = {
-      item_type: getSelect("txt_contentType"),
+      item_type: getSelect("txt_itemType"),
+      content_type: getSelect("txt_contentType"),
       item_value: getInput("txt_itemValue"),
       postage_paid: getInput("txt_postagePaid"),
       indemnity_amount: getInput("txt_indemnityAmount"),
@@ -268,9 +269,13 @@ import { IMICSettings } from "../lib/OptionElement";
       pod_required_no: getInput("txt_podRequired_2"),
     };
 
+    if (post_element.ItemID.startsWith("L") || post_element.ItemID.startsWith("R")) {
+      if (dom.item_type.value === "") dom.item_type.value = "Packet";
+    }
+
     // Content type
-    if (dom.item_type.value === "") {
-      dom.item_type.value = "Other/various";
+    if (dom.content_type.value === "") {
+      dom.content_type.value = "Other/various";
     }
     SetItemValueCurrency(dom.item_value_currency, dom.item_value);
     SetPostagePaidCurrency(dom.postage_paid_currency, dom.postage_paid);
