@@ -14,7 +14,9 @@ export class PersonalRemark {
   }
 }
 export class IMICSettings {
+  IcareUnreadReplies = false;
   IcareUnreadRequests: boolean = false;
+  IcareAuthor: string[] = [];
   PersonalRemarks: PersonalRemark[] = [];
   GcssUnreadReplies = false;
   GcssUnreadRequests = false;
@@ -35,7 +37,7 @@ export class IMICSettings {
   async SaveOptions() {
     await chrome.storage.local.set({ IMICSettings: this });
     console.log("Options Saved as ", this);
-    
+
     if (this.SavingFinished) clearTimeout(this.SavingFinished);
     this.SavingFinished = setTimeout(() => {
       (async () => {

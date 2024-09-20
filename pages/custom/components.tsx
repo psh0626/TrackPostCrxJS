@@ -74,9 +74,12 @@ export const InfoTextField: React.FC<InfoFieldType> = ({
 export function MyList(
   items: WorkflowItem[] | GcssItem[],
   type: "replies" | "requests" = "replies",
-  service: "GCSS" | "iCare" = "iCare"
+  service: "GCSS" | "iCare" = "iCare",
+  author = ""
 ) {
-  const list_title = type === "replies" ? service + " - 발송 회신" : service + " - 도착 문의";
+  let list_title = type === "replies" ? service + " - 발송 회신" : service + " - 도착 문의";
+  list_title += `: ${items.length}건`;
+  if (author !== "") list_title += ` (${author})`;
 
   const OpenNewTab = async (urlLink: string) => {
     const current_tab = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
@@ -118,7 +121,7 @@ export function MyList(
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMore />}>
           <Typography variant="body1" fontWeight="600" textAlign="center">
-            {list_title + `: ${items.length}건`}
+            {list_title}
           </Typography>
         </AccordionSummary>
         <Stack alignItems="end">
@@ -145,11 +148,9 @@ export function MyList(
               <Card style={{ margin: "0 0 1px" }}>
                 <ListItem dense={true} disablePadding={true} key={id}>
                   <ListItemButton
-                    onClick={async () =>{
-                      if(service === "iCare")
-                        await OpenNewTab(item.link)
-                      else
-                        await OpenNewTab(item.WorkflowLink);
+                    onClick={async () => {
+                      if (service === "iCare") await OpenNewTab(item.link);
+                      else await OpenNewTab(item.WorkflowLink);
                     }}>
                     <ListItemIcon>
                       <OpenInBrowser />

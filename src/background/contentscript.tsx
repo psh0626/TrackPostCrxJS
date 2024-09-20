@@ -63,7 +63,8 @@ import { IMICSettings } from "../lib/OptionElement";
         }
       });
 
-      GcssAPI.FetchReplies(false);
+      if (settings.IcareUnreadReplies) GcssAPI.FetchReplies(false);
+      
       if (
         currentURL.pathname.includes("/create/") ||
         currentURL.pathname.includes("/reactivate/")
@@ -95,16 +96,16 @@ import { IMICSettings } from "../lib/OptionElement";
         InjectUtil.InjectGcssQueryInput();
       }
     } else if (currentURL.origin === ICARE_URL) {
-      (async () => {
-        console.log("finding user id.."); // global timer, local storage에 user id 저장 한번만 찾으면 다시 찾을 필요 없어짐, webrequest 분석해서 csrf 계속 확인하는 건 어떰?
-        icare_internal_userid = await GetIcareUserId();
+      // (async () => {
+      //   // console.log("finding user id.."); // global timer, local storage에 user id 저장 한번만 찾으면 다시 찾을 필요 없어짐, webrequest 분석해서 csrf 계속 확인하는 건 어떰?
+      //   // icare_internal_userid = await GetIcareUserId();
 
-        console.log("user id found:", icare_internal_userid);
-        IcareAPI.UserId = icare_internal_userid;
-        console.log("fetching replies with found csrf:", csrfToken, "\nUserID: ", IcareAPI.UserId);
-
-        await IcareAPI.FetchUnreadReplies(csrfToken!);
-      })();
+      //   // console.log("user id found:", icare_internal_userid);
+      //   // IcareAPI.UserId = icare_internal_userid;
+      //   // console.log("fetching replies with found csrf:", csrfToken, "\nUserID: ", IcareAPI.UserId);
+      // })();
+      
+      if(settings.IcareUnreadReplies) await IcareAPI.FetchUnreadReplies(csrfToken!);
 
       const param_action = currentURL.searchParams.get("action");
       if (param_action === "new") {

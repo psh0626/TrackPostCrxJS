@@ -13,11 +13,13 @@ import { TabPanel } from "./TabPanel";
 import { IMICSettings } from "../../../src/lib/OptionElement";
 
 interface GeneralSettingsProps {
-  settings: React.MutableRefObject<IMICSettings>
+  settings: React.MutableRefObject<IMICSettings>;
 }
 
 export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) => {
   const [chkIcareReq, setChkIcareReq] = useState(false);
+  const [chkIcareRep, SetChkIcareRep] = useState(false);
+  const [icareAuthor, setIcareAuthor] = useState<string[]>([]);
   const [chkGcssReq, setChkGcssReq] = useState(false);
   const [chkGcssRep, setChkGcssRep] = useState(false);
   const [gcssAuthor, setGcssAuthor] = useState<string[]>([]);
@@ -26,7 +28,9 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
   useEffect(() => {
     if (!initialized.current) {
       console.log("GENERAL SETTINGS INITIALIZING: ", initialized);
+      SetChkIcareRep(settings.current.IcareUnreadReplies);
       setChkIcareReq(settings.current.IcareUnreadRequests);
+      setIcareAuthor(settings.current.IcareAuthor);
       setChkGcssRep(settings.current.GcssUnreadReplies);
       setChkGcssReq(settings.current.GcssUnreadRequests);
       setGcssAuthor(settings.current.GcssAuthor);
@@ -40,10 +44,12 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
       SaveSettings();
       console.log("GENERALSETTINGS SAVE SETTINGS: ", initialized.current);
     } else initialized.current = true;
-  }, [chkIcareReq, chkGcssRep, chkGcssReq, gcssAuthor]);
+  }, [chkIcareRep, chkIcareReq, icareAuthor, chkGcssRep, chkGcssReq, gcssAuthor]);
 
   async function SaveSettings() {
+    settings.current.IcareUnreadReplies = chkIcareRep;
     settings.current.IcareUnreadRequests = chkIcareReq;
+    settings.current.IcareAuthor = icareAuthor;
     settings.current.GcssUnreadRequests = chkGcssReq;
     settings.current.GcssUnreadReplies = chkGcssRep;
     settings.current.GcssAuthor = gcssAuthor;
@@ -55,7 +61,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
   }
 
   function TrimArray(str_arr: string[]) {
-    const result = str_arr.map(item => item.trim());
+    const result = str_arr.map((item) => item.trim());
     return result;
   }
 
@@ -84,7 +90,46 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                 }
               />
             </Grid>
-            <Grid item xs={6}></Grid>
+            <Grid item xs={6}>
+              <FormControlLabel
+                label="iCare 발송 회신 알림"
+                control={
+                  <Checkbox
+                    checked={chkIcareRep}
+                    onChange={(e, c) => SetChkIcareRep(c)}
+                    color="primary"
+                  />
+                }
+              />
+            </Grid>
+            {chkIcareRep ? (
+              <Grid item xs={12}>
+                <Divider sx={{ marginY: 2 }} />
+                <Stack direction="row" alignItems="end" justifyContent="end">
+                  <Typography
+                    textAlign="center"
+                    fontWeight={700}
+                    sx={{ mr: 2 }}
+                    variant="subtitle1">
+                    검색할 작성자:
+                  </Typography>
+                  <TextField
+                    label="author"
+                    size="small"
+                    variant="standard"
+                    value={icareAuthor.join(", ")}
+                    onChange={(e) => setIcareAuthor(TrimArray(e.target.value.split(",")))}
+                  />
+                </Stack>
+                <Typography textAlign="end" fontWeight={100} sx={{ mt: 2 }} variant="subtitle2">
+                  * 대소문자 구분 없음 <br />* 일부만 입력 가능 (예: Sunghoon Park -{">"} sung){" "}
+                  <br />
+                  * 여러명 입력 가능 (예: sung, mi, kim) <br />
+                </Typography>
+              </Grid>
+            ) : (
+              ""
+            )}
           </Grid>
         </Paper>
         <Paper sx={{ p: 3 }}>

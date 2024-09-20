@@ -31,12 +31,15 @@ function PopUpApp() {
   const [item_id_field, set_item_id_field] = useState("");
   const [is_valid, set_is_valid] = useState(true);
 
-  const [workflow_items, set_workflow_items] = useState<WorkflowItem[]>([]);
+  const [icare_items, set_icare_items] = useState<WorkflowItem[]>([]);
   const [icare_req_items, set_icare_req] = useState<WorkflowItem[]>([]);
+  const [icare_author, set_icare_author] = useState<string[]>([]);
   const [gcss_items, set_gcss_items] = useState<GcssItem[]>([]);
   const [gcss_req_items, set_gcss_req] = useState<GcssItem[]>([]);
+  const [gcss_author, set_gcss_author] = useState<string[]>([]);
 
-  const [chk_req, set_chkreq] = useState(false);
+  const [chk_rep, set_chk_rep] = useState(false);
+  const [chk_req, set_chk_req] = useState(false);
   const [chk_gcss_rep, set_chk_gcssrep] = useState(false);
   const [chk_gcss_req, set_chk_gcssreq] = useState(false);
 
@@ -44,6 +47,9 @@ function PopUpApp() {
   const settings = useRef(new IMICSettings());
   const tracker = new PopupTrack();
 
+  const IncludesOneOf = (target: string, search_strings: string[]) => {
+    return search_strings.some((item) => target.toLowerCase().includes(item.toLowerCase()));
+  };
   const CheckValue = (target: HTMLInputElement | HTMLTextAreaElement) => {
     const pretty_value = target.value.trim().toUpperCase();
     set_item_id_field(pretty_value); // Update
@@ -70,18 +76,23 @@ function PopUpApp() {
 
     (async () => {
       await settings.current.LoadOptions();
-      set_chkreq(settings.current.IcareUnreadRequests);
+      set_chk_rep(settings.current.IcareUnreadReplies);
+      set_chk_req(settings.current.IcareUnreadRequests);
+      set_icare_author(settings.current.IcareAuthor);
       set_chk_gcssrep(settings.current.GcssUnreadReplies);
       set_chk_gcssreq(settings.current.GcssUnreadRequests);
+      set_gcss_author(settings.current.GcssAuthor);
 
-      const dict = (await chrome.storage.session.get("ICARE_UNREAD_REPLIES"))
-        .ICARE_UNREAD_REPLIES as WorkflowItem[];
+      if (settings.current.IcareUnreadReplies) {
+        const dict = (await chrome.storage.session.get("ICARE_UNREAD_REPLIES"))
+          .ICARE_UNREAD_REPLIES as WorkflowItem[];
 
-      if (typeof dict !== "undefined" && dict.length > 0) {
-        set_workflow_items(dict);
-        console.log("workflows loaded from storage local: ", dict);
-      } else {
-        console.log("workflows count is 0 or below");
+        if (typeof dict !== "undefined" && dict.length > 0) {
+          set_icare_items(dict);
+          console.log("icare replies loaded from storage local: ", dict);
+        } else {
+          console.log("icare replies  count is 0 or below");
+        }
       }
 
       if (settings.current.IcareUnreadRequests) {
@@ -154,7 +165,18 @@ function PopUpApp() {
       )}
       {chk_gcss_rep ? (
         gcss_items.length > 0 ? (
-          MyList(gcss_items, "replies", "GCSS")
+          gcss_author.length > 1 ? (
+            gcss_author.map((user) =>
+              MyList(
+                gcss_items.filter((e) => e.RequestAuthor.includes(user)),
+                "replies",
+                "GCSS",
+                user
+              )
+            )
+          ) : (
+            MyList(gcss_items, "replies", "GCSS")
+          )
         ) : (
           <Stack alignItems="center">
             <Typography variant="subtitle2" color="initial">
@@ -178,14 +200,29 @@ function PopUpApp() {
       ) : (
         ""
       )}
-      {workflow_items.length > 0 ? (
-        MyList(workflow_items)
+      {chk_rep ? (
+        icare_items.length > 0 ? (
+          icare_author.length > 1 ? (
+            icare_author.map((user) =>
+              MyList(
+                icare_items.filter((e) => e.author.includes(user)),
+                "replies",
+                "iCare",
+                user
+              )
+            )
+          ) : (
+            MyList(icare_items)
+          )
+        ) : (
+          <Stack alignItems="center">
+            <Typography variant="subtitle2" color="initial">
+              iCare 발송 회신: 모두 읽음 ✔️
+            </Typography>
+          </Stack>
+        )
       ) : (
-        <Stack alignItems="center">
-          <Typography variant="subtitle2" color="initial">
-            iCare 발송 회신: 모두 읽음 ✔️
-          </Typography>
-        </Stack>
+        ""
       )}
     </Stack>
   );
