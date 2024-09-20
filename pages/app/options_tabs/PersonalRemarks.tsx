@@ -74,18 +74,14 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
   }
 
   async function onDlRemoved() {
-    setPrList((prev) =>
-      prev.filter((entry) => entry.Section === slSelected && entry.Id !== dlCurrentId)
-    );
+    setPrList((prev) => prev.filter((entry) => entry.Id !== dlCurrentId));
     RenumberPrList();
     await SaveSettings();
     onDlCancelled();
   }
 
   async function onDlEdited() {
-    setPrList((prev) =>
-      prev.filter((entry) => entry.Section === slSelected && entry.Id !== dlCurrentId)
-    );
+    setPrList((prev) => prev.filter((entry) => entry.Id !== dlCurrentId));
     setPrList((prev) =>
       prev.concat(new PersonalRemark(dlTitle, dlContent, dlCurrentId, slSelected))
     );
@@ -110,7 +106,15 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
     if (index === 1) return; // Already at the top
     setPrList((prev) => {
       const newList = [...prev];
-      [newList[index - 2], newList[index - 1]] = [newList[index - 1], newList[index - 2]];
+      const filteredList = newList
+        .filter((e) => e.Section === newList[index - 1].Section)
+        .sort((a, b) => a.Id - b.Id);
+      const filteredId = filteredList[filteredList.findIndex((el) => el.Id === index) - 1].Id;
+      const theOneBefore = newList.findIndex((el) => el.Id === filteredId);
+
+      if (!newList[theOneBefore]) return prev;
+
+      [newList[theOneBefore], newList[index - 1]] = [newList[index - 1], newList[theOneBefore]];
       return newList.map((item, idx) => ({ ...item, Id: idx + 1 }));
     });
   }
@@ -119,7 +123,15 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
     if (index === prList.length) return; // Already at the bottom
     setPrList((prev) => {
       const newList = [...prev];
-      [newList[index - 1], newList[index]] = [newList[index], newList[index - 1]];
+      const filteredList = newList
+        .filter((e) => e.Section === newList[index - 1].Section)
+        .sort((a, b) => a.Id - b.Id);
+      const filteredId = filteredList[filteredList.findIndex((el) => el.Id === index) + 1].Id;
+      const theOneAfter = newList.findIndex((el) => el.Id === filteredId);
+
+      if (!newList[theOneAfter]) return prev;
+
+      [newList[index - 1], newList[theOneAfter]] = [newList[theOneAfter], newList[index - 1]];
       return newList.map((item, idx) => ({ ...item, Id: idx + 1 }));
     });
   }
