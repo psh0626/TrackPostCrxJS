@@ -109,7 +109,7 @@ export function MyList(
     if (tab_ids.length > 0) {
       const newGroup = await chrome.tabs.group({ tabIds: tab_ids });
       await chrome.tabGroups.update(newGroup, {
-        title: list_title,
+        title: list_title.replace(`: ${items.length}건`, ""),
         color: "orange",
         collapsed: true,
       });
