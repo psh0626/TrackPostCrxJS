@@ -106,15 +106,16 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
     if (index === 1) return; // Already at the top
     setPrList((prev) => {
       const newList = [...prev];
+      const thisOne = newList.findIndex((el) => el.Id === index);
       const filteredList = newList
-        .filter((e) => e.Section === newList[index - 1].Section)
+        .filter((e) => e.Section === newList[thisOne].Section)
         .sort((a, b) => a.Id - b.Id);
       const filteredId = filteredList[filteredList.findIndex((el) => el.Id === index) - 1].Id;
       const theOneBefore = newList.findIndex((el) => el.Id === filteredId);
 
       if (!newList[theOneBefore]) return prev;
 
-      [newList[theOneBefore], newList[index - 1]] = [newList[index - 1], newList[theOneBefore]];
+      [newList[theOneBefore], newList[thisOne]] = [newList[thisOne], newList[theOneBefore]];
       return newList.map((item, idx) => ({ ...item, Id: idx + 1 }));
     });
   }
@@ -123,15 +124,16 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
     if (index === prList.length) return; // Already at the bottom
     setPrList((prev) => {
       const newList = [...prev];
+      const thisOne = newList.findIndex((el) => el.Id === index);
       const filteredList = newList
-        .filter((e) => e.Section === newList[index - 1].Section)
+        .filter((e) => e.Section === newList[thisOne].Section)
         .sort((a, b) => a.Id - b.Id);
       const filteredId = filteredList[filteredList.findIndex((el) => el.Id === index) + 1].Id;
       const theOneAfter = newList.findIndex((el) => el.Id === filteredId);
 
       if (!newList[theOneAfter]) return prev;
 
-      [newList[index - 1], newList[theOneAfter]] = [newList[theOneAfter], newList[index - 1]];
+      [newList[thisOne], newList[theOneAfter]] = [newList[theOneAfter], newList[thisOne]];
       return newList.map((item, idx) => ({ ...item, Id: idx + 1 }));
     });
   }
