@@ -1,3 +1,4 @@
+import { ServiceType, ServiceTypes } from "../background/GetUnreadReplies/GcssReplies";
 import { COMMANDS, Msg, SendRequest } from "./Message";
 
 export class PersonalRemark {
@@ -21,6 +22,7 @@ export class IMICSettings {
   GcssUnreadReplies = false;
   GcssUnreadRequests = false;
   GcssAuthor: string[] = [];
+  GcssServiceTypes: ServiceTypes[] = [ServiceTypes.EMS];
   SavingFinished: NodeJS.Timeout | null = null;
   private async NotifyTabs() {
     const work_tabs = await chrome.tabs.query({

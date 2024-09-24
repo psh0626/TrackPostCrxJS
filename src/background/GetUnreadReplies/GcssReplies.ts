@@ -2,12 +2,13 @@ import { COMMANDS, Msg } from "../../lib/Message";
 import { IMICSettings } from "../../lib/OptionElement";
 import { GcssItem, GcssRawItem, TrimObject } from "./DataWrapper";
 
-enum ServiceType {
+export enum ServiceTypes {
   EMS = "EMS",
   Parcel = "UPU",
   Registered = "REG",
   KPacket = "EXPRES",
 }
+export type ServiceType = ServiceTypes | ServiceTypes[];
 export class GcssAPI {
   static settings: IMICSettings;
 
@@ -18,8 +19,10 @@ export class GcssAPI {
   }
   private static async PostFetch(
     folder: "RPLYRCVD" | "TODO" = "RPLYRCVD",
-    serviceType: ServiceType[] | ServiceType = ServiceType.EMS
+    serviceType: ServiceType = ServiceTypes.EMS
   ) {
+    let targetType = serviceType;
+    if (Array.isArray(targetType)) targetType = targetType.join('", "');
     return await fetch("https://gcss.ipc.be/CSS/gcss/list-tasks", {
       headers: {
         accept: "application/json, text/plain, */*",
@@ -31,11 +34,8 @@ export class GcssAPI {
       credentials: "include",
     });
   }
-  private static async FetchParcelReplies() {
-    const response = await this.PostFetch("RPLYRCVD", ServiceType.Parcel);
-  }
   private static async FetchRequests() {
-    const response = await this.PostFetch("TODO", ServiceType.EMS);
+    const response = await this.PostFetch("TODO", ServiceTypes.EMS);
     if (!response.ok) {
       console.error(response.status);
       return;
@@ -55,7 +55,9 @@ export class GcssAPI {
   }
   static async FetchReplies(repeat: boolean = true) {
     console.log("fetching GCSS replies with settings: ", this.settings);
-    const response = await this.PostFetch("RPLYRCVD", [ServiceType.EMS]); // TODO: 선택하는대로 추가시키기..
+    const TargetService = [ServiceTypes.EMS];
+    TargetService.push();
+    const response = await this.PostFetch("RPLYRCVD", [ServiceTypes.EMS]); // TODO: 선택하는대로 추가시키기..
     if (!response.ok) {
       console.error(response.status);
       if (this.settings.GcssUnreadReplies)
