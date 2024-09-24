@@ -116,7 +116,9 @@ export function MyList(
     }
   };
 
-  return (
+  return items.length === 0 ? (
+    ""
+  ) : (
     <List>
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMore />}>
