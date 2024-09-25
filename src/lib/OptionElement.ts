@@ -1,4 +1,4 @@
-import { ServiceType, ServiceTypes } from "../background/GetUnreadReplies/GcssReplies";
+import { ServiceTypes } from "../background/GetUnreadReplies/GcssReplies";
 import { COMMANDS, Msg, SendRequest } from "./Message";
 
 export class PersonalRemark {

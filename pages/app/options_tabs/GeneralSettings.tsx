@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { TabPanel } from "./TabPanel";
 import { IMICSettings } from "../../../src/lib/OptionElement";
+import { ServiceTypes } from "../../../src/background/GetUnreadReplies/GcssReplies";
 
 interface GeneralSettingsProps {
   settings: React.MutableRefObject<IMICSettings>;
@@ -23,6 +24,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
   const [chkGcssReq, setChkGcssReq] = useState(false);
   const [chkGcssRep, setChkGcssRep] = useState(false);
   const [gcssAuthor, setGcssAuthor] = useState<string[]>([]);
+  const [gcssServiceTypes, setGcssServiceTypes] = useState<ServiceTypes[]>([ServiceTypes.EMS]);
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -34,6 +36,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
       setChkGcssRep(settings.current.GcssUnreadReplies);
       setChkGcssReq(settings.current.GcssUnreadRequests);
       setGcssAuthor(settings.current.GcssAuthor);
+      setGcssServiceTypes(settings.current.GcssServiceTypes);
       initialized.current = true;
     }
   }, []);
@@ -44,7 +47,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
       SaveSettings();
       console.log("GENERALSETTINGS SAVE SETTINGS: ", initialized.current);
     } else initialized.current = true;
-  }, [chkIcareRep, chkIcareReq, icareAuthor, chkGcssRep, chkGcssReq, gcssAuthor]);
+  }, [chkIcareRep, chkIcareReq, icareAuthor, chkGcssRep, chkGcssReq, gcssAuthor, gcssServiceTypes]);
 
   async function SaveSettings() {
     settings.current.IcareUnreadReplies = chkIcareRep;
@@ -53,6 +56,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
     settings.current.GcssUnreadRequests = chkGcssReq;
     settings.current.GcssUnreadReplies = chkGcssRep;
     settings.current.GcssAuthor = gcssAuthor;
+    settings.current.GcssServiceTypes = gcssServiceTypes;
     await settings.current.SaveOptions();
   }
 
@@ -63,6 +67,17 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
   function TrimArray(str_arr: string[]) {
     const result = str_arr.map((item) => item.trim());
     return result;
+  }
+
+  function ToggleCheckService(type: ServiceTypes, checked: boolean) {
+    if (checked) {
+      if (gcssServiceTypes.includes(type)) return;
+      setGcssServiceTypes((prev) => prev.concat(type));
+    } else {
+      if (!gcssServiceTypes.includes(type)) return;
+      if (gcssServiceTypes.length === 1) setChkGcssRep(false);
+      setGcssServiceTypes((prev) => prev.filter((el) => el !== type));
+    }
   }
 
   return (
@@ -158,7 +173,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                 control={
                   <Checkbox
                     checked={chkGcssRep}
-                    onChange={(e, c) => setChkGcssRep(c)}
+                    onChange={(e, c) => {
+                      setChkGcssRep(c);
+                      if (gcssServiceTypes.length < 1) setGcssServiceTypes([ServiceTypes.EMS]);
+                    }}
                     color="primary"
                   />
                 }
@@ -166,7 +184,53 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             </Grid>
             {chkGcssRep ? (
               <Grid item xs={12}>
-                <Divider sx={{ marginY: 2 }} />
+                <Divider sx={{ marginTop: 2 }} />
+                <Stack direction="row" alignItems="end" justifyContent="space-evenly">
+                  <FormControlLabel
+                    label="EMS"
+                    control={
+                      <Checkbox
+                        checked={gcssServiceTypes.includes(ServiceTypes.EMS)}
+                        onChange={(e, c) => ToggleCheckService(ServiceTypes.EMS, c)}
+                        color="error"
+                      />
+                    }
+                  />
+
+                  <FormControlLabel
+                    label="Exprès/Tracked"
+                    control={
+                      <Checkbox
+                        checked={gcssServiceTypes.includes(ServiceTypes.KPacket)}
+                        onChange={(e, c) => ToggleCheckService(ServiceTypes.KPacket, c)}
+                        color="error"
+                      />
+                    }
+                  />
+
+                  <FormControlLabel
+                    label="REG"
+                    control={
+                      <Checkbox
+                        checked={gcssServiceTypes.includes(ServiceTypes.Registered)}
+                        onChange={(e, c) => ToggleCheckService(ServiceTypes.Registered, c)}
+                        color="error"
+                      />
+                    }
+                  />
+
+                  <FormControlLabel
+                    label="Parcels"
+                    control={
+                      <Checkbox
+                        checked={gcssServiceTypes.includes(ServiceTypes.Parcel)}
+                        onChange={(e, c) => ToggleCheckService(ServiceTypes.Parcel, c)}
+                        color="error"
+                      />
+                    }
+                  />
+                </Stack>
+                <Divider sx={{ marginTop: 0 }} />
                 <Stack direction="row" alignItems="end" justifyContent="end">
                   <Typography
                     textAlign="center"

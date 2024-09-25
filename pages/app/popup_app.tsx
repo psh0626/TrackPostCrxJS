@@ -24,6 +24,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import { ExpandMore, OpenInBrowser } from "@mui/icons-material";
+import { ServiceTypes } from "../../src/background/GetUnreadReplies/GcssReplies";
 
 function PopUpApp() {
   // TODO: GCSS Author Name Separation.
@@ -37,6 +38,7 @@ function PopUpApp() {
   const [gcss_items, set_gcss_items] = useState<GcssItem[]>([]);
   const [gcss_req_items, set_gcss_req] = useState<GcssItem[]>([]);
   const [gcss_author, set_gcss_author] = useState<string[]>([]);
+  const [gcss_services, set_gcss_services] = useState<ServiceTypes[]>([ServiceTypes.EMS]);
 
   const [chk_rep, set_chk_rep] = useState(false);
   const [chk_req, set_chk_req] = useState(false);
@@ -166,16 +168,25 @@ function PopUpApp() {
       {chk_gcss_rep ? (
         gcss_items.length > 0 ? (
           gcss_author.length > 1 ? (
-            gcss_author.map((user) =>
-              MyList(
-                gcss_items.filter((e) => e.RequestAuthor.includes(user)),
-                "replies",
-                "GCSS",
-                user
-              )
-            )
+            gcss_services.map((service) => {
+              return gcss_author.map((user) =>
+                MyList(
+                  gcss_items.filter(
+                    (e) => e.RequestAuthor.includes(user) && e.ServiceType === ServiceTypes.EMS
+                  ),
+                  "replies",
+                  "GCSS",
+                  user,
+                  service
+                )
+              );
+            })
           ) : (
-            MyList(gcss_items, "replies", "GCSS")
+            MyList(
+              gcss_items.filter((el) => el.ServiceType === ServiceTypes.EMS),
+              "replies",
+              "GCSS"
+            )
           )
         ) : (
           <Stack alignItems="center">
@@ -187,6 +198,7 @@ function PopUpApp() {
       ) : (
         ""
       )}
+
       {chk_req ? (
         icare_req_items.length > 0 ? (
           MyList(icare_req_items, "requests")

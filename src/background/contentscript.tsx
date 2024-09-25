@@ -63,7 +63,7 @@ import { IMICSettings } from "../lib/OptionElement";
         }
       });
 
-      if (settings.IcareUnreadReplies) GcssAPI.FetchReplies(false);
+      if (settings.GcssUnreadReplies) GcssAPI.FetchReplies(false);
       
       if (
         currentURL.pathname.includes("/create/") ||

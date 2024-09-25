@@ -8,7 +8,6 @@ export enum ServiceTypes {
   Registered = "REG",
   KPacket = "EXPRES",
 }
-export type ServiceType = ServiceTypes | ServiceTypes[];
 export class GcssAPI {
   static settings: IMICSettings;
 
@@ -19,10 +18,9 @@ export class GcssAPI {
   }
   private static async PostFetch(
     folder: "RPLYRCVD" | "TODO" = "RPLYRCVD",
-    serviceType: ServiceType = ServiceTypes.EMS
+    serviceType: ServiceTypes[] | string = ServiceTypes.EMS
   ) {
-    let targetType = serviceType;
-    if (Array.isArray(targetType)) targetType = targetType.join('", "');
+    if (Array.isArray(serviceType)) serviceType = serviceType.join('", "');
     return await fetch("https://gcss.ipc.be/CSS/gcss/list-tasks", {
       headers: {
         accept: "application/json, text/plain, */*",
@@ -54,10 +52,9 @@ export class GcssAPI {
     return search_strings.some((item) => target.toLowerCase().includes(item.toLowerCase()));
   }
   static async FetchReplies(repeat: boolean = true) {
-    console.log("fetching GCSS replies with settings: ", this.settings);
-    const TargetService = [ServiceTypes.EMS];
-    TargetService.push();
-    const response = await this.PostFetch("RPLYRCVD", [ServiceTypes.EMS]); // TODO: 선택하는대로 추가시키기..
+    console.log("fetching GCSS replies with settings: ", this.settings.GcssServiceTypes);
+
+    const response = await this.PostFetch("RPLYRCVD", this.settings.GcssServiceTypes); // TODO: 선택하는대로 추가시키기..
     if (!response.ok) {
       console.error(response.status);
       if (this.settings.GcssUnreadReplies)
@@ -68,8 +65,10 @@ export class GcssAPI {
     const fetched_obj = TrimObject(await response.json()) as GcssRawItem[];
     console.log("GCSS REPLIES FETCHED: ", fetched_obj);
 
-    const my_msgs = fetched_obj.filter((item) =>
-      this.IncludesOneOf(item.requestAuthor, this.settings.GcssAuthor)
+    const my_msgs = fetched_obj.filter(
+      (item) =>
+        this.IncludesOneOf(item.requestAuthor, this.settings.GcssAuthor) &&
+        this.IncludesOneOf(item.product, this.settings.GcssServiceTypes)
     );
     console.log("My Messages: ", my_msgs);
 
