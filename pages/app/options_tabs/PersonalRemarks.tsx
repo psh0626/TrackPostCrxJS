@@ -110,8 +110,11 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
       const filteredList = newList
         .filter((e) => e.Section === newList[thisOne].Section)
         .sort((a, b) => a.Id - b.Id);
-      const filteredId = filteredList[filteredList.findIndex((el) => el.Id === index) - 1].Id;
-      const theOneBefore = newList.findIndex((el) => el.Id === filteredId);
+      const beforeElement = filteredList[filteredList.findIndex((el) => el.Id === index) - 1];
+
+      if (!beforeElement) return prev;
+
+      const theOneBefore = newList.findIndex((el) => el.Id === beforeElement.Id);
 
       if (!newList[theOneBefore]) return prev;
 
@@ -128,8 +131,11 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
       const filteredList = newList
         .filter((e) => e.Section === newList[thisOne].Section)
         .sort((a, b) => a.Id - b.Id);
-      const filteredId = filteredList[filteredList.findIndex((el) => el.Id === index) + 1].Id;
-      const theOneAfter = newList.findIndex((el) => el.Id === filteredId);
+      const nextElement = filteredList[filteredList.findIndex((el) => el.Id === index) + 1];
+
+      if (!nextElement) return prev;
+
+      const theOneAfter = newList.findIndex((el) => el.Id === nextElement.Id);
 
       if (!newList[theOneAfter]) return prev;
 
