@@ -240,7 +240,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                     }
                   />
                 </Stack>
-                <Divider sx={{ marginTop: 0 }} />
+                <Divider sx={{ marginTop: 0, marginBottom: 2 }} />
                 <Stack direction="row" alignItems="end" justifyContent="end">
                   <Typography
                     textAlign="center"

@@ -132,7 +132,7 @@ export const MyList: React.FC<MyListProps> = ({
     <List>
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMore />}>
-          <Typography variant="body1" fontWeight="600" textAlign="center">
+          <Typography variant="body1" fontWeight="100" textAlign="left">
             {list_title}
           </Typography>
         </AccordionSummary>
