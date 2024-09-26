@@ -26,9 +26,10 @@ function main() {
   GlobalTimer.Start();
 }
 async function APICalls(count: number) {
-  console.log("Ticking Global Timer: ", count, " times");
+  const today = new Date();
+  console.log(`${today.toLocaleTimeString("ko-KR")}: Ticking Global Timer: `, count, " times");
   if (count % 12 === 0) {
-    console.log("CreateNotification invoking..")
+    console.log("CreateNotification invoking..");
     CreateNotification(true);
   }
   const work_tabs = await chrome.tabs.query({
@@ -103,7 +104,7 @@ chrome.webRequest.onCompleted.addListener(
       }
     }
   },
-  { urls: ["*://icare.post/*"] }
+  { urls: ["*://icare.post/*"] },
 );
 
 chrome.runtime.onConnect.addListener((port) => {

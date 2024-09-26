@@ -133,33 +133,16 @@ function PopUpApp() {
     })();
   }, []);
 
-  // const sorting_now = useRef(false);
-  // useEffect(() => {
-  //   if (!sorting_now.current) {
-  //     sorting_now.current = true;
-  //     set_gcss_items((prev) => {
-  //       const serviceOrder: string[] = [
-  //         ServiceTypes.EMS,
-  //         ServiceTypes.Parcel,
-  //         ServiceTypes.Registered,
-  //         ServiceTypes.KPacket,
-  //       ];
-  //       const new_list = prev.sort(
-  //         (a, b) => serviceOrder.indexOf(a.ServiceType) - serviceOrder.indexOf(b.ServiceType)
-  //       );
-  //       sorting_now.current = false;
-  //       return new_list;
-  //     });
-  //   }
-  // }, [gcss_items]);
-
   const render_gcss_replies = () => {
     if (!chk_gcss_rep) return null;
 
     if (gcss_items.length < 1)
       return (
         <Stack alignItems="center">
-          <Typography variant="subtitle2" color="initial">
+          <Typography
+            variant="subtitle2"
+            color="initial"
+            sx={{ userSelect: "none", fontWeight: "300" }}>
             GCSS 발송 회신: 모두 읽음 ✔️
           </Typography>
         </Stack>
@@ -255,7 +238,10 @@ function PopUpApp() {
           MyList({ items: gcss_req_items, type: "requests", service: "GCSS" })
         ) : (
           <Stack alignItems="center">
-            <Typography variant="subtitle2" color="initial">
+            <Typography
+              variant="subtitle2"
+              color="initial"
+              sx={{ userSelect: "none", fontWeight: "300" }}>
               GCSS 도착 문의: 모두 읽음 ✔️
             </Typography>
           </Stack>
@@ -265,13 +251,17 @@ function PopUpApp() {
       )}
 
       {render_gcss_replies()}
+      <Divider variant="middle" sx={{ m: "15px" }}></Divider>
 
       {chk_req ? (
         icare_req_items.length > 0 ? (
           MyList({ items: icare_req_items, type: "requests" })
         ) : (
           <Stack alignItems="center">
-            <Typography variant="subtitle2" color="initial">
+            <Typography
+              variant="subtitle2"
+              color="initial"
+              sx={{ userSelect: "none", fontWeight: "300" }}>
               ICare 도착 문의: 모두 읽음 ✔️
             </Typography>
           </Stack>
@@ -297,7 +287,10 @@ function PopUpApp() {
           )
         ) : (
           <Stack alignItems="center">
-            <Typography variant="subtitle2" color="initial">
+            <Typography
+              variant="subtitle2"
+              color="initial"
+              sx={{ userSelect: "none", fontWeight: "300" }}>
               iCare 발송 회신: 모두 읽음 ✔️
             </Typography>
           </Stack>

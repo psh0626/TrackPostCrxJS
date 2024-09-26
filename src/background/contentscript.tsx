@@ -1,18 +1,20 @@
 import { Msg, COMMANDS, SendRequest } from "../lib/Message";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./injectDOM/InjectUtil";
-import { IcareAPI } from "./GetUnreadReplies/IcareReplies";
+import { IcareAPI, IcareAPI2 } from "./GetUnreadReplies/IcareReplies";
 import GetIcareUserId from "../lib/GetIcareUserId";
 import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
 import { IMICSettings } from "../lib/OptionElement";
+
 
 (async () => {
   const settings = new IMICSettings();
   await settings.RequestLoad();
   GcssAPI.settings = settings;
-  IcareAPI.settings = settings;
+  IcareAPI2.settings = settings;
 
   let csrfToken = "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8";
+  // let csrfToken = document.querySelector("meta[name='csrf-token']")?.getAttribute("content");
   // if (csrfToken) {
   //   console.log("CSRF Token found:", csrfToken);
   //   // You can now use the CSRF token for your requests or initialization logic here
@@ -29,21 +31,21 @@ import { IMICSettings } from "../lib/OptionElement";
         GcssAPI.FetchReplies(false);
         break;
       case COMMANDS.ICARE_UNREAD_REPLIES:
-        IcareAPI.FetchUnreadReplies(csrfToken);
+        IcareAPI2.FetchUnreadReplies(csrfToken);
         break;
       case COMMANDS.SETTINGS_CHANGED:
         (async () => {
           await settings.RequestLoad();
           GcssAPI.settings = settings;
-          IcareAPI.settings = settings;
-          console.log("Settings Reloaded", settings, GcssAPI.settings, IcareAPI.settings);
+          IcareAPI2.settings = settings;
+          console.log("Settings Reloaded", settings, GcssAPI.settings, IcareAPI2.settings);
         })();
         break;
     }
   });
 
   console.log("Content script loaded at: " + document.readyState);
-  if (document.readyState === "complete") main();
+  main();
 
   let post_element: PostElement;
   let icare_internal_userid = "";
@@ -64,7 +66,7 @@ import { IMICSettings } from "../lib/OptionElement";
       });
 
       if (settings.GcssUnreadReplies) GcssAPI.FetchReplies(false);
-      
+
       if (
         currentURL.pathname.includes("/create/") ||
         currentURL.pathname.includes("/reactivate/")
@@ -96,16 +98,8 @@ import { IMICSettings } from "../lib/OptionElement";
         InjectUtil.InjectGcssQueryInput();
       }
     } else if (currentURL.origin === ICARE_URL) {
-      // (async () => {
-      //   // console.log("finding user id.."); // global timer, local storage에 user id 저장 한번만 찾으면 다시 찾을 필요 없어짐, webrequest 분석해서 csrf 계속 확인하는 건 어떰?
-      //   // icare_internal_userid = await GetIcareUserId();
 
-      //   // console.log("user id found:", icare_internal_userid);
-      //   // IcareAPI.UserId = icare_internal_userid;
-      //   // console.log("fetching replies with found csrf:", csrfToken, "\nUserID: ", IcareAPI.UserId);
-      // })();
-      
-      if(settings.IcareUnreadReplies) await IcareAPI.FetchUnreadReplies(csrfToken!);
+      if (settings.IcareUnreadReplies) await IcareAPI2.FetchUnreadReplies(csrfToken!);
 
       const param_action = currentURL.searchParams.get("action");
       if (param_action === "new") {

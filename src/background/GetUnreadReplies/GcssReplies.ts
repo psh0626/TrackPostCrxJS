@@ -58,6 +58,11 @@ export class GcssAPI {
     return search_strings.some((item) => target.toLowerCase().includes(item.toLowerCase()));
   }
   static async FetchReplies(repeat: boolean = true) {
+    if (!this.settings.GcssUnreadReplies) {
+      if (this.settings.GcssUnreadRequests) this.FetchRequests();
+      return;
+    }
+
     console.log("fetching GCSS replies with settings: ", this.settings.GcssServiceTypes);
 
     const response = await this.PostFetch("RPLYRCVD", this.settings.GcssServiceTypes); // TODO: 선택하는대로 추가시키기..
