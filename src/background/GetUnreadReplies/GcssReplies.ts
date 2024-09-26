@@ -8,6 +8,12 @@ export enum ServiceTypes {
   Registered = "REG",
   KPacket = "EXPRES",
 }
+export enum ServiceNames {
+  EMS = "EMS",
+  UPU = "PRC",
+  REG = "REG",
+  EXPRES = "LPK",
+}
 export class GcssAPI {
   static settings: IMICSettings;
 

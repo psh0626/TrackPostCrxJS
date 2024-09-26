@@ -35,6 +35,8 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
       setIcareAuthor(settings.current.IcareAuthor);
       setChkGcssRep(settings.current.GcssUnreadReplies);
       setChkGcssReq(settings.current.GcssUnreadRequests);
+      if (!Array.isArray(settings.current.GcssAuthor))
+        settings.current.GcssAuthor = [settings.current.GcssAuthor];
       setGcssAuthor(settings.current.GcssAuthor);
       setGcssServiceTypes(settings.current.GcssServiceTypes);
       initialized.current = true;
@@ -56,7 +58,15 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
     settings.current.GcssUnreadRequests = chkGcssReq;
     settings.current.GcssUnreadReplies = chkGcssRep;
     settings.current.GcssAuthor = gcssAuthor;
-    settings.current.GcssServiceTypes = gcssServiceTypes;
+    settings.current.GcssServiceTypes = gcssServiceTypes.sort((a, b) => {
+      const serviceOrder = [
+        ServiceTypes.EMS,
+        ServiceTypes.Parcel,
+        ServiceTypes.Registered,
+        ServiceTypes.KPacket,
+      ];
+      return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
+    });
     await settings.current.SaveOptions();
   }
 

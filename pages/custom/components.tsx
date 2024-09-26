@@ -19,7 +19,7 @@ import { styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import { GcssItem, WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
 import React from "react";
-import { ServiceTypes } from "../../src/background/GetUnreadReplies/GcssReplies";
+import { ServiceNames, ServiceTypes } from "../../src/background/GetUnreadReplies/GcssReplies";
 
 export const StyledTextField = styled(TextField)({
   "& .MuiInputLabel-root": {
@@ -72,13 +72,20 @@ export const InfoTextField: React.FC<InfoFieldType> = ({
     />
   );
 };
-export function MyList(
-  items: WorkflowItem[] | GcssItem[],
-  type: "replies" | "requests" = "replies",
-  service: "GCSS" | "iCare" = "iCare",
+interface MyListProps {
+  items: WorkflowItem[] | GcssItem[] | any[];
+  type?: "replies" | "requests";
+  service?: "GCSS" | "iCare";
+  author?: string;
+  serviceType?: ServiceNames;
+}
+export const MyList: React.FC<MyListProps> = ({
+  items,
+  type = "replies",
+  service = "iCare",
   author = "",
-  serviceType: ServiceTypes = ServiceTypes.EMS
-) {
+  serviceType = ServiceNames.EMS,
+}) => {
   let list_title =
     type === "replies" ? `${service} - ${serviceType} 발송 회신` : service + " - 도착 문의";
   list_title += `: ${items.length}건`;
@@ -173,4 +180,4 @@ export function MyList(
       </Accordion>
     </List>
   );
-}
+};

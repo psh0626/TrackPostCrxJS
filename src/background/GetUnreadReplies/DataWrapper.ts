@@ -27,6 +27,7 @@ export class GcssItem {
   ItemId = "";
   WorkflowLevel = "";
   ServiceType = "";
+  ServiceName = "";
   ReadStatus = "";
   RequestAuthor = "";
   RequestType = "";
@@ -41,7 +42,7 @@ export class GcssItem {
     if (data) Object.assign(this, data);
     const is_reply = this.OriginCountry === "KR" ? "reply" : "request";
     this.WorkflowLink =
-      `https://gcss.ipc.be/CSS/gcss/${this.ServiceType}` +
+      `https://gcss.ipc.be/CSS/gcss/${this.ServiceName}` +
       `/${is_reply}/show/message/${this.InternalMessageId}` +
       `/item/${this.InternalItemId}` +
       `/task/${this.InternalTaskId}`;
@@ -53,7 +54,8 @@ export class GcssItem {
       DestinationCountry: rawItem.destCountry,
       ItemId: rawItem.itemId,
       WorkflowLevel: rawItem.taskDescription,
-      ServiceType: rawItem.productName,
+      ServiceType: rawItem.product,
+      ServiceName: rawItem.productName,
       ReadStatus: rawItem.readStatus,
       RequestAuthor: rawItem.requestAuthor,
       RequestType: rawItem.requestTypeMnemonic,

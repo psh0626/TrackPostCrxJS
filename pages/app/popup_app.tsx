@@ -24,7 +24,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import { ExpandMore, OpenInBrowser } from "@mui/icons-material";
-import { ServiceTypes } from "../../src/background/GetUnreadReplies/GcssReplies";
+import { ServiceNames, ServiceTypes } from "../../src/background/GetUnreadReplies/GcssReplies";
 
 function PopUpApp() {
   // TODO: GCSS Author Name Separation.
@@ -84,6 +84,17 @@ function PopUpApp() {
       set_chk_gcssrep(settings.current.GcssUnreadReplies);
       set_chk_gcssreq(settings.current.GcssUnreadRequests);
       set_gcss_author(settings.current.GcssAuthor);
+      set_gcss_services(
+        settings.current.GcssServiceTypes.sort((a, b) => {
+          const serviceOrder = [
+            ServiceTypes.EMS,
+            ServiceTypes.Parcel,
+            ServiceTypes.Registered,
+            ServiceTypes.KPacket,
+          ];
+          return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
+        })
+      );
 
       if (settings.current.IcareUnreadReplies) {
         const dict = (await chrome.storage.session.get("ICARE_UNREAD_REPLIES"))
@@ -122,6 +133,94 @@ function PopUpApp() {
     })();
   }, []);
 
+  // const sorting_now = useRef(false);
+  // useEffect(() => {
+  //   if (!sorting_now.current) {
+  //     sorting_now.current = true;
+  //     set_gcss_items((prev) => {
+  //       const serviceOrder: string[] = [
+  //         ServiceTypes.EMS,
+  //         ServiceTypes.Parcel,
+  //         ServiceTypes.Registered,
+  //         ServiceTypes.KPacket,
+  //       ];
+  //       const new_list = prev.sort(
+  //         (a, b) => serviceOrder.indexOf(a.ServiceType) - serviceOrder.indexOf(b.ServiceType)
+  //       );
+  //       sorting_now.current = false;
+  //       return new_list;
+  //     });
+  //   }
+  // }, [gcss_items]);
+
+  const render_gcss_replies = () => {
+    if (!chk_gcss_rep) return null;
+
+    if (gcss_items.length < 1)
+      return (
+        <Stack alignItems="center">
+          <Typography variant="subtitle2" color="initial">
+            GCSS 발송 회신: 모두 읽음 ✔️
+          </Typography>
+        </Stack>
+      );
+    console.log("GCSS POPUP: services--", gcss_services, "author--", gcss_author);
+    if (gcss_services.length === 1) {
+      if (gcss_author.length <= 1) {
+        return MyList({
+          items: gcss_items.filter((el) => el.ServiceType === gcss_services[0]),
+          type: "replies",
+          service: "GCSS",
+        });
+      } else {
+        // 이용자 2명 이상, 서비스 1개
+        return gcss_author.map((user) =>
+          MyList({
+            items: gcss_items.filter((el) =>
+              el.RequestAuthor.toLowerCase().includes(user.toLowerCase())
+            ),
+            type: "replies",
+            service: "GCSS",
+            author: user,
+            serviceType: ServiceNames[gcss_services[0]],
+          })
+        );
+      }
+    } else {
+      // 서비스 2개 이상
+      if (gcss_author.length <= 1) {
+        // 이용자 1명 이하
+        return gcss_services.map((serv) =>
+          MyList({
+            items: gcss_items.filter((el) => el.ServiceType === serv),
+            type: "replies",
+            service: "GCSS",
+            author: "",
+            serviceType: ServiceNames[serv],
+          })
+        );
+      } else {
+        // 이용자 2명 이상
+        return gcss_services
+          .flatMap((serv) =>
+            gcss_author.map((user) =>
+              MyList({
+                items: gcss_items.filter(
+                  (el) =>
+                    el.ServiceType === serv &&
+                    el.RequestAuthor.toLowerCase().includes(user.toLowerCase())
+                ),
+                type: "replies",
+                service: "GCSS",
+                author: user,
+                serviceType: ServiceNames[serv],
+              })
+            )
+          )
+      }
+    }
+  };
+
   return (
     <Stack spacing={0} margin={6} marginTop={0} width="300px">
       <StyledTextField
@@ -154,7 +253,7 @@ function PopUpApp() {
       <Divider style={{ margin: "15px 0" }} />
       {chk_gcss_req ? (
         gcss_req_items.length > 0 ? (
-          MyList(gcss_req_items, "requests", "GCSS")
+          MyList({ items: gcss_req_items, type: "requests", service: "GCSS" })
         ) : (
           <Stack alignItems="center">
             <Typography variant="subtitle2" color="initial">
@@ -165,43 +264,12 @@ function PopUpApp() {
       ) : (
         ""
       )}
-      {chk_gcss_rep ? (
-        gcss_items.length > 0 ? (
-          gcss_author.length > 1 ? (
-            gcss_services.map((service) => {
-              return gcss_author.map((user) =>
-                MyList(
-                  gcss_items.filter(
-                    (e) => e.RequestAuthor.includes(user) && e.ServiceType === ServiceTypes.EMS
-                  ),
-                  "replies",
-                  "GCSS",
-                  user,
-                  service
-                )
-              );
-            })
-          ) : (
-            MyList(
-              gcss_items.filter((el) => el.ServiceType === ServiceTypes.EMS),
-              "replies",
-              "GCSS"
-            )
-          )
-        ) : (
-          <Stack alignItems="center">
-            <Typography variant="subtitle2" color="initial">
-              GCSS 발송 회신: 모두 읽음 ✔️
-            </Typography>
-          </Stack>
-        )
-      ) : (
-        ""
-      )}
+
+      {render_gcss_replies()}
 
       {chk_req ? (
         icare_req_items.length > 0 ? (
-          MyList(icare_req_items, "requests")
+          MyList({ items: icare_req_items, type: "requests" })
         ) : (
           <Stack alignItems="center">
             <Typography variant="subtitle2" color="initial">
@@ -216,15 +284,17 @@ function PopUpApp() {
         icare_items.length > 0 ? (
           icare_author.length > 1 ? (
             icare_author.map((user) =>
-              MyList(
-                icare_items.filter((e) => e.author.includes(user)),
-                "replies",
-                "iCare",
-                user
-              )
+              MyList({
+                items: icare_items.filter((e) =>
+                  e.author.toLowerCase().includes(user.toLowerCase())
+                ),
+                type: "replies",
+                service: "iCare",
+                author: user,
+              })
             )
           ) : (
-            MyList(icare_items)
+            MyList({ items: icare_items })
           )
         ) : (
           <Stack alignItems="center">
