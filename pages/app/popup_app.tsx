@@ -201,22 +201,21 @@ function PopUpApp() {
         );
       } else {
         // 이용자 2명 이상
-        return gcss_services
-          .flatMap((serv) =>
-            gcss_author.map((user) =>
-              MyList({
-                items: gcss_items.filter(
-                  (el) =>
-                    el.ServiceType === serv &&
-                    el.RequestAuthor.toLowerCase().includes(user.toLowerCase())
-                ),
-                type: "replies",
-                service: "GCSS",
-                author: user,
-                serviceType: ServiceNames[serv],
-              })
-            )
+        return gcss_services.flatMap((serv) =>
+          gcss_author.map((user) =>
+            MyList({
+              items: gcss_items.filter(
+                (el) =>
+                  el.ServiceType === serv &&
+                  el.RequestAuthor.toLowerCase().includes(user.toLowerCase())
+              ),
+              type: "replies",
+              service: "GCSS",
+              author: user,
+              serviceType: ServiceNames[serv],
+            })
           )
+        );
       }
     }
   };

@@ -7,7 +7,7 @@ interface nested_component {
 }
 export default function PopupHeader({ children }: nested_component) {
   return (
-    <Stack color={colors.deepOrange} marginTop={5} marginBottom={5}>
+    <Stack color={colors.deepOrange} marginTop={5} marginBottom={5} height="48px">
       <AppBar position="fixed" color="primary">
         <Toolbar>
           <TravelExplore sx={{ mr: 1 }} />
