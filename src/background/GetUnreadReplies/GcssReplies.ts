@@ -10,7 +10,7 @@ export enum ServiceTypes {
 }
 export enum ServiceNames {
   EMS = "EMS",
-  UPU = "PRC",
+  UPU = "소포",
   REG = "REG",
   EXPRES = "LPK",
 }

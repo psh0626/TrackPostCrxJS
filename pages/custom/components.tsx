@@ -131,8 +131,10 @@ export const MyList: React.FC<MyListProps> = ({
   ) : (
     <List>
       <Accordion>
-        <AccordionSummary expandIcon={<ExpandMore />}>
-          <Typography variant="body1" fontWeight="100" textAlign="left" letterSpacing="-1px">
+        <AccordionSummary
+          expandIcon={<ExpandMore />}
+          sx={{ "& .MuiAccordionSummary-content": { justifyContent: "center" } }}>
+          <Typography variant="body1" fontWeight="100" letterSpacing="-1px">
             {list_title}
           </Typography>
         </AccordionSummary>
