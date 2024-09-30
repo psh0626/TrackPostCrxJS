@@ -6,7 +6,6 @@ import GetIcareUserId from "../lib/GetIcareUserId";
 import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
 import { IMICSettings } from "../lib/OptionElement";
 
-
 (async () => {
   const settings = new IMICSettings();
   await settings.RequestLoad();
@@ -98,8 +97,7 @@ import { IMICSettings } from "../lib/OptionElement";
         InjectUtil.InjectGcssQueryInput();
       }
     } else if (currentURL.origin === ICARE_URL) {
-
-      if (settings.IcareUnreadReplies) await IcareAPI2.FetchUnreadReplies(csrfToken!);
+      if (settings.IcareUnreadReplies) await IcareAPI2.FetchUnreadReplies(csrfToken!, false);
 
       const param_action = currentURL.searchParams.get("action");
       if (param_action === "new") {
@@ -125,11 +123,13 @@ import { IMICSettings } from "../lib/OptionElement";
           console.log("message received: ", message);
           if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
             setTimeout(() => InjectIcare(post_element), 600);
-            port.disconnect();
+            // port.disconnect();
           }
         });
         port.onDisconnect.addListener((p) => {
+          p.disconnect();
           port.disconnect();
+          console.log("PORT DISCONNECTED");
         });
       } else if (param_action === "view") {
         if (currentURL.searchParams.get("module") === "notification") {
@@ -146,10 +146,11 @@ import { IMICSettings } from "../lib/OptionElement";
           console.log("message received: ", message);
           if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
             setTimeout(() => InjectUtil.InjectIcarePersonalRemarks(remark_type), 600);
-            port.disconnect();
+            // port.disconnect();
           }
         });
         port.onDisconnect.addListener((p) => {
+          p.disconnect();
           port.disconnect();
         });
       }

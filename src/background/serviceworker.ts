@@ -104,7 +104,7 @@ chrome.webRequest.onCompleted.addListener(
       }
     }
   },
-  { urls: ["*://icare.post/*"] },
+  { urls: ["*://icare.post/*"] }
 );
 
 chrome.runtime.onConnect.addListener((port) => {

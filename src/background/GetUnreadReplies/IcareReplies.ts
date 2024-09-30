@@ -22,10 +22,10 @@ export class IcareAPI2 {
     "sec-fetch-site": "same-origin",
     "x-requested-with": "XMLHttpRequest",
   };
-  static async FetchUnreadReplies(csrfToken: string, trialNo: number = 1) {
+  static async FetchUnreadReplies(csrfToken: string, notifyBadge = true, trialNo: number = 1) {
     if (trialNo > 2) {
       this.LastCsrfToken = csrfToken;
-      chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?"));
+      if (notifyBadge) chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?"));
       return;
     }
 
@@ -71,7 +71,7 @@ export class IcareAPI2 {
         "\nResponse:",
         result
       );
-      this.FetchUnreadReplies(this.LastCsrfToken, ++trialNo);
+      this.FetchUnreadReplies(this.LastCsrfToken, notifyBadge, ++trialNo);
     }
   }
   private static async FetchUnreadRequests(csrfToken: string) {
