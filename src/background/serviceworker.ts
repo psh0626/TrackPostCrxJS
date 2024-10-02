@@ -25,7 +25,7 @@ function main() {
   GlobalTimer.Interval = 15000;
   GlobalTimer.Start();
 }
-async function APICalls(count: number) {
+async function APICalls(count: number, final = false) {
   const today = new Date();
   console.log(`${today.toLocaleTimeString("ko-KR")}: Ticking Global Timer: `, count, " times");
   if (count % 12 === 0) {
@@ -49,7 +49,13 @@ async function APICalls(count: number) {
     )[0] as chrome.tabs.Tab;
 
     if (!icare_tab || !gcss_tab) {
-      chrome.action.setBadgeText({ text: "?" });
+      if (final) {
+        chrome.action.setBadgeText({ text: "?" });
+      } else {
+        setTimeout(() => {
+          APICalls(count, true);
+        }, 1000);
+      }
       return;
     }
 
