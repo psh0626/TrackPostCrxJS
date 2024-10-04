@@ -23,12 +23,6 @@ export class IcareAPI2 {
     "x-requested-with": "XMLHttpRequest",
   };
   static async FetchUnreadReplies(csrfToken: string, notifyBadge = true, trialNo: number = 1) {
-    if (trialNo > 2) {
-      this.LastCsrfToken = csrfToken;
-      if (notifyBadge) chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?"));
-      return;
-    }
-
     if (!this.settings.IcareUnreadReplies) {
       if (this.settings.IcareUnreadRequests) this.FetchUnreadRequests(this.LastCsrfToken);
       return;
@@ -62,7 +56,7 @@ export class IcareAPI2 {
 
     if (response.ok && !see_other) {
       console.log(`ICARE FETCH: GET-UNREAD-REPLIES Attempt No.${trialNo} successful`, result);
-      if (this.settings.IcareUnreadRequests) this.FetchUnreadRequests(this.LastCsrfToken);
+      if (this.settings.IcareUnreadRequests) await this.FetchUnreadRequests(this.LastCsrfToken);
       this.OnSuccess(result!);
     } else {
       console.log(
@@ -71,7 +65,13 @@ export class IcareAPI2 {
         "\nResponse:",
         result
       );
-      this.FetchUnreadReplies(this.LastCsrfToken, notifyBadge, ++trialNo);
+
+      if (trialNo >= 2) {
+        this.LastCsrfToken = csrfToken;
+        if (notifyBadge) chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?"));
+      } else {
+        this.FetchUnreadReplies(this.LastCsrfToken, notifyBadge, ++trialNo);
+      }
     }
   }
   private static async FetchUnreadRequests(csrfToken: string) {
