@@ -14,7 +14,7 @@ const GCSS_URL = "https://gcss.ipc.be";
 const ICARE_URL = "https://icare.post";
 console.log("BackgroundWorker has been initiated.");
 
-let MsgPort: chrome.runtime.Port | null = null;
+var MsgPort: { [key: number]: chrome.runtime.Port } = {};
 export const PopupTracker = new PopupTrack();
 
 main();
@@ -84,7 +84,7 @@ chrome.webRequest.onCompleted.addListener(
               );
               return;
             }
-            MsgPort.postMessage(new Msg(COMMANDS.WEB_REQUEST_COMPLETE));
+            MsgPort[details.tabId].postMessage(new Msg(COMMANDS.WEB_REQUEST_COMPLETE));
             console.log("Message Sent to content script in: ", tab.title);
             return true;
           }
@@ -102,7 +102,7 @@ chrome.webRequest.onCompleted.addListener(
             console.log("Message port is not open. Unable to send a message to the content script");
             return;
           }
-          MsgPort.postMessage(new Msg(COMMANDS.WEB_REQUEST_COMPLETE));
+          MsgPort[details.tabId].postMessage(new Msg(COMMANDS.WEB_REQUEST_COMPLETE));
           console.log("Message Sent to content script in: ", tab.title);
           return true;
         })();
@@ -114,7 +114,7 @@ chrome.webRequest.onCompleted.addListener(
 );
 
 chrome.runtime.onConnect.addListener((port) => {
-  if (port.sender?.url?.includes("icare.post")) MsgPort = port;
+  if (port.sender?.url?.includes("icare.post")) MsgPort[port.sender?.tab?.id!] = port;
 });
 
 chrome.runtime.onMessage.addListener(ProcessMessage);
