@@ -114,7 +114,12 @@ chrome.webRequest.onCompleted.addListener(
 );
 
 chrome.runtime.onConnect.addListener((port) => {
-  if (port.sender?.url?.includes("icare.post")) MsgPort[port.sender?.tab?.id!] = port;
+  if (port.sender?.url?.includes("icare.post")) {
+    MsgPort[port.sender?.tab?.id!] = port;
+    port.onDisconnect.addListener((p) => {
+      delete MsgPort[p.sender?.tab?.id!];
+    });
+  }
 });
 
 chrome.runtime.onMessage.addListener(ProcessMessage);
