@@ -126,11 +126,11 @@ import { IMICSettings } from "../lib/OptionElement";
             // port.disconnect();
           }
         });
-        port.onDisconnect.addListener((p) => {
-          p.disconnect();
-          port.disconnect();
-          console.log("PORT DISCONNECTED");
-        });
+        // port.onDisconnect.addListener((p) => {
+        //   p.disconnect();
+        //   port.disconnect();
+        //   console.log("PORT DISCONNECTED");
+        // });
       } else if (param_action === "view") {
         if (currentURL.searchParams.get("module") === "notification") {
           //noti 도착
@@ -149,10 +149,10 @@ import { IMICSettings } from "../lib/OptionElement";
             // port.disconnect();
           }
         });
-        port.onDisconnect.addListener((p) => {
-          p.disconnect();
-          port.disconnect();
-        });
+        // port.onDisconnect.addListener((p) => {
+        //   p.disconnect();
+        //   port.disconnect();
+        // });
       }
     }
   }

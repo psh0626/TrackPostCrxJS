@@ -116,8 +116,21 @@ chrome.webRequest.onCompleted.addListener(
 chrome.runtime.onConnect.addListener((port) => {
   if (port.sender?.url?.includes("icare.post")) {
     MsgPort[port.sender?.tab?.id!] = port;
+    console.log(
+      `${new Date().toLocaleString("ko-KR")} - MsgPort established with new connection.`,
+      MsgPort,
+      "background: ",
+      port
+    );
     port.onDisconnect.addListener((p) => {
       delete MsgPort[p.sender?.tab?.id!];
+      console.log(
+        `${new Date().toLocaleString("ko-KR")} - MsgPort deleted since the connection is lost.`,
+        MsgPort,
+        "background: ",
+        port,
+        port === p
+      );
     });
   }
 });
