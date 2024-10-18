@@ -22,7 +22,7 @@ main();
 function main() {
   let count = 0;
   GlobalTimer.Callback = async () => await APICalls(count++);
-  GlobalTimer.Interval = 15000;
+  GlobalTimer.Interval = 30000;
   GlobalTimer.Start();
 }
 async function APICalls(count: number, final = false) {
@@ -61,11 +61,11 @@ async function APICalls(count: number, final = false) {
 
     if (icare_tab) {
       chrome.tabs.sendMessage(icare_tab.id!, new Msg(COMMANDS.ICARE_UNREAD_REPLIES));
-      console.log("icare ticked");
+      console.log(new Date().toLocaleTimeString(), "icare ticked");
     }
     if (gcss_tab) {
       chrome.tabs.sendMessage(gcss_tab.id!, new Msg(COMMANDS.GCSS_UNREAD_REPLIES));
-      console.log("gcss ticked");
+      console.log(new Date().toLocaleTimeString(), "gcss ticked");
     }
   }
 }

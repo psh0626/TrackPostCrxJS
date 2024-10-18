@@ -36,22 +36,22 @@ export class IcareAPI2 {
     const bodyCombined = this.GetBodyStringForUnreadReplies(
       this.LastCsrfToken ? this.LastCsrfToken : csrfToken
     );
-    const response = await fetch(
-      "https://icare.post/?module=workflow&tab=active&action=overviewJson&mode=ajax",
-      {
-        method: "POST",
-        headers: this.AcceptAll,
-        referrer: "https://icare.post/?module=workflow&tab=active",
-        referrerPolicy: "strict-origin-when-cross-origin",
-        body: bodyCombined,
-        mode: "cors",
-        credentials: "include",
-      }
-    );
-
+    let response: Response;
     let result: IcareResponse | undefined;
-    let errorOccured = false;
     try {
+      response = await fetch(
+        "https://icare.post/?module=workflow&tab=active&action=overviewJson&mode=ajax",
+        {
+          method: "POST",
+          headers: this.AcceptAll,
+          referrer: "https://icare.post/?module=workflow&tab=active",
+          referrerPolicy: "strict-origin-when-cross-origin",
+          body: bodyCombined,
+          mode: "cors",
+          credentials: "include",
+        }
+      );
+
       result = (await response.json()) as IcareResponse;
       this.LastCsrfToken = result.control.csrfToken;
     } catch (e) {
@@ -60,8 +60,9 @@ export class IcareAPI2 {
       if (noResponse >= 5) {
         chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?"));
       } else {
+        console.log("NO RESPONSE", noResponse);
         setTimeout(() => {
-          this.FetchUnreadReplies(this.LastCsrfToken, notifyBadge, trialNo, noResponse + 1);
+          this.FetchUnreadReplies(this.LastCsrfToken, notifyBadge, trialNo, ++noResponse);
         }, 1000);
       }
       return;

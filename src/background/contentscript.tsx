@@ -30,6 +30,7 @@ import { IMICSettings } from "../lib/OptionElement";
         GcssAPI.FetchReplies(false);
         break;
       case COMMANDS.ICARE_UNREAD_REPLIES:
+        console.log("IcareAPI2 fetching unread replies by tick");
         IcareAPI2.FetchUnreadReplies(csrfToken);
         break;
       case COMMANDS.SETTINGS_CHANGED:
