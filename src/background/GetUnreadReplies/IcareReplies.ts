@@ -56,9 +56,9 @@ export class IcareAPI2 {
       this.LastCsrfToken = result.control.csrfToken;
     } catch (e) {
       //this.LastCsrfToken = "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8";
-      console.log(`ICARE FETCH: error ${e} `);
+      console.log(`ICARE FETCH: error`, e);
       if (noResponse >= 5) {
-        if (notifyBadge) chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?"));
+        chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?"));
       } else {
         setTimeout(() => {
           this.FetchUnreadReplies(this.LastCsrfToken, notifyBadge, trialNo, noResponse + 1);
@@ -83,7 +83,7 @@ export class IcareAPI2 {
         this.LastCsrfToken = csrfToken;
         if (notifyBadge) chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?"));
       } else {
-        this.FetchUnreadReplies(this.LastCsrfToken, notifyBadge, ++trialNo);
+        this.FetchUnreadReplies(this.LastCsrfToken, notifyBadge, trialNo + 1, noResponse);
       }
     }
   }
