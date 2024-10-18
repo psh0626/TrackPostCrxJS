@@ -14,7 +14,7 @@ const GCSS_URL = "https://gcss.ipc.be";
 const ICARE_URL = "https://icare.post";
 console.log("BackgroundWorker has been initiated.");
 
-var MsgPort: { [key: number]: chrome.runtime.Port } = {};
+let MsgPort: { [key: number]: chrome.runtime.Port } = {};
 export const PopupTracker = new PopupTrack();
 
 main();
@@ -22,7 +22,7 @@ main();
 function main() {
   let count = 0;
   GlobalTimer.Callback = async () => await APICalls(count++);
-  GlobalTimer.Interval = 30000;
+  GlobalTimer.Interval = 15000;
   GlobalTimer.Start();
 }
 async function APICalls(count: number, final = false) {

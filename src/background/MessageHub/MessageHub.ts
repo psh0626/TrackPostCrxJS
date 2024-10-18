@@ -5,6 +5,7 @@ import { PopupTracker } from "../serviceworker";
 import CreateNotification from "../../lib/Notification";
 import { GcssAPI } from "../GetUnreadReplies/GcssReplies";
 import { IcareAPI } from "../GetUnreadReplies/IcareReplies";
+import { errorMonitor } from "events";
 
 export default function ProcessMessage(
   Message: Msg,
@@ -19,6 +20,10 @@ export default function ProcessMessage(
     "\ncontent: ",
     Message
   );
+  type FetchError = {
+    ICARE: boolean;
+    GCSS: boolean;
+  };
 
   switch (Message.Command) {
     case COMMANDS.FETCH_POST_ELEMENT:
@@ -36,8 +41,14 @@ export default function ProcessMessage(
 
     case COMMANDS.GCSS_UNREAD_REPLIES:
     case COMMANDS.ICARE_UNREAD_REPLIES:
-      if (Message.Param === "?") {
-        console.log("Unable to fetch/communicate data from Gcss or iCare");
+      if (["?ICARE", "?GCSS"].includes(Message.Param)) {
+        (async () => {
+          const err_msg = Message.Param.replace("?", "") as keyof FetchError;
+          const which_one: FetchError = { ICARE: false, GCSS: false };
+          which_one[err_msg] = true;
+          console.log("Unable to fetch/communicate data from", which_one);
+          await chrome.storage.session.set({ FETCH_ERROR: which_one });
+        })();
         chrome.action.setBadgeText({ text: "?" });
         return;
       }
@@ -48,10 +59,16 @@ export default function ProcessMessage(
       else replies = Message.Param as GcssItem[];
 
       (async () => {
-        if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES)
+        const err: FetchError = (await chrome.storage.session.get("FETCH_ERROR")).FETCH_ERROR;
+        if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES) {
+          if (err) err.ICARE = false;
+          await chrome.storage.session.set({ FETCH_ERROR: err });
           await chrome.storage.session.set({ ICARE_UNREAD_REPLIES: replies });
-        else await chrome.storage.session.set({ GCSS_UNREAD_REPLIES: replies });
-
+        } else {
+          if (err) err.GCSS = false;
+          await chrome.storage.session.set({ FETCH_ERROR: err });
+          await chrome.storage.session.set({ GCSS_UNREAD_REPLIES: replies });
+        }
         await CreateNotification();
       })();
       return; // false since we're not sending response

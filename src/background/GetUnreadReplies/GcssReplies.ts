@@ -69,7 +69,7 @@ export class GcssAPI {
     if (!response.ok) {
       console.error(response.status);
       if (this.settings.GcssUnreadReplies)
-        chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, "?"));
+        chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, "?GCSS"));
       //this.ScheduleAnotherFetch();
       return;
     }

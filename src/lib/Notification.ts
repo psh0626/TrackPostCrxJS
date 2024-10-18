@@ -2,9 +2,23 @@ import { GcssItem, WorkflowItem } from "../background/GetUnreadReplies/DataWrapp
 import { COMMANDS } from "./Message";
 import { IMICSettings } from "./OptionElement";
 
+async function CheckFetchError() {
+  type FetchError = {
+    ICARE: boolean;
+    GCSS: boolean;
+  };
+  const err: FetchError = (await chrome.storage.session.get("FETCH_ERROR")).FETCH_ERROR;
+  if (!err) return false;
+  if (err.GCSS || err.ICARE) {
+    return err;
+  }
+  return false;
+}
 export default async function CreateNotification(force_update = false) {
   const settings = new IMICSettings();
   await settings.LoadOptions();
+
+  const fetch_error = await CheckFetchError();
 
   let WorkFlowItems: WorkflowItem[] = [];
   let GcssItems: GcssItem[] = [];
@@ -50,10 +64,11 @@ export default async function CreateNotification(force_update = false) {
     } else {
       item_count = "";
     }
-    chrome.action.setBadgeText({ text: item_count });
-
+    if (!fetch_error) chrome.action.setBadgeText({ text: item_count });
     if (!force_update) return;
   } else chrome.action.setBadgeText({ text: `${current_num}` });
+
+  if (fetch_error && !force_update) return;
 
   let mapped_items: chrome.notifications.ItemOptions[] = [];
   let gcss_mapped_items: chrome.notifications.ItemOptions[] = [];
@@ -79,12 +94,14 @@ export default async function CreateNotification(force_update = false) {
     ...(Array.isArray(mapped_items) ? mapped_items : []),
   ];
 
+  const err_msg = fetch_error ? (fetch_error.GCSS ? "(GCSS 에러)\n" : "(i-Care 에러)\n") : "";
+
   const options = {
     type: "list",
     priority: 2,
     requireInteraction: true,
     iconUrl: "src/ext-icon.png",
-    title: `IMIC 알림: ${current_num}개 메시지 대기`,
+    title: `${err_msg}IMIC 알림: ${current_num}개 메시지 대기`,
     message: `GCSS/iCare 읽지 않은 메시지가 ${current_num}개 있습니다.`,
     contextMessage: `GCSS/Icare unread replies: ${current_num}`,
     items: combined,
