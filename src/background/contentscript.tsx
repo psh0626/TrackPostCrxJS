@@ -98,7 +98,7 @@ import { IMICSettings } from "../lib/OptionElement";
         InjectUtil.InjectGcssQueryInput();
       }
     } else if (currentURL.origin === ICARE_URL) {
-      if (settings.IcareUnreadReplies) await IcareAPI2.FetchUnreadReplies(csrfToken!, false);
+      if (settings.IcareUnreadReplies) await IcareAPI2.FetchUnreadReplies(csrfToken!);
 
       const param_action = currentURL.searchParams.get("action");
       if (param_action === "new") {

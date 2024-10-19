@@ -22,7 +22,7 @@ main();
 function main() {
   let count = 0;
   GlobalTimer.Callback = async () => await APICalls(count++);
-  GlobalTimer.Interval = 20000;
+  GlobalTimer.Interval = 15000;
   GlobalTimer.Start();
 }
 async function APICalls(count: number, final = false) {

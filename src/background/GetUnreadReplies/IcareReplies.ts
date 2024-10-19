@@ -42,12 +42,7 @@ export class IcareAPI2 {
   private static UpdateCsrfToken(newToken: string) {
     this.LastCsrfToken = newToken;
   }
-  static async FetchUnreadReplies(
-    csrfToken: string,
-    notifyBadge = true,
-    trialNo = 1,
-    noResponse = 0
-  ) {
+  static async FetchUnreadReplies(csrfToken: string, trialNo = 1, noResponse = 0) {
     if (!this.settings.IcareUnreadReplies) {
       if (this.settings.IcareUnreadRequests) this.FetchUnreadRequests(this.LastCsrfToken);
       return;
@@ -69,7 +64,7 @@ export class IcareAPI2 {
         chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?ICARE"));
       } else {
         setTimeout(() => {
-          this.FetchUnreadReplies(this.LastCsrfToken, notifyBadge, trialNo, ++noResponse);
+          this.FetchUnreadReplies(this.LastCsrfToken, trialNo, ++noResponse);
         }, this.RETRY_TIMEOUT_MS);
       }
       return;
@@ -89,10 +84,9 @@ export class IcareAPI2 {
 
       if (trialNo >= this.MAX_RETRY_COUNT) {
         //this.UpdateCsrfToken(csrfToken);
-        if (notifyBadge)
-          chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?ICARE"));
+        chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?ICARE"));
       } else {
-        this.FetchUnreadReplies(this.LastCsrfToken, notifyBadge, trialNo + 1, noResponse);
+        this.FetchUnreadReplies(this.LastCsrfToken, trialNo + 1, noResponse);
       }
     }
   }
