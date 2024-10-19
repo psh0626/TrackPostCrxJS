@@ -22,13 +22,13 @@ main();
 function main() {
   let count = 0;
   GlobalTimer.Callback = async () => await APICalls(count++);
-  GlobalTimer.Interval = 15000;
+  GlobalTimer.Interval = 30 * 1000;
   GlobalTimer.Start();
 }
 async function APICalls(count: number, final = false) {
   const today = new Date();
   console.log(`${today.toLocaleTimeString("ko-KR")}: Ticking Global Timer: `, count, " times");
-  if (count % 12 === 0) {
+  if (count % 6 === 0) {
     console.log("CreateNotification invoking..");
     CreateNotification(true);
   }
@@ -54,7 +54,7 @@ async function APICalls(count: number, final = false) {
       } else {
         setTimeout(() => {
           APICalls(count, true);
-        }, 1000);
+        }, 2000);
       }
       return;
     }

@@ -12,7 +12,7 @@ export class IcareAPI2 {
   static readonly FETCH_URL =
     "https://icare.post/?module=workflow&tab=active&action=overviewJson&mode=ajax";
   static readonly MAX_RETRY_COUNT = 3;
-  static readonly RETRY_TIMEOUT_MS = 1000;
+  static readonly RETRY_TIMEOUT_MS = 2 * 1000;
   private static readonly FETCH_HEADERS = {
     accept: "application/json, text/javascript, */*; q=0.01",
     "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -86,7 +86,11 @@ export class IcareAPI2 {
         //this.UpdateCsrfToken(csrfToken);
         chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?ICARE"));
       } else {
-        this.FetchUnreadReplies(this.LastCsrfToken, trialNo + 1, noResponse);
+        if (response.status === 403) {
+          setTimeout(() => {
+            this.FetchUnreadReplies(this.LastCsrfToken, trialNo + 1, noResponse);
+          }, this.RETRY_TIMEOUT_MS);
+        } else this.FetchUnreadReplies(this.LastCsrfToken, trialNo + 1, noResponse);
       }
     }
   }

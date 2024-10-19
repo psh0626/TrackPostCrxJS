@@ -1,3 +1,4 @@
+import { arrayBuffer } from "stream/consumers";
 import { GcssItem, WorkflowItem } from "../background/GetUnreadReplies/DataWrapper";
 import { COMMANDS } from "./Message";
 import { IMICSettings } from "./OptionElement";
@@ -94,9 +95,11 @@ export default async function CreateNotification(force_update = false) {
     ...(Array.isArray(mapped_items) ? mapped_items : []),
   ];
 
+  if (!Array.isArray(combined) || combined.length < 1) return;
+
   const err_msg = fetch_error ? (fetch_error.GCSS ? "(GCSS 에러)\n" : "(i-Care 에러)\n") : "";
 
-  const options = {
+  const options: chrome.notifications.NotificationOptions<true> = {
     type: "list",
     priority: 2,
     requireInteraction: true,
@@ -108,9 +111,6 @@ export default async function CreateNotification(force_update = false) {
     buttons: [{ title: "확인" }],
   };
   chrome.notifications.clear(COMMANDS.ICARE_UNREAD_REPLIES);
-  chrome.notifications.create(
-    COMMANDS.ICARE_UNREAD_REPLIES,
-    options as chrome.notifications.NotificationOptions<true>
-  );
+  chrome.notifications.create(COMMANDS.ICARE_UNREAD_REPLIES, options);
   return true;
 }
