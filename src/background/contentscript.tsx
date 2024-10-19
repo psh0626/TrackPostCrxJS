@@ -1,7 +1,7 @@
 import { Msg, COMMANDS, SendRequest } from "../lib/Message";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./injectDOM/InjectUtil";
-import { IcareAPI, IcareAPI2 } from "./GetUnreadReplies/IcareReplies";
+import { IcareAPI2 } from "./GetUnreadReplies/IcareReplies";
 import GetIcareUserId from "../lib/GetIcareUserId";
 import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
 import { IMICSettings } from "../lib/OptionElement";

@@ -4,7 +4,6 @@ import { GcssItem, WorkflowItem } from "../GetUnreadReplies/DataWrapper";
 import { PopupTracker } from "../serviceworker";
 import CreateNotification from "../../lib/Notification";
 import { GcssAPI } from "../GetUnreadReplies/GcssReplies";
-import { IcareAPI } from "../GetUnreadReplies/IcareReplies";
 import { errorMonitor } from "events";
 
 export default function ProcessMessage(
