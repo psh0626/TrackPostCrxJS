@@ -14,21 +14,12 @@ Write-Output "Creating dist.zip..."
 Compress-Archive -Path "dist\\*" -DestinationPath "publish\\dist.zip" -Force
 Write-Output "dist.zip file has been created!"
 
-# try{
-# git remote add publish_dist https://github.com/shawnpark9494/TrackPostExtZip.git
-# }catch{
-#   exit;
-# }
-# git add publish/dist.zip
+Set-Location publish
+git add dist.zip
+git commit
+git push origin main
 
-# Write-Output "Creating commit..."
-# git commit -m "Add build artifacts"
-
-# # Replace 'your-remote' with the desired remote name and 'your-branch' with the desired branch name
-# $remote = "publish_dist"
-# $branch = "main"
-
-# Write-Output "Pushing changes to remote..."
-# git push $remote $branch --force
-
-# git remote rm publish_dist
+Set-Location ..
+git add publish
+git commit -m "Update submodule reference"
+git push origin main
