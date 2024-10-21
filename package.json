@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "postbuild": "node ./set-dynamic-url.cjs",
+    "postbuild": "node ./set-dynamic-url.cjs && powershell -ExecutionPolicy Bypass -File ./post-build-zip.ps1",
     "preview": "vite preview"
   },
   "dependencies": {
