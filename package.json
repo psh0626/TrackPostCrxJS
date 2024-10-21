@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "postbuild": "node ./set-dynamic-url.cjs",
     "preview": "vite preview"
   },
   "dependencies": {
