@@ -76,17 +76,19 @@ export default async function CreateNotification(force_update = false) {
 
   if (Array.isArray(WorkFlowItems)) {
     mapped_items = WorkFlowItems.map((item) => {
+      const is_outbound = item.tracking_id.slice(-2) === "KR";
       return {
-        title: `iCare L${item.current_level} ${item.workflow_status === "Replied" ? "발송" : "도착"}`,
-        message: `${item.tracking_id} ${item.tracking_id.slice(-2) === "KR" ? "(" + item.replying_op.substring(0, 2) + ")" : ""}`,
+        title: `iCare L${item.current_level} ${is_outbound ? "발송" : "도착"}`,
+        message: `${item.tracking_id} ${is_outbound ? "(" + item.replying_op.substring(0, 2) + ")" : ""}`,
       } as chrome.notifications.ItemOptions;
     });
   }
   if (Array.isArray(GcssItems)) {
     gcss_mapped_items = GcssItems.map((item) => {
+      const is_outbound = item.OriginCountry === "KR";
       return {
-        title: `GCSS ${item.WorkflowLevel} ${item.OriginCountry === "KR" ? "발송" : "도착"}`,
-        message: `${item.ItemId} ${item.OriginCountry === "KR" ? "(" + item.DestinationCountry + ")" : ""}`,
+        title: `GCSS ${item.WorkflowLevel} ${is_outbound ? "발송" : "도착"}`,
+        message: `${item.ItemId} ${is_outbound ? "(" + item.DestinationCountry + ")" : ""}`,
       } as chrome.notifications.ItemOptions;
     });
   }
