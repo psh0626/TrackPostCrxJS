@@ -69,7 +69,16 @@ async function APICalls(count: number, final = false) {
     }
   }
 }
-
+chrome.webRequest.onBeforeRequest.addListener(
+  function (details) {
+    if (details.url.includes("https://github.com/shawnpark9494/TrackPostExtZip/commits/main/")) {
+      chrome.runtime.reload();
+    }
+  },
+  {
+    urls: ["https://github.com/shawnpark9494/TrackPostExtZip/commits/main/"],
+  }
+);
 chrome.webRequest.onCompleted.addListener(
   function (details) {
     if (details.method === "GET") {

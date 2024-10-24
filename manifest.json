@@ -34,7 +34,8 @@
   "host_permissions": [
     "https://ems.epost.go.kr/*",
     "https://icare.post/*",
-    "https://gcss.ipc.be/*"
+    "https://gcss.ipc.be/*",
+    "https://github.com/shawnpark9494/TrackPostExtZip/commits/main/"
   ],
   "content_scripts": [
     {
