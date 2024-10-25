@@ -1,6 +1,4 @@
 import { Msg, COMMANDS } from "../lib/Message";
-import { PostAPI, PostElement } from "../lib/PostUtil";
-import { WorkflowItem } from "./GetUnreadReplies/DataWrapper";
 import PopupTrack from "../lib/PopupTrack";
 import CreateNotification from "../lib/Notification";
 import ProcessMessage from "./MessageHub/MessageHub";
@@ -10,11 +8,11 @@ import { GlobalTimer } from "./GetUnreadReplies/Timer";
 chrome.action.setBadgeBackgroundColor({ color: "#424242" });
 chrome.action.setBadgeTextColor({ color: "white" });
 
-const GCSS_URL = "https://gcss.ipc.be";
+// const GCSS_URL = "https://gcss.ipc.be";
 const ICARE_URL = "https://icare.post";
 console.log("BackgroundWorker has been initiated.");
 
-let MsgPort: { [key: number]: chrome.runtime.Port } = {};
+const MsgPort: { [key: number]: chrome.runtime.Port } = {};
 export const PopupTracker = new PopupTrack();
 
 main();
@@ -30,7 +28,7 @@ async function APICalls(count: number, final = false) {
   console.log(`${today.toLocaleTimeString("ko-KR")}: Ticking Global Timer: `, count, " times");
   if (count % 6 === 0) {
     console.log("CreateNotification invoking..");
-    CreateNotification(true);
+    await CreateNotification(true);
   }
   const work_tabs = await chrome.tabs.query({
     url: ["https://icare.post/*", "https://gcss.ipc.be/*"],
@@ -50,7 +48,7 @@ async function APICalls(count: number, final = false) {
 
     if (!icare_tab || !gcss_tab) {
       if (final) {
-        chrome.action.setBadgeText({ text: "?" });
+        await chrome.action.setBadgeText({ text: "?" });
       } else {
         setTimeout(() => {
           APICalls(count, true);
@@ -60,11 +58,11 @@ async function APICalls(count: number, final = false) {
     }
 
     if (icare_tab) {
-      chrome.tabs.sendMessage(icare_tab.id!, new Msg(COMMANDS.ICARE_UNREAD_REPLIES));
+      await chrome.tabs.sendMessage(icare_tab.id!, new Msg(COMMANDS.ICARE_UNREAD_REPLIES));
       console.log(new Date().toLocaleTimeString(), "icare ticked");
     }
     if (gcss_tab) {
-      chrome.tabs.sendMessage(gcss_tab.id!, new Msg(COMMANDS.GCSS_UNREAD_REPLIES));
+      await chrome.tabs.sendMessage(gcss_tab.id!, new Msg(COMMANDS.GCSS_UNREAD_REPLIES));
       console.log(new Date().toLocaleTimeString(), "gcss ticked");
     }
   }
@@ -128,8 +126,13 @@ chrome.webRequest.onCompleted.addListener(
 );
 
 chrome.runtime.onConnect.addListener((port) => {
-  if (port.sender?.url?.includes("icare.post")) {
-    MsgPort[port.sender?.tab?.id!] = port;
+  if(!port.sender || !port.sender.url || !port.sender.tab || !port.sender.tab.id){
+    return;
+  }
+  const port_url = port.sender.url;
+  const port_tab_id = port.sender.tab.id;
+  if (port_url.includes("icare.post")) {
+    MsgPort[port_tab_id] = port;
     console.log(
       `${new Date().toLocaleString("ko-KR")} - MsgPort established with new connection.`,
       MsgPort,
@@ -137,7 +140,11 @@ chrome.runtime.onConnect.addListener((port) => {
       port
     );
     port.onDisconnect.addListener((p) => {
-      delete MsgPort[p.sender?.tab?.id!];
+      if(!p.sender || !p.sender.tab || !p.sender.tab.id){
+        return;
+      }
+      const tab_id = p.sender.tab.id;
+      delete MsgPort[tab_id];
       console.log(
         `${new Date().toLocaleString("ko-KR")} - MsgPort deleted since the connection is lost.`,
         MsgPort,
@@ -157,11 +164,11 @@ chrome.notifications.onClicked.addListener((id) => {
   }
 });
 
-chrome.notifications.onButtonClicked.addListener((noti_id, button_id) => {
+chrome.notifications.onButtonClicked.addListener((noti_id) => {
   if (noti_id === COMMANDS.ICARE_UNREAD_REPLIES) {
     chrome.tabs.getCurrent((tab) => {
       if (tab)
-        chrome.windows.update(tab.windowId, { focused: true }, (_) => chrome.action.openPopup());
+        chrome.windows.update(tab.windowId, { focused: true }, () => chrome.action.openPopup());
     });
   }
 });
