@@ -69,7 +69,7 @@ async function APICalls(count: number, final = false) {
     }
   }
 }
-chrome.webRequest.onBeforeRequest.addListener(
+chrome.webRequest.onCompleted.addListener(
   function (details) {
     console.log("[onBeforeRequest]", details);
     if (details.url.includes("https://github.com/shawnpark9494/TrackPostExtZip/commits/main/")) {
