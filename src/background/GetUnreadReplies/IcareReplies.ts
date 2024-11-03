@@ -62,7 +62,7 @@ export class IcareAPI2 {
         await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?ICARE"));
       } else {
         setTimeout(() => {
-          this.FetchUnreadReplies(this.LastCsrfToken, trialNo, ++noResponse);
+          void this.FetchUnreadReplies(this.LastCsrfToken, trialNo, ++noResponse);
         }, this.RETRY_TIMEOUT_MS);
       }
       return;
@@ -86,7 +86,7 @@ export class IcareAPI2 {
       } else {
         if (response.status === 403) {
           setTimeout(() => {
-            this.FetchUnreadReplies(this.LastCsrfToken, trialNo + 1, noResponse);
+            void this.FetchUnreadReplies(this.LastCsrfToken, trialNo + 1, noResponse);
           }, this.RETRY_TIMEOUT_MS);
         } else await this.FetchUnreadReplies(this.LastCsrfToken, trialNo + 1, noResponse);
       }

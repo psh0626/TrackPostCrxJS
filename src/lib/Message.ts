@@ -27,7 +27,7 @@ export class Msg {
 export async function SendRequest<T>(message: Msg, param?: any): Promise<T>;
 export async function SendRequest(message: Msg, param?: any): Promise<any>;
 export async function SendRequest<T>(message: Msg, param?: any): Promise<T | any> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     chrome.runtime.sendMessage(message, param, (response) => {
       resolve(response);
     });

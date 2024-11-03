@@ -73,19 +73,19 @@ class InjectUtil {
   static InjectIcarePersonalRemarks(type: string = "REQ") {
     let selector: string;
     switch (type) {
-    case "REQ":
-      selector =
+      case "REQ":
+        selector =
           "div.request-fields > div > div > div.row.text-templates-row > div > div.input-container";
-      break;
-    case "REP":
-      selector =
+        break;
+      case "REP":
+        selector =
           "div.reply-fields > div > div > div.row.text-templates-row > div > div.input-container";
-      break;
-    case "SUM":
-      selector = "div.update-message > form > div > div.row > div > div.input-container";
-      break;
-    default:
-      selector = "div.row.text-templates-row > div > div.input-container";
+        break;
+      case "SUM":
+        selector = "div.update-message > form > div > div.row > div > div.input-container";
+        break;
+      default:
+        selector = "div.row.text-templates-row > div > div.input-container";
     }
     const target = document.querySelector(selector) as HTMLElement;
     if (!target) {

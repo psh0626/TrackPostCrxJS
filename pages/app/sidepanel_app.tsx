@@ -42,7 +42,7 @@ function SidePanelApp() {
     if (popup && popup.IsTracked) {
       set_item_id_field(popup.ItemId);
       console.log("item id set", popup);
-      FetchPostItem(popup.ItemId);
+      void FetchPostItem(popup.ItemId);
       console.log("item fetched");
     }
   };
@@ -54,7 +54,7 @@ function SidePanelApp() {
   };
 
   useEffect(() => {
-    check_popup().then((p) => track_from_popup(p));
+    void check_popup().then((p) => track_from_popup(p));
     if (textfield_ref.current) {
       textfield_ref.current.focus();
     }
@@ -84,7 +84,7 @@ function SidePanelApp() {
         onChange={(e) => CheckValue(e.target)}
         onKeyUp={(e) => {
           if (e.key === "Enter" && is_valid) {
-            FetchPostItem(item_id_field);
+            void FetchPostItem(item_id_field);
           }
           return true;
         }}
@@ -97,16 +97,16 @@ function SidePanelApp() {
             <Stack spacing={0.5} margin="6px 0">
               <Button
                 variant="outlined"
-                onClick={(e) => {
-                  navigator.clipboard.writeText(post_element.AddresseeZipcode);
+                onClick={() => {
+                  void navigator.clipboard.writeText(post_element.AddresseeZipcode);
                 }}>
                 {`${post_element.Destination} (${post_element.AddresseeZipcode})`}
               </Button>
 
               <Button
                 variant="outlined"
-                onClick={(e) => {
-                  navigator.clipboard.writeText(post_element.Contents);
+                onClick={() => {
+                  void navigator.clipboard.writeText(post_element.Contents);
                 }}>
                 {`Contents: ${post_element.Contents}`}
               </Button>

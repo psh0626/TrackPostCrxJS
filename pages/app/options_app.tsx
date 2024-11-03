@@ -14,7 +14,7 @@ export default function OptionsApp() {
 
   useEffect(() => {
     if (!initialized) {
-      (async () => {
+      void (async () => {
         await settings.current.LoadOptions();
         console.log("options_app.tsb: settings loaded", settings.current);
         setInitialized(true);

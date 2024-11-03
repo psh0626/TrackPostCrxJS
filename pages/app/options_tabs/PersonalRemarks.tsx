@@ -16,7 +16,6 @@ import {
   SelectChangeEvent,
 } from "@mui/material";
 
-import { TabPanel } from "./TabPanel";
 import { RemarkDialog } from "./PRDialog";
 import { IMICSettings, PersonalRemark } from "../../../src/lib/OptionElement";
 
@@ -39,7 +38,7 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
   }, []);
 
   useEffect(() => {
-    if (initialized.current) SaveSettings();
+    if (initialized.current) void SaveSettings();
     else initialized.current = true;
   }, [prList]);
 

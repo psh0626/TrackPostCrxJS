@@ -180,24 +180,24 @@ export class WorkflowItem {
 
   private convertRequestType(reqTypeString: string) {
     switch (reqTypeString) {
-    case "Update/confirmation item status":
-      return "Status";
-    case "Written proof of delivery":
-      return "WPOD";
-    case "Disputed delivery":
-      return "Disputed";
-    case "Request for change":
-      return "CN17";
-    case "Damaged/missing contents":
-      return "Damaged/missing";
-    case "Missent/redirected/transit":
-      return "Missent";
-    case "Customs investigation":
-      return "Customs";
-    case "COD amount not received":
-      return "COD";
-    default:
-      return reqTypeString; // or return a default value if you prefer
+      case "Update/confirmation item status":
+        return "Status";
+      case "Written proof of delivery":
+        return "WPOD";
+      case "Disputed delivery":
+        return "Disputed";
+      case "Request for change":
+        return "CN17";
+      case "Damaged/missing contents":
+        return "Damaged/missing";
+      case "Missent/redirected/transit":
+        return "Missent";
+      case "Customs investigation":
+        return "Customs";
+      case "COD amount not received":
+        return "COD";
+      default:
+        return reqTypeString; // or return a default value if you prefer
     }
   }
 

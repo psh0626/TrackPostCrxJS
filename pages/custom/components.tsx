@@ -55,7 +55,7 @@ export const InfoTextField: React.FC<InfoFieldType> = ({
 }) => {
   const TextFieldFocused = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.select();
-    navigator.clipboard.writeText(e.target.value);
+    void navigator.clipboard.writeText(e.target.value);
   };
   return (
     <TextField
@@ -125,7 +125,7 @@ export const MyList: React.FC<MyListProps> = ({
   };
 
   return items.length === 0 ? (
-    ""
+    null
   ) : (
     <List>
       <Accordion>

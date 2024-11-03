@@ -31,7 +31,7 @@ export default async function GetIcareUserId() {
 }
 
 function SaveIcareUserId(user_id: string) {
-  chrome.runtime.sendMessage(new Msg(COMMANDS.SAVE_ICARE_USER_ID, user_id));
+  void chrome.runtime.sendMessage(new Msg(COMMANDS.SAVE_ICARE_USER_ID, user_id));
 }
 async function LoadIcareUserId() {
   console.log("requesting local storage for icare user id");

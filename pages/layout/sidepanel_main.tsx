@@ -5,7 +5,7 @@ import SidePanelApp from "../app/sidepanel_app";
 // import "@fontsource/noto-sans-kr/400.css";
 // import "@fontsource/noto-sans-kr/500.css";
 // import "@fontsource/noto-sans-kr/700.css";
-import "@fontsource/noto-sans-kr"
+import "@fontsource/noto-sans-kr";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { deepOrange, orange } from "@mui/material/colors";
 

@@ -9,7 +9,6 @@ import {
   Typography,
   TextField,
 } from "@mui/material";
-import { TabPanel } from "./TabPanel";
 import { IMICSettings } from "../../../src/lib/OptionElement";
 import { ServiceTypes } from "../../../src/background/GetUnreadReplies/GcssReplies";
 
@@ -46,7 +45,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
   useEffect(() => {
     console.log("CHECK ICARE REQ", chkIcareReq);
     if (initialized.current) {
-      SaveSettings();
+      void SaveSettings();
       console.log("GENERALSETTINGS SAVE SETTINGS: ", initialized.current);
     } else initialized.current = true;
   }, [chkIcareRep, chkIcareReq, icareAuthor, chkGcssRep, chkGcssReq, gcssAuthor, gcssServiceTypes]);

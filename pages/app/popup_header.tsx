@@ -20,7 +20,7 @@ export default function PopupHeader({ children }: nested_component) {
             color="inherit"
             sx={{ position: "absolute", right: 5 }}
             onClick={() => {
-              chrome.runtime.openOptionsPage();
+              void chrome.runtime.openOptionsPage();
             }}>
             <Settings />
           </Button>

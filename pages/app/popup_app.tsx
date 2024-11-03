@@ -49,7 +49,7 @@ function PopUpApp() {
   const OpenSidePanel = () => {
     chrome.windows.getCurrent(async (w) => {
       await tracker.SetItemId(item_id_field);
-      chrome.sidePanel.open({ windowId: w.id! });
+      await chrome.sidePanel.open({ windowId: w.id! });
       window.close();
     });
     console.log("Popup sidepanel opened state:", tracker);
@@ -60,7 +60,7 @@ function PopUpApp() {
       textfield_ref.current.focus();
     }
 
-    (async () => {
+    void (async () => {
       await settings.current.LoadOptions();
       set_chk_rep(settings.current.IcareUnreadReplies);
       set_chk_req(settings.current.IcareUnreadRequests);

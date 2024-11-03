@@ -12,7 +12,7 @@ export default class PopupTrack {
   Reset() {
     this.ItemId = "";
     this.IsTracked = false;
-    this.PassToBackground();
+    void this.PassToBackground();
   }
   private async PassToBackground() {
     await chrome.runtime.sendMessage(new Msg(COMMANDS.POPUP_TRACK_SET, this));

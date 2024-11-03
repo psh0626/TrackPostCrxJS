@@ -1,7 +1,6 @@
-import React, { ChangeEvent, FC, useEffect, useRef } from "react";
+import React, { ChangeEvent, useRef } from "react";
 import { Box, Button, ButtonProps, Divider, Stack, Typography } from "@mui/material";
 import { Download, Upload } from "@mui/icons-material";
-import { TabPanel } from "./TabPanel";
 import { IMICSettings } from "../../../src/lib/OptionElement";
 
 interface ImportExportProps {
@@ -36,24 +35,21 @@ export const ImportExport: React.FC<ImportExportProps> = ({ settings }) => {
     const files = e.target.files;
     if (!files) return;
     const reader = new FileReader();
-    reader.onload = _imp;
+    reader.onload = function _imp() {
+      try {
+        const _myImportedData = JSON.parse(this.result as string) as IMICSettings;
+        console.log("Importing data: ", _myImportedData);
+        Object.assign(settings.current, _myImportedData);
+        void settings.current.SaveOptions();
+        alert("설정 불러오기 성공!");
+      } catch (e) {
+        console.error(e);
+        alert("설정 불러오기 실패, 개발자와 확인하세요.");
+      } finally {
+        import_input.current!.value = ""; //make sure to clear input value after every import
+      }
+    };
     reader.readAsText(files[0]);
-  }
-  function _imp() {
-    try {
-      const _myImportedData = JSON.parse(this.result) as IMICSettings;
-      console.log("Importing data: ", _myImportedData);
-      Object.assign(settings.current, _myImportedData);
-      settings.current.SaveOptions();
-      alert("설정 불러오기 성공!");
-    }
-    catch (e){
-      console.error(e);
-      alert("설정 불러오기 실패, 개발자와 확인하세요.");
-    }
-    finally {
-      import_input.current!.value = ""; //make sure to clear input value after every import
-    }
   }
   return (
     <div>
