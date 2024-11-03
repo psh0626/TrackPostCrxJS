@@ -58,7 +58,7 @@ export default async function CreateNotification(force_update = false) {
   console.log("current number: ", current_num, "  last number: ", last_num);
 
   if (last_num >= current_num) {
-    let item_count = "-1";
+    let item_count: string;
     if (current_num > 0) {
       item_count = current_num.toString();
     } else {

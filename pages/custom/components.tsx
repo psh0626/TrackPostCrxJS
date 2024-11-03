@@ -157,7 +157,7 @@ export const MyList: React.FC<MyListProps> = ({
             }
 
             return (
-              <Card style={{ margin: "0 0 1px" }}>
+              <Card style={{ margin: "0 0 1px" }} key={id}>
                 <ListItem dense={true} disablePadding={true} key={id}>
                   <ListItemButton
                     onClick={async () => {
