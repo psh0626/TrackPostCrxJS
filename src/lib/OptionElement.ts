@@ -32,8 +32,8 @@ export class IMICSettings {
     if (!work_tabs || !Array.isArray(work_tabs)) {
       return;
     }
-    work_tabs.forEach((tab) => {
-      if (tab.id) chrome.tabs.sendMessage(tab.id, new Msg(COMMANDS.SETTINGS_CHANGED));
+    work_tabs.forEach(async (tab) => {
+      if (tab.id) await chrome.tabs.sendMessage(tab.id, new Msg(COMMANDS.SETTINGS_CHANGED));
     });
   }
   async SaveOptions() {
@@ -42,7 +42,7 @@ export class IMICSettings {
 
     if (this.SavingFinished) clearTimeout(this.SavingFinished);
     this.SavingFinished = setTimeout(() => {
-      (async () => {
+      void (async () => {
         await this.NotifyTabs();
       })();
     }, 5000);

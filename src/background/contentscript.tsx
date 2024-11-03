@@ -1,11 +1,11 @@
-import {COMMANDS, Msg, SendRequest} from "../lib/Message";
-import {PostElement} from "../lib/PostUtil";
+import { COMMANDS, Msg, SendRequest } from "../lib/Message";
+import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./injectDOM/InjectUtil";
-import {IcareAPI2} from "./GetUnreadReplies/IcareReplies";
-import {GcssAPI} from "./GetUnreadReplies/GcssReplies";
-import {IMICSettings} from "../lib/OptionElement";
+import { IcareAPI2 } from "./GetUnreadReplies/IcareReplies";
+import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
+import { IMICSettings } from "../lib/OptionElement";
 
-(async () => {
+void (async () => {
   const settings = new IMICSettings();
   await settings.RequestLoad();
   GcssAPI.settings = settings;
@@ -25,21 +25,21 @@ import {IMICSettings} from "../lib/OptionElement";
 
   chrome.runtime.onMessage.addListener((message: Msg) => {
     switch (message.Command) {
-    case COMMANDS.GCSS_UNREAD_REPLIES:
-      GcssAPI.FetchReplies(false);
-      break;
-    case COMMANDS.ICARE_UNREAD_REPLIES:
-      console.log("IcareAPI2 fetching unread replies by tick");
-      IcareAPI2.FetchUnreadReplies(csrfToken);
-      break;
-    case COMMANDS.SETTINGS_CHANGED:
-      (async () => {
-        await settings.RequestLoad();
-        GcssAPI.settings = settings;
-        IcareAPI2.settings = settings;
-        console.log("Settings Reloaded", settings, GcssAPI.settings, IcareAPI2.settings);
-      })();
-      break;
+      case COMMANDS.GCSS_UNREAD_REPLIES:
+        void GcssAPI.FetchReplies(false);
+        break;
+      case COMMANDS.ICARE_UNREAD_REPLIES:
+        console.log("IcareAPI2 fetching unread replies by tick");
+        void IcareAPI2.FetchUnreadReplies(csrfToken);
+        break;
+      case COMMANDS.SETTINGS_CHANGED:
+        void (async () => {
+          await settings.RequestLoad();
+          GcssAPI.settings = settings;
+          IcareAPI2.settings = settings;
+          console.log("Settings Reloaded", settings, GcssAPI.settings, IcareAPI2.settings);
+        })();
+        break;
     }
   });
 
@@ -160,21 +160,21 @@ import {IMICSettings} from "../lib/OptionElement";
     let rate = 1400; // USD
 
     switch (currency_value) {
-    case "2": // EUR
-      rate = 1600;
-      break;
-    case "89": // KRW
-      rate = 1;
-      break;
-    case "111": // GBP
-      rate = 1800;
-      break;
-    case "87": // JPY
-      rate = 1000;
-      break;
-    case "80": // CNY
-      rate = 200;
-      break;
+      case "2": // EUR
+        rate = 1600;
+        break;
+      case "89": // KRW
+        rate = 1;
+        break;
+      case "111": // GBP
+        rate = 1800;
+        break;
+      case "87": // JPY
+        rate = 1000;
+        break;
+      case "80": // CNY
+        rate = 200;
+        break;
     }
     return rate;
   }
@@ -198,6 +198,8 @@ import {IMICSettings} from "../lib/OptionElement";
           item_value_currency,
           calc_item_value.toString()
         );
+      } else {
+        item_value.value = "0";
       }
       item_value_currency.value = "3"; // SDR
     }
@@ -217,6 +219,8 @@ import {IMICSettings} from "../lib/OptionElement";
           postage_paid_currency,
           calc_postage_paid.toString()
         );
+      } else {
+        postage_paid.value = "10";
       }
       postage_paid_currency.value = "3"; // SDR
     }
@@ -348,16 +352,6 @@ import {IMICSettings} from "../lib/OptionElement";
       dom.postage_paid
     );
 
-    if(dom.item_value.value === ""){
-      dom.item_value.value = "0";
-    }
-    if(dom.item_weight.value === ""){
-      dom.item_weight.value = "0";
-    }
-    if(dom.postage_paid.value === ""){
-      dom.postage_paid.value = "10";
-    }
-
     // POD required
     dom.pod_required_yes.checked = true;
 
@@ -460,8 +454,6 @@ import {IMICSettings} from "../lib/OptionElement";
   };
 
   async function FindPostElement(item_id: string): Promise<PostElement> {
-    return await SendRequest<PostElement>(
-      new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id)
-    );
+    return await SendRequest<PostElement>(new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id));
   }
 })();

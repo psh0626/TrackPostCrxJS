@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
+    "devbuild": "tsc && vite build",
     "build": "tsc && vite build",
     "postbuild": "node ./set-dynamic-url.cjs && powershell -ExecutionPolicy Bypass -File ./post-build-zip.ps1",
     "preview": "vite preview"

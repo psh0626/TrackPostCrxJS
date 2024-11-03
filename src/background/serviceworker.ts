@@ -5,8 +5,8 @@ import ProcessMessage from "./MessageHub/MessageHub";
 import { GlobalTimer } from "./GetUnreadReplies/Timer";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
-await chrome.action.setBadgeBackgroundColor({ color: "#424242" });
-await chrome.action.setBadgeTextColor({ color: "white" });
+void chrome.action.setBadgeBackgroundColor({ color: "#424242" });
+void chrome.action.setBadgeTextColor({ color: "white" });
 
 // const GCSS_URL = "https://gcss.ipc.be";
 const ICARE_URL = "https://icare.post";
@@ -50,8 +50,8 @@ async function APICalls(count: number, final = false) {
       if (final) {
         await chrome.action.setBadgeText({ text: "?" });
       } else {
-        setTimeout(() => {
-          APICalls(count, true);
+        setTimeout(async () => {
+          await APICalls(count, true);
         }, 2000);
       }
       return;
@@ -87,7 +87,7 @@ chrome.webRequest.onCompleted.addListener(
     if (details.method === "GET") {
       if (details.url.includes("icare.post/?module=workflow&action=requestFields")) {
         console.log("API GET request completed: ", details.url);
-        (async () => {
+        void (async () => {
           const [tab] = await chrome.tabs.query({ url: ICARE_URL + "/*" });
           if (tab) {
             if (!MsgPort) {
@@ -105,7 +105,7 @@ chrome.webRequest.onCompleted.addListener(
         return false;
       } else if (details.url.includes("icare.post/?module=workflow&action=replyFields")) {
         console.log("API GET request completed: ", details.url);
-        (async () => {
+        void (async () => {
           const [tab] = await chrome.tabs.query({ url: ICARE_URL + "/*" });
           if (!tab) {
             return false;

@@ -20,20 +20,20 @@ export default function PersonalRemarksSelect({ type = "REQ" }: prSelectProp) {
     setSelectedItem(event_args.target.value);
     let field_number: string;
     switch (type) {
-    case "NOP":
-      field_number = "field54";
-      break;
-    case "NOQ":
-      field_number = "field47";
-      break;
-    case "REP":
-      field_number = "field41";
-      break;
-    case "SUM":
-      field_number = "updateMessage";
-      break;
-    default:
-      field_number = "field37";
+      case "NOP":
+        field_number = "field54";
+        break;
+      case "NOQ":
+        field_number = "field47";
+        break;
+      case "REP":
+        field_number = "field41";
+        break;
+      case "SUM":
+        field_number = "updateMessage";
+        break;
+      default:
+        field_number = "field37";
     }
     const textarea_elm = getElement<HTMLTextAreaElement>(`textarea[name="${field_number}"]`);
     textarea_elm.value = event_args.target.value;
@@ -45,7 +45,7 @@ export default function PersonalRemarksSelect({ type = "REQ" }: prSelectProp) {
   }
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       await settings.current.RequestLoad();
       set_pr_list(settings.current.PersonalRemarks);
       initialized.current = true;
