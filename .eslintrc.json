@@ -13,6 +13,7 @@
   "plugins": ["@typescript-eslint", "react"],
   "rules": {
     "indent": ["error", 2],
+    "@typescript-eslint/no-explicit-any": "off",
     "linebreak-style": ["error", "windows"],
     "semi": ["error", "always"],
     "no-restricted-imports": [

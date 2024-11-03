@@ -33,9 +33,9 @@ function PopUpApp() {
   const settings = useRef(new IMICSettings());
   const tracker = new PopupTrack();
 
-  const IncludesOneOf = (target: string, search_strings: string[]) => {
-    return search_strings.some((item) => target.toLowerCase().includes(item.toLowerCase()));
-  };
+  // const IncludesOneOf = (target: string, search_strings: string[]) => {
+  //   return search_strings.some((item) => target.toLowerCase().includes(item.toLowerCase()));
+  // };
   const CheckValue = (target: HTMLInputElement | HTMLTextAreaElement) => {
     const pretty_value = target.value.trim().toUpperCase();
     set_item_id_field(pretty_value); // Update
