@@ -4,8 +4,6 @@ import {
   AccordionSummary,
   Button,
   Card,
-  Checkbox,
-  IconButton,
   List,
   ListItem,
   ListItemButton,
@@ -19,7 +17,7 @@ import { styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import { GcssItem, WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
 import React from "react";
-import { ServiceNames, ServiceTypes } from "../../src/background/GetUnreadReplies/GcssReplies";
+import { ServiceNames } from "../../src/background/GetUnreadReplies/GcssReplies";
 
 export const StyledTextField = styled(TextField)({
   "& .MuiInputLabel-root": {

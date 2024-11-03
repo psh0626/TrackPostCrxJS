@@ -1,4 +1,3 @@
-import { arrayBuffer } from "stream/consumers";
 import { GcssItem, WorkflowItem } from "../background/GetUnreadReplies/DataWrapper";
 import { COMMANDS } from "./Message";
 import { IMICSettings } from "./OptionElement";
@@ -21,7 +20,7 @@ export default async function CreateNotification(force_update = false) {
 
   const fetch_error = await CheckFetchError();
 
-  let WorkFlowItems: WorkflowItem[] = [];
+  let WorkFlowItems: WorkflowItem[];
   let GcssItems: GcssItem[] = [];
 
   let dict = await chrome.storage.session.get("ICARE_UNREAD_REPLIES");
@@ -65,9 +64,9 @@ export default async function CreateNotification(force_update = false) {
     } else {
       item_count = "";
     }
-    if (!fetch_error) chrome.action.setBadgeText({ text: item_count });
+    if (!fetch_error) await chrome.action.setBadgeText({ text: item_count });
     if (!force_update) return;
-  } else chrome.action.setBadgeText({ text: `${current_num}` });
+  } else await chrome.action.setBadgeText({ text: `${current_num}` });
 
   if (fetch_error && !force_update) return;
 

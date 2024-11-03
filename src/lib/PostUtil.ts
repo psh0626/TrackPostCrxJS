@@ -39,7 +39,7 @@ export class PostAPI {
       const data = result.xsync.LData; // Adjust based on your XML structure
       if (data.length === 0)
       {
-        console.log("Blank XML returned;")
+        console.log("Blank XML returned;");
         return new PostElement({ItemID: trackingNumber, ItemTracked: false, });
       }
 
@@ -57,10 +57,10 @@ export class PostAPI {
         AddresseeAddress: data.RECEIVER_ADDR,
         MailTypeCode: data.FRNMAIL_DIV_CD,
         ApplicationDate: data.RECEVYMD,
-        DeliveryResult: data.RESULTYN === "Y" ? true : false,
-        InquiryRequested: data.REQYN === "Y" ? true : false,
-        HEvent: data.HEVENT === "Y" ? true : false,
-        IEvent: data.IEVENT === "Y" ? true : false,
+        DeliveryResult: data.RESULTYN === "Y",
+        InquiryRequested: data.REQYN === "Y",
+        HEvent: data.HEVENT === "Y",
+        IEvent: data.IEVENT === "Y",
         ItemTracked: true,
       });
     } catch (error) {
@@ -82,7 +82,7 @@ export class PostAPI {
 
       if (!response.ok) {
         console.error(response.statusText);
-        throw new Error(response.statusText);
+        // throw new Error(response.statusText);
       }
       
       return response.text();

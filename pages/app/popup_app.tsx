@@ -2,28 +2,12 @@ import React, { useEffect, useRef } from "react";
 import { useState } from "react";
 
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
-import Card from "@mui/material/Card";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 import { MyList, StyledTextField } from "../custom/components";
 import PopupTrack from "../../src/lib/PopupTrack";
 import { GcssItem, WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
 import { IMICSettings } from "../../src/lib/OptionElement";
-import {
-  Accordion,
-  AccordionSummary,
-  Checkbox,
-  Icon,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-} from "@mui/material";
-import { ExpandMore, OpenInBrowser } from "@mui/icons-material";
 import { ServiceNames, ServiceTypes } from "../../src/background/GetUnreadReplies/GcssReplies";
 
 function PopUpApp() {

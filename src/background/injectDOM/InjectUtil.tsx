@@ -1,8 +1,7 @@
-import React, { ChangeEvent, ChangeEventHandler, ReactNode, useState } from "react";
+import React, { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import FloatingHelper from "./DomInject";
 import PersonalRemarksSelect from "./PersonalRemarks";
-import { Input, TextField } from "@mui/material";
 
 class InjectUtil {
   private static InsertReact(
@@ -60,10 +59,10 @@ class InjectUtil {
     old_input.setAttribute("pattern", String.raw`[A-Z]{2}\d{9}[A-Z]{2}`);
     old_input.setAttribute("title", "EB123456789KR");
     old_input.classList.add("uppercase");
-    old_input.onkeyup = (e) => {
+    old_input.onkeyup = () => {
       old_input.value = old_input.value.toUpperCase();
     };
-    form.onsubmit = (e) => {
+    form.onsubmit = () => {
       old_input.value = old_input.value.toUpperCase();
     };
     // const target = old_input?.closest("div") as HTMLDivElement;
@@ -74,19 +73,19 @@ class InjectUtil {
   static InjectIcarePersonalRemarks(type: string = "REQ") {
     let selector: string;
     switch (type) {
-      case "REQ":
-        selector =
+    case "REQ":
+      selector =
           "div.request-fields > div > div > div.row.text-templates-row > div > div.input-container";
-        break;
-      case "REP":
-        selector =
+      break;
+    case "REP":
+      selector =
           "div.reply-fields > div > div > div.row.text-templates-row > div > div.input-container";
-        break;
-      case "SUM":
-        selector = "div.update-message > form > div > div.row > div > div.input-container";
-        break;
-      default:
-        selector = "div.row.text-templates-row > div > div.input-container";
+      break;
+    case "SUM":
+      selector = "div.update-message > form > div > div.row > div > div.input-container";
+      break;
+    default:
+      selector = "div.row.text-templates-row > div > div.input-container";
     }
     const target = document.querySelector(selector) as HTMLElement;
     if (!target) {

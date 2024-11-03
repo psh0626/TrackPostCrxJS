@@ -1,10 +1,9 @@
-import { Msg, COMMANDS, SendRequest } from "../lib/Message";
-import { PostElement } from "../lib/PostUtil";
+import {COMMANDS, Msg, SendRequest} from "../lib/Message";
+import {PostElement} from "../lib/PostUtil";
 import InjectUtil from "./injectDOM/InjectUtil";
-import { IcareAPI2 } from "./GetUnreadReplies/IcareReplies";
-import GetIcareUserId from "../lib/GetIcareUserId";
-import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
-import { IMICSettings } from "../lib/OptionElement";
+import {IcareAPI2} from "./GetUnreadReplies/IcareReplies";
+import {GcssAPI} from "./GetUnreadReplies/GcssReplies";
+import {IMICSettings} from "../lib/OptionElement";
 
 (async () => {
   const settings = new IMICSettings();
@@ -12,7 +11,7 @@ import { IMICSettings } from "../lib/OptionElement";
   GcssAPI.settings = settings;
   IcareAPI2.settings = settings;
 
-  let csrfToken = "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8";
+  const csrfToken = "nA1tQy921DGPmaL45z7Bq/W7B3qBICZFO/WB1b189ylvEyVW8qh8";
   // let csrfToken = document.querySelector("meta[name='csrf-token']")?.getAttribute("content");
   // if (csrfToken) {
   //   console.log("CSRF Token found:", csrfToken);
@@ -24,31 +23,30 @@ import { IMICSettings } from "../lib/OptionElement";
 
   window.addEventListener("load", main, false);
 
-  chrome.runtime.onMessage.addListener((message: Msg, sender, response) => {
+  chrome.runtime.onMessage.addListener((message: Msg) => {
     switch (message.Command) {
-      case COMMANDS.GCSS_UNREAD_REPLIES:
-        GcssAPI.FetchReplies(false);
-        break;
-      case COMMANDS.ICARE_UNREAD_REPLIES:
-        console.log("IcareAPI2 fetching unread replies by tick");
-        IcareAPI2.FetchUnreadReplies(csrfToken);
-        break;
-      case COMMANDS.SETTINGS_CHANGED:
-        (async () => {
-          await settings.RequestLoad();
-          GcssAPI.settings = settings;
-          IcareAPI2.settings = settings;
-          console.log("Settings Reloaded", settings, GcssAPI.settings, IcareAPI2.settings);
-        })();
-        break;
+    case COMMANDS.GCSS_UNREAD_REPLIES:
+      GcssAPI.FetchReplies(false);
+      break;
+    case COMMANDS.ICARE_UNREAD_REPLIES:
+      console.log("IcareAPI2 fetching unread replies by tick");
+      IcareAPI2.FetchUnreadReplies(csrfToken);
+      break;
+    case COMMANDS.SETTINGS_CHANGED:
+      (async () => {
+        await settings.RequestLoad();
+        GcssAPI.settings = settings;
+        IcareAPI2.settings = settings;
+        console.log("Settings Reloaded", settings, GcssAPI.settings, IcareAPI2.settings);
+      })();
+      break;
     }
   });
 
   console.log("Content script loaded at: " + document.readyState);
-  main();
+  await main();
 
   let post_element: PostElement;
-  let icare_internal_userid = "";
   async function main() {
     console.log("Content script loaded");
 
@@ -65,7 +63,7 @@ import { IMICSettings } from "../lib/OptionElement";
         }
       });
 
-      if (settings.GcssUnreadReplies) GcssAPI.FetchReplies(false);
+      if (settings.GcssUnreadReplies) await GcssAPI.FetchReplies(false);
 
       if (
         currentURL.pathname.includes("/create/") ||
@@ -119,7 +117,7 @@ import { IMICSettings } from "../lib/OptionElement";
           return;
         }
         console.log(post_element);
-        let port = chrome.runtime.connect();
+        const port = chrome.runtime.connect();
         port.onMessage.addListener((message: Msg) => {
           console.log("message received: ", message);
           if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
@@ -142,7 +140,7 @@ import { IMICSettings } from "../lib/OptionElement";
         const dataset = (document.querySelector("div[data-tracking-id]") as HTMLDivElement).dataset;
         const item_id = dataset.trackingId ?? "";
         const remark_type = item_id.slice(-2) === "KR" ? "REQ" : "REP";
-        let port = chrome.runtime.connect();
+        const port = chrome.runtime.connect();
         port.onMessage.addListener((message: Msg) => {
           console.log("message received: ", message);
           if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
@@ -162,21 +160,21 @@ import { IMICSettings } from "../lib/OptionElement";
     let rate = 1400; // USD
 
     switch (currency_value) {
-      case "2": // EUR
-        rate = 1600;
-        break;
-      case "89": // KRW
-        rate = 1;
-        break;
-      case "111": // GBP
-        rate = 1800;
-        break;
-      case "87": // JPY
-        rate = 1000;
-        break;
-      case "80": // CNY
-        rate = 200;
-        break;
+    case "2": // EUR
+      rate = 1600;
+      break;
+    case "89": // KRW
+      rate = 1;
+      break;
+    case "111": // GBP
+      rate = 1800;
+      break;
+    case "87": // JPY
+      rate = 1000;
+      break;
+    case "80": // CNY
+      rate = 200;
+      break;
     }
     return rate;
   }
@@ -304,6 +302,7 @@ import { IMICSettings } from "../lib/OptionElement";
       content_type: getSelect("txt_contentType"),
       item_contents: getInput("txt_contents"),
       item_value: getInput("txt_itemValue"),
+      item_weight: getInput("txt_itemWeight"),
       postage_paid: getInput("txt_postagePaid"),
       indemnity_amount: getInput("txt_indemnityAmount"),
       item_value_currency: getSelect("txt_itemValueCurrency"),
@@ -334,8 +333,7 @@ import { IMICSettings } from "../lib/OptionElement";
 
     // Date of Posting 빈 칸일 경우 입력
     if (dom.posting_date.value === "") {
-      const converted_date = `${post_element.ApplicationDate.substring(5, 6)}/${post_element.ApplicationDate.substring(3, 4)}/${post_element.ApplicationDate.substring(0, 4)}`;
-      dom.posting_date.value = converted_date;
+      dom.posting_date.value = `${post_element.ApplicationDate.substring(5, 6)}/${post_element.ApplicationDate.substring(3, 4)}/${post_element.ApplicationDate.substring(0, 4)}`;
     }
 
     // Content type
@@ -350,6 +348,16 @@ import { IMICSettings } from "../lib/OptionElement";
       dom.postage_paid
     );
 
+    if(dom.item_value.value === ""){
+      dom.item_value.value = "0";
+    }
+    if(dom.item_weight.value === ""){
+      dom.item_weight.value = "0";
+    }
+    if(dom.postage_paid.value === ""){
+      dom.postage_paid.value = "10";
+    }
+
     // POD required
     dom.pod_required_yes.checked = true;
 
@@ -360,7 +368,7 @@ import { IMICSettings } from "../lib/OptionElement";
     InjectUtil.GcssSwitchValue(
       dom.addr_name,
       post_element.AddresseeName,
-      dom.addr_name.value.length === 0 ? false : true
+      dom.addr_name.value.length !== 0
     );
 
     InjectUtil.GcssSwitchValue(dom.addr_street, post_element.AddresseeAddress);
@@ -379,7 +387,7 @@ import { IMICSettings } from "../lib/OptionElement";
     InjectUtil.GcssSwitchValue(
       dom.sndr_name,
       post_element.SenderName,
-      dom.sndr_name.value.length === 0 ? false : true
+      dom.sndr_name.value.length !== 0
     );
     InjectUtil.GcssSwitchValue(dom.sndr_street, post_element.SenderAddress);
     InjectUtil.GcssSwitchValue(dom.sndr_phone, post_element.SenderPhone);
@@ -419,7 +427,7 @@ import { IMICSettings } from "../lib/OptionElement";
       addr_phone: GetInput("field72"),
       addr_email: GetInput("field74"),
       item_categ: GetSelect("field75"), // 10: documents 13: other
-      item_type: GetSelect("CI1_field81"), // 15: books 17: clothes 18: cosmetics 21: documents 24: food 39: other
+      item_type: GetSelect("CI1_field81"), // 15: books 17: clothes 18: cosmetics 21: documents 24: food 39: other.
       item_desc: GetInput("CI1_field76"),
     };
 
@@ -452,10 +460,8 @@ import { IMICSettings } from "../lib/OptionElement";
   };
 
   async function FindPostElement(item_id: string): Promise<PostElement> {
-    const raw_post_element = await SendRequest<PostElement>(
+    return await SendRequest<PostElement>(
       new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id)
     );
-
-    return raw_post_element;
   }
 })();

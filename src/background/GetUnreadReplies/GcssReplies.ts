@@ -18,8 +18,8 @@ export class GcssAPI {
   static settings: IMICSettings;
 
   static ScheduleAnotherFetch() {
-    setTimeout(() => {
-      this.FetchReplies();
+    setTimeout(async () => {
+      await this.FetchReplies();
     }, 15000);
   }
   private static async PostFetch(
@@ -52,14 +52,14 @@ export class GcssAPI {
       .map((item) => GcssItem.FromRawItem(item));
     console.log("GCSS REQUESTS FILTERED: ", unread);
 
-    chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REQUESTS, unread));
+    await chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REQUESTS, unread));
   }
   private static IncludesOneOf(target: string, search_strings: string[]) {
     return search_strings.some((item) => target.toLowerCase().includes(item.toLowerCase()));
   }
   static async FetchReplies(repeat: boolean = true) {
     if (!this.settings.GcssUnreadReplies) {
-      if (this.settings.GcssUnreadRequests) this.FetchRequests();
+      if (this.settings.GcssUnreadRequests) await this.FetchRequests();
       return;
     }
 
@@ -69,7 +69,7 @@ export class GcssAPI {
     if (!response.ok) {
       console.error(response.status);
       if (this.settings.GcssUnreadReplies)
-        chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, "?GCSS"));
+        await chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, "?GCSS"));
       //this.ScheduleAnotherFetch();
       return;
     }
@@ -88,9 +88,9 @@ export class GcssAPI {
       .map((item) => GcssItem.FromRawItem(item));
     console.log("GCSS REPLIES FILTERED: ", unread_msgs);
 
-    chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, unread_msgs));
+    await chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, unread_msgs));
 
-    if (this.settings.GcssUnreadRequests) this.FetchRequests();
+    if (this.settings.GcssUnreadRequests) await this.FetchRequests();
 
     if (repeat) this.ScheduleAnotherFetch();
   }

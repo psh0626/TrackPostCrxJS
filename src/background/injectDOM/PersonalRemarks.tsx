@@ -1,10 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import FormControl from "@mui/material/FormControl";
-import FormLabel from "@mui/material/FormLabel";
-import FormHelperText from "@mui/material/FormHelperText";
 import { InputLabel, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import { IMICSettings, PersonalRemark } from "../../lib/OptionElement";
-import { parseNumbers } from "xml2js/lib/processors";
 interface prSelectProp {
   type: string;
 }
@@ -23,20 +20,20 @@ export default function PersonalRemarksSelect({ type = "REQ" }: prSelectProp) {
     setSelectedItem(event_args.target.value);
     let field_number: string;
     switch (type) {
-      case "NOP":
-        field_number = "field54";
-        break;
-      case "NOQ":
-        field_number = "field47";
-        break;
-      case "REP":
-        field_number = "field41";
-        break;
-      case "SUM":
-        field_number = "updateMessage";
-        break;
-      default:
-        field_number = "field37";
+    case "NOP":
+      field_number = "field54";
+      break;
+    case "NOQ":
+      field_number = "field47";
+      break;
+    case "REP":
+      field_number = "field41";
+      break;
+    case "SUM":
+      field_number = "updateMessage";
+      break;
+    default:
+      field_number = "field37";
     }
     const textarea_elm = getElement<HTMLTextAreaElement>(`textarea[name="${field_number}"]`);
     textarea_elm.value = event_args.target.value;

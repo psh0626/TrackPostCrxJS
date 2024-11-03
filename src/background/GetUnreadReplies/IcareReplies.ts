@@ -1,7 +1,5 @@
-import axios, { AxiosResponse, AxiosRequestConfig } from "axios";
 import { IcareResponse, WorkflowItem } from "./DataWrapper";
 import { Msg, COMMANDS } from "../../lib/Message";
-import { GlobalTimer } from "./Timer";
 import { IMICSettings } from "../../lib/OptionElement";
 
 export class IcareAPI2 {
@@ -44,7 +42,7 @@ export class IcareAPI2 {
   }
   static async FetchUnreadReplies(csrfToken: string, trialNo = 1, noResponse = 0) {
     if (!this.settings.IcareUnreadReplies) {
-      if (this.settings.IcareUnreadRequests) this.FetchUnreadRequests(this.LastCsrfToken);
+      if (this.settings.IcareUnreadRequests) await this.FetchUnreadRequests(this.LastCsrfToken);
       return;
     }
 
@@ -61,7 +59,7 @@ export class IcareAPI2 {
       console.log(`ICARE FETCH: error`, e);
       console.log("NO RESPONSE", noResponse);
       if (noResponse >= this.MAX_RETRY_COUNT) {
-        chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?ICARE"));
+        await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?ICARE"));
       } else {
         setTimeout(() => {
           this.FetchUnreadReplies(this.LastCsrfToken, trialNo, ++noResponse);
@@ -73,7 +71,7 @@ export class IcareAPI2 {
     if (response.ok) {
       console.log(`[FetchUnreadReplies] Attempt No.${trialNo} successful`, result);
       if (this.settings.IcareUnreadRequests) await this.FetchUnreadRequests(this.LastCsrfToken);
-      this.OnSuccess(result!);
+      await this.OnSuccess(result!);
     } else {
       console.log(
         `[FetchUnreadReplies] Attempt No.${trialNo} failed with CSRF Token:`,
@@ -84,13 +82,13 @@ export class IcareAPI2 {
 
       if (trialNo >= this.MAX_RETRY_COUNT) {
         //this.UpdateCsrfToken(csrfToken);
-        chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?ICARE"));
+        await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?ICARE"));
       } else {
         if (response.status === 403) {
           setTimeout(() => {
             this.FetchUnreadReplies(this.LastCsrfToken, trialNo + 1, noResponse);
           }, this.RETRY_TIMEOUT_MS);
-        } else this.FetchUnreadReplies(this.LastCsrfToken, trialNo + 1, noResponse);
+        } else await this.FetchUnreadReplies(this.LastCsrfToken, trialNo + 1, noResponse);
       }
     }
   }
@@ -112,7 +110,7 @@ export class IcareAPI2 {
     if (response.ok && !see_other) {
       console.log(`[FetchUnreadRequests] Attempt successful`, result);
       const request_items = result!.content.data.map((data) => new WorkflowItem(data));
-      chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REQUESTS, request_items));
+      await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REQUESTS, request_items));
     } else {
       console.log(
         `[FetchUnreadRequests] Attempt failed with CSRF Token:`,
@@ -127,7 +125,7 @@ export class IcareAPI2 {
     const targetLower = target.toLowerCase();
     return search_strings.some((item) => targetLower.includes(item.toLowerCase()));
   }
-  private static OnSuccess(response: IcareResponse) {
+  private static async OnSuccess(response: IcareResponse) {
     const workflow_items = response.content.data.map(
       (rawdata: object) => new WorkflowItem(rawdata)
     );
@@ -138,7 +136,7 @@ export class IcareAPI2 {
 
     console.log(`${workflow_items.length} items fetched:`, filtered_items);
 
-    chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, filtered_items));
+    await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, filtered_items));
 
     const today = new Date();
     console.log(today.toLocaleString(), "\nworkflows sent");

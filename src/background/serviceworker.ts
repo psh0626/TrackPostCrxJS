@@ -5,8 +5,8 @@ import ProcessMessage from "./MessageHub/MessageHub";
 import { GlobalTimer } from "./GetUnreadReplies/Timer";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
-chrome.action.setBadgeBackgroundColor({ color: "#424242" });
-chrome.action.setBadgeTextColor({ color: "white" });
+await chrome.action.setBadgeBackgroundColor({ color: "#424242" });
+await chrome.action.setBadgeTextColor({ color: "white" });
 
 // const GCSS_URL = "https://gcss.ipc.be";
 const ICARE_URL = "https://icare.post";

@@ -3,7 +3,6 @@ import { useState } from "react";
 
 import Fab from "@mui/material/Fab";
 import CachedIcon from "@mui/icons-material/Cached";
-import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import { Tooltip, Typography } from "@mui/material";
 interface HelperProps {
   target: HTMLInputElement;
@@ -16,7 +15,7 @@ function GetOptionValueText(select_element: HTMLSelectElement, input: string) {
   if (!select_element) return "";
 
   // Iterate through each option in the select element
-  for (let option of select_element.options) {
+  for (const option of select_element.options) {
     // Check if input matches the value or the inner text
     if (option.value === input) {
       console.log("OPTION TEXT: ", option.text);

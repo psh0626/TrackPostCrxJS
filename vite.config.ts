@@ -13,7 +13,7 @@ export default defineConfig({
         options: "pages/options.html",
       },
       onwarn(warning, warn) {
-        // Suppress "Module level directives cause errors when bundled" warnings
+        // Suppress “Module level directives cause errors when bundled” warnings
         if (warning.code === "MODULE_LEVEL_DIRECTIVE") {
           return;
         }

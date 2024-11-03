@@ -6,7 +6,7 @@ export function TrimObject(obj: any): any {
 
   // Iterate over all properties of the object
   for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
       const value = obj[key];
 
       if (typeof value === "string") {
@@ -49,7 +49,7 @@ export class GcssItem {
   }
 
   public static FromRawItem(rawItem: GcssRawItem): GcssItem {
-    const gcssItem = new GcssItem({
+    return new GcssItem({
       OriginCountry: rawItem.origCountry,
       DestinationCountry: rawItem.destCountry,
       ItemId: rawItem.itemId,
@@ -65,7 +65,6 @@ export class GcssItem {
       InternalTaskId: rawItem.taskId,
       numberOfSum: rawItem.numberOfSum,
     });
-    return gcssItem;
   }
 }
 export interface GcssRawItem {
@@ -181,24 +180,24 @@ export class WorkflowItem {
 
   private convertRequestType(reqTypeString: string) {
     switch (reqTypeString) {
-      case "Update/confirmation item status":
-        return "Status";
-      case "Written proof of delivery":
-        return "WPOD";
-      case "Disputed delivery":
-        return "Disputed";
-      case "Request for change":
-        return "CN17";
-      case "Damaged/missing contents":
-        return "Damaged/missing";
-      case "Missent/redirected/transit":
-        return "Missent";
-      case "Customs investigation":
-        return "Customs";
-      case "COD amount not received":
-        return "COD";
-      default:
-        return reqTypeString; // or return a default value if you prefer
+    case "Update/confirmation item status":
+      return "Status";
+    case "Written proof of delivery":
+      return "WPOD";
+    case "Disputed delivery":
+      return "Disputed";
+    case "Request for change":
+      return "CN17";
+    case "Damaged/missing contents":
+      return "Damaged/missing";
+    case "Missent/redirected/transit":
+      return "Missent";
+    case "Customs investigation":
+      return "Customs";
+    case "COD amount not received":
+      return "COD";
+    default:
+      return reqTypeString; // or return a default value if you prefer
     }
   }
 
