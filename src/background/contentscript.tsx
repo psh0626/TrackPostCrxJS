@@ -181,10 +181,10 @@ void (async () => {
     return document.querySelector(cssString) as T;
   }
 
-  const SetItemValueCurrency = (
+  function SetItemValueCurrency(
     item_value_currency: HTMLSelectElement,
     item_value: HTMLInputElement
-  ) => {
+  ) {
     // Item value
     if (item_value_currency.value !== "3") {
       // 이미 SDR이 지정되지 않은 경우에만
@@ -202,12 +202,12 @@ void (async () => {
       }
       item_value_currency.value = "3"; // SDR
     }
-  };
+  }
 
-  const SetPostagePaidCurrency = (
+  function SetPostagePaidCurrency(
     postage_paid_currency: HTMLSelectElement,
     postage_paid: HTMLInputElement
-  ) => {
+  ) {
     // Postage paid
     if (postage_paid_currency.value !== "3") {
       // 이미 SDR이 지정되지 않은 경우에만
@@ -223,14 +223,14 @@ void (async () => {
       }
       postage_paid_currency.value = "3"; // SDR
     }
-  };
+  }
 
-  const SetIndemnityCurrency = (
+  function SetIndemnityCurrency(
     indemnity_amount_currency: HTMLSelectElement,
     indemnity_amount: HTMLInputElement,
     item_value: HTMLInputElement,
     postage_paid: HTMLInputElement
-  ) => {
+  ) {
     // Indemnity amount
     if (indemnity_amount_currency.value !== "3") {
       // 이미 SDR이 지정되지 않은 경우에만
@@ -244,9 +244,9 @@ void (async () => {
       }
       indemnity_amount_currency.value = "3"; // SDR
     }
-  };
+  }
 
-  const injectGcssL2 = (post_element: PostElement) => {
+  function injectGcssL2(post_element: PostElement) {
     const getSelect = (id: string): HTMLSelectElement => {
       return getElement<HTMLSelectElement>(`#${id}`);
     };
@@ -287,9 +287,9 @@ void (async () => {
     if (!dom.pod_required_no.checked && !dom.pod_required_yes.checked) {
       dom.pod_required_yes.checked = true;
     }
-  };
+  }
 
-  const injectGcss = (post_element: PostElement) => {
+  function injectGcss(post_element: PostElement) {
     const getSelect = (id: string): HTMLSelectElement => {
       return getElement<HTMLSelectElement>(`#${id}`);
     };
@@ -389,9 +389,9 @@ void (async () => {
     if (dom.sndr_postcode.value === "") dom.sndr_postcode.value = ".";
 
     console.log("dom injected");
-  };
+  }
 
-  const InjectIcare = (post_element: PostElement) => {
+  function InjectIcare(post_element: PostElement) {
     const event = new Event("change", { bubbles: true });
 
     const GetSelect = (name: string) => {
@@ -450,7 +450,7 @@ void (async () => {
 
     InjectUtil.InjectIcarePersonalRemarks();
     console.log("Dom Injected");
-  };
+  }
 
   async function FindPostElement(item_id: string): Promise<PostElement> {
     return await SendRequest<PostElement>(new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id));
