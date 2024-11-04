@@ -219,7 +219,7 @@ void (async () => {
           calc_postage_paid.toString()
         );
       } else {
-        postage_paid.value = "10";
+        postage_paid.value = "30";
       }
       postage_paid_currency.value = "3"; // SDR
     }
