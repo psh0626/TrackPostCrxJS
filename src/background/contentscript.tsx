@@ -46,7 +46,6 @@ void (async () => {
   console.log("Content script loaded at: " + document.readyState);
   await main();
 
-  let post_element: PostElement;
   async function main() {
     console.log("Content script loaded");
 
@@ -79,7 +78,7 @@ void (async () => {
           return;
         }
 
-        post_element = await FindPostElement(item_id);
+        const post_element = await FindPostElement(item_id);
         if (!post_element.ItemTracked) {
           console.log(`Item does not exist ${item_id}`);
           return;
@@ -110,7 +109,7 @@ void (async () => {
           return;
         }
 
-        post_element = await FindPostElement(item_id!);
+        const post_element = await FindPostElement(item_id!);
 
         if (!post_element.ItemTracked) {
           console.log(`Item does not exist ${item_id}`);
