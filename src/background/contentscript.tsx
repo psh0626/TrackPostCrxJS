@@ -336,7 +336,11 @@ void (async () => {
 
     // Date of Posting 빈 칸일 경우 입력
     if (dom.posting_date.value === "") {
-      dom.posting_date.value = `${post_element.ApplicationDate.substring(5, 6)}/${post_element.ApplicationDate.substring(3, 4)}/${post_element.ApplicationDate.substring(0, 4)}`;
+      dom.posting_date.value = `${post_element.ApplicationDate.substring(6)}/${post_element.ApplicationDate.substring(4, 6)}/${post_element.ApplicationDate.substring(0, 4)}`;
+    }
+
+    if (dom.item_weight.value === "") {
+      dom.item_weight.value = "0";
     }
 
     // Content type
