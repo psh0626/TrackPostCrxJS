@@ -1,3 +1,5 @@
+import { Sick } from "@mui/icons-material";
+
 export function TrimObject(obj: any): any {
   if (typeof obj !== "object" || obj === null) {
     // If it's not an object or it's null, return it as is
@@ -37,10 +39,53 @@ export class GcssItem {
   InternalTaskId = -1;
   WorkflowLink = "";
   MessageType = "";
-  numberOfSum = -1;
+  NumberOfSum = -1;
+  NotificationReason = "";
+  NotificationStatus = "REPLY_COMPLETED";
+  NotificationCreationDate = "";
+  NotificationId = -1;
+  NotificationLink = "";
 
   constructor(data?: Partial<GcssItem>) {
     if (data) Object.assign(this, data);
+    this.GenerateLink();
+  }
+
+  public static FromRawItem(rawItem: GcssRawItem): GcssItem {
+    if (rawItem.messageType.substring(0, 1) === "N") {
+      return new GcssItem({
+        OriginCountry: rawItem.originCountry!,
+        DestinationCountry: rawItem.destCountry,
+        ItemId: rawItem.itemId,
+        ReadStatus: rawItem.readStatus,
+        RequestAuthor: rawItem.originAuthor!,
+        NotificationReason: this.ConvertReason(rawItem.notificationReasonLabel!),
+        NotificationCreationDate: this.ConvertDate(rawItem.notificationStatusCreationDate!),
+        NotificationId: rawItem.notificationStatusId!,
+        NotificationStatus: rawItem.notificationStatus!,
+        NotificationLink: `https://gcss.ipc.be/CSS/gcss/EMS/notification/showRequest/${rawItem.notificationStatusId!}`,
+        MessageType: rawItem.messageType,
+      });
+    } else
+      return new GcssItem({
+        OriginCountry: rawItem.originCountry!,
+        DestinationCountry: rawItem.destCountry,
+        ItemId: rawItem.itemId,
+        WorkflowLevel: rawItem.taskDescription,
+        ServiceType: rawItem.product,
+        ServiceName: rawItem.productName,
+        ReadStatus: rawItem.readStatus,
+        RequestAuthor: rawItem.requestAuthor,
+        RequestType: rawItem.requestTypeMnemonic,
+        ReplyAuthor: rawItem.replyAuthor,
+        InternalItemId: rawItem.itemPk,
+        InternalMessageId: rawItem.messageId,
+        InternalTaskId: rawItem.taskId,
+        NumberOfSum: rawItem.numberOfSum,
+        MessageType: rawItem.messageType,
+      });
+  }
+  private GenerateLink() {
     const is_reply = this.OriginCountry === "KR" ? "reply" : "request";
     this.WorkflowLink =
       `https://gcss.ipc.be/CSS/gcss/${this.ServiceType}` +
@@ -48,25 +93,26 @@ export class GcssItem {
       `/item/${this.InternalItemId}` +
       `/task/${this.InternalTaskId}`;
   }
-
-  public static FromRawItem(rawItem: GcssRawItem): GcssItem {
-    return new GcssItem({
-      OriginCountry: rawItem.origCountry,
-      DestinationCountry: rawItem.destCountry,
-      ItemId: rawItem.itemId,
-      WorkflowLevel: rawItem.taskDescription,
-      ServiceType: rawItem.product,
-      ServiceName: rawItem.productName,
-      ReadStatus: rawItem.readStatus,
-      RequestAuthor: rawItem.requestAuthor,
-      RequestType: rawItem.requestTypeMnemonic,
-      ReplyAuthor: rawItem.replyAuthor,
-      InternalItemId: rawItem.itemPk,
-      InternalMessageId: rawItem.messageId,
-      InternalTaskId: rawItem.taskId,
-      numberOfSum: rawItem.numberOfSum,
-      MessageType: rawItem.messageType,
-    });
+  private static ConvertReason(reason: string) {
+    switch (reason) {
+      case "Item found undeliverable":
+        return "Undeliverable";
+      case "Item retained by Customs - documentation required":
+        return "Retained";
+      case "Item found damaged":
+        return "Damaged";
+      case "Item found delayed":
+        return "Delayed";
+      case "Operational irregularity":
+        return "Irregularity";
+      default:
+        return reason;
+    }
+  }
+  private static ConvertDate(dateSerial: number) {
+    const date = new Date(dateSerial)
+    const result = (date.getMonth()+1).toString().padStart(2, "0") + "/" + date.getDate().toString().padStart(2, "0");
+    return result;
   }
 }
 export interface GcssRawItem {
@@ -110,7 +156,9 @@ export interface GcssRawItem {
   originPartner: string | null;
   originCallCentre: string | null;
   originCountry: string | null;
-  notificationStatusId: string | null;
+  notificationStatusId: number | null;
+  notificationStatusCreationDate: number | null;
+  notificationStatus: string | null;
   originCallcentre: string | null;
   destinationCallcentre: string | null;
   sticky: boolean;
@@ -201,7 +249,7 @@ export class WorkflowItem {
   private convertNotificationType(type: string) {
     switch (type) {
       case "Item damaged":
-        return "CN24";
+        return "Damaged";
       case "Item delayed":
         return "Delayed";
       case "Item retained":

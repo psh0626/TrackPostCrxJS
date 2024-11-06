@@ -57,7 +57,11 @@ export class GcssAPI {
     console.log("GCSS NOTIFICATIONS FETCHED: ", trimmed);
 
     const unread = trimmed
-      .filter((item) => item.readStatus === "UNREAD" || item.readStatus === "MARKED_UNREAD")
+      .filter(
+        (item) =>
+          item.messageType === "NQ" &&
+          (item.readStatus === "UNREAD" || item.readStatus === "MARKED_UNREAD")
+      )
       .map((item) => GcssItem.FromRawItem(item));
     console.log("GCSS NOTIFICATIONS FILTERED: ", unread);
 
@@ -93,8 +97,10 @@ export class GcssAPI {
   }
   static async FetchReplies(repeat: boolean = true) {
     if (!this.settings.GcssUnreadReplies) {
-      if (this.settings.GcssUnreadRequests) await this.FetchRequests();
-      this.FetchNotifications();
+      if (this.settings.GcssUnreadRequests) {
+        await this.FetchRequests();
+        await this.FetchNotifications();
+      }
       return;
     }
 

@@ -127,6 +127,36 @@ export const MyList: React.FC<MyListProps> = ({
     }
   };
 
+  const CopyIDs = () => {
+    let ids: string[];
+    if (service === "GCSS") {
+      ids = items.map((item) => (item as GcssItem).ItemId);
+    } else {
+      ids = items.map((item) => (item as WorkflowItem).tracking_id);
+    }
+    const str_ids = ids.join("\n");
+    void navigator.clipboard.writeText(str_ids);
+  };
+
+  const CopyCountries = () => {
+    let countries: string[];
+    if (service === "GCSS") {
+      if (type === "replies" && !isNotification) {
+        countries = items.map((item) => (item as GcssItem).DestinationCountry);
+      } else {
+        countries = items.map((item) => (item as GcssItem).OriginCountry);
+      }
+    } else {
+      if (type === "replies" && !isNotification) {
+        countries = items.map((item) => (item as WorkflowItem).replying_op.substring(0, 2));
+      } else {
+        countries = items.map((item) => (item as WorkflowItem).requesting_op.substring(0, 2));
+      }
+    }
+    const str_ids = countries.join("\n");
+    void navigator.clipboard.writeText(str_ids);
+  };
+
   return items.length === 0 ? null : (
     <List>
       <Accordion>
@@ -137,12 +167,22 @@ export const MyList: React.FC<MyListProps> = ({
             {list_title}
           </Typography>
         </AccordionSummary>
-        <Stack alignItems="end">
+        <Stack alignItems="center" justifyContent="space-around" direction="row">
+          <Button variant="outlined" size="small" onClick={async () => CopyIDs()} sx={{ p: 1 }}>
+            ID 복사
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={async () => CopyCountries()}
+            sx={{ m: 1, p: 1 }}>
+            국가 복사
+          </Button>
           <Button
             variant="outlined"
             size="small"
             onClick={async () => await OpenAll()}
-            sx={{ mr: 2 }}>
+            sx={{ p: 1 }}>
             Open All
           </Button>
         </Stack>
@@ -152,13 +192,18 @@ export const MyList: React.FC<MyListProps> = ({
             if (service === "iCare") {
               const i = item as WorkflowItem;
               if (isNotification) {
-                primary_string = `${i.requesting_op.substring(0, 2)} - NQ\n${i.request_type}`;
+                const date = i.created.slice(5, 10).replace("-", "/");
+                primary_string = `[${date}] ${i.requesting_op.substring(0, 2)} - ${i.request_type}`;
               } else {
-                primary_string = `${i.tracking_id.slice(-2) === "KR" ? i.replying_op.substring(0, 2) : i.requesting_op.substring(0, 2)} - L${i.current_level}\n${i.request_type}`;
+                primary_string = `${i.tracking_id.slice(-2) === "KR" ? i.replying_op.substring(0, 2) : i.requesting_op.substring(0, 2)} - L${i.current_level} ${i.request_type}`;
               }
             } else {
               const i = item as GcssItem;
-              primary_string = `${i.OriginCountry === "KR" ? `${i.DestinationCountry}` : `${i.OriginCountry}`} - ${i.WorkflowLevel} ${i.RequestType}`;
+              if (isNotification) {
+                primary_string = `[${i.NotificationCreationDate}] ${i.OriginCountry} - ${i.NotificationReason}`;
+              } else {
+                primary_string = `${i.ItemId.slice(-2) === "KR" ? `${i.DestinationCountry}` : `${i.OriginCountry}`} - ${i.WorkflowLevel} ${i.RequestType}`;
+              }
             }
 
             return (
@@ -167,7 +212,10 @@ export const MyList: React.FC<MyListProps> = ({
                   <ListItemButton
                     onClick={async () => {
                       if (service === "iCare") await OpenNewTab(item.link);
-                      else await OpenNewTab(item.WorkflowLink);
+                      else {
+                        if (isNotification) await OpenNewTab(item.NotificationLink);
+                        else await OpenNewTab(item.WorkflowLink);
+                      }
                     }}>
                     <ListItemIcon>
                       <OpenInBrowser />

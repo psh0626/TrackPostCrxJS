@@ -119,12 +119,19 @@ export default async function CreateNotification(force_update = false) {
   }
   if (Array.isArray(GcssItems)) {
     gcss_mapped_items = GcssItems.map((item) => {
-      const is_outbound = item.OriginCountry === "KR";
-      const is_notif = item.MessageType === "NQ" ? "NQ" : item.WorkflowLevel;
-      return {
-        title: `GCSS ${is_notif} ${is_outbound ? "발송" : "도착"}`,
-        message: `${item.ItemId} ${is_outbound ? "(" + item.DestinationCountry + ")" : ""}`,
-      } as chrome.notifications.ItemOptions;
+      if (item.MessageType === "NQ") {
+        const is_outbound = item.ItemId.slice(-2) === "KR";
+        return {
+          title: `GCSS NQ ${is_outbound ? "발송" : "도착"}`,
+          message: `${item.ItemId} ${is_outbound ? "(" + item.OriginCountry + ")" : ""}`,
+        } as chrome.notifications.ItemOptions;
+      } else {
+        const is_outbound = item.ItemId.slice(-2) === "KR";
+        return {
+          title: `GCSS ${item.WorkflowLevel} ${is_outbound ? "발송" : "도착"}`,
+          message: `${item.ItemId} ${is_outbound ? "(" + item.DestinationCountry + ")" : ""}`,
+        } as chrome.notifications.ItemOptions;
+      }
     });
   }
   const combined = [

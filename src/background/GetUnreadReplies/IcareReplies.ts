@@ -47,6 +47,7 @@ export class IcareAPI2 {
   static async FetchUnreadReplies(csrfToken: string, trialNo = 1, noResponse = 0) {
     if (!this.settings.IcareUnreadReplies) {
       if (this.settings.IcareUnreadRequests) await this.FetchUnreadRequests(this.LastCsrfToken);
+      await this.FetchNotifications(this.LastCsrfToken);
       return;
     }
 
@@ -116,7 +117,6 @@ export class IcareAPI2 {
       console.log(`[FetchUnreadRequests] Attempt successful`, result);
       const request_items = result!.content.data.map((data) => new WorkflowItem(data));
       await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REQUESTS, request_items));
-      await this.FetchNotifications(this.LastCsrfToken);
     } else {
       console.log(
         `[FetchUnreadRequests] Attempt failed with CSRF Token:`,
@@ -129,7 +129,7 @@ export class IcareAPI2 {
 
   private static async FetchNotifications(csrfToken: string) {
     if (
-      !this.settings.IcareUnreadNotificationInbound ||
+      !this.settings.IcareUnreadNotificationInbound &&
       !this.settings.IcareUnreadNotificationOutbound
     ) {
       return;
@@ -144,24 +144,26 @@ export class IcareAPI2 {
       result = (await response.json()) as IcareResponse;
       this.UpdateCsrfToken(result.control.csrfToken);
     } catch (e) {
-      console.error(`[FetchUnreadRequests] Network request failed:`, e);
+      console.error(`[FetchNotifications] Network request failed:`, e);
       see_other = true;
     }
 
     if (response.ok && !see_other) {
-      console.log(`[FetchUnreadRequests] Attempt successful`, result);
+      console.log(`[FetchNotifications] Attempt successful`, result);
       const notif_items = result!.content.data.map((data) => new WorkflowItem(data));
       if (this.settings.IcareUnreadNotificationInbound) {
         const inbound = notif_items.filter((item) => item.tracking_id.slice(-2) !== "KR");
+        console.log(`[FetchNotifications] Notification inbound items filtered`, inbound);
         await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_NOTIF_INBOUND, inbound));
       }
       if (this.settings.IcareUnreadNotificationOutbound) {
         const outbound = notif_items.filter((item) => item.tracking_id.slice(-2) === "KR");
+        console.log(`[FetchNotifications] Notification outbound items filtered`, outbound);
         await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND, outbound));
       }
     } else {
       console.log(
-        `[FetchUnreadRequests] Attempt failed with CSRF Token:`,
+        `[FetchNotifications] Attempt failed with CSRF Token:`,
         csrfToken,
         "\nResponse:",
         result
