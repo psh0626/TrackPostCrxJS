@@ -3,14 +3,15 @@ import {
   Checkbox,
   Divider,
   FormControlLabel,
-  Grid,
   Paper,
   Stack,
   Typography,
   TextField,
 } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import { IMICSettings } from "../../../src/lib/OptionElement";
 import { ServiceTypes } from "../../../src/background/GetUnreadReplies/GcssReplies";
+import { SubdirectoryArrowRight } from "@mui/icons-material";
 
 interface GeneralSettingsProps {
   settings: React.MutableRefObject<IMICSettings>;
@@ -18,10 +19,14 @@ interface GeneralSettingsProps {
 
 export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) => {
   const [chkIcareReq, setChkIcareReq] = useState(false);
-  const [chkIcareRep, SetChkIcareRep] = useState(false);
+  const [chkIcareRep, setChkIcareRep] = useState(false);
+  const [chkIcareNotiIn, setChkIcareNotiIn] = useState(false);
+  const [chkIcareNotiOut, setChkIcareNotiOut] = useState(false);
   const [icareAuthor, setIcareAuthor] = useState<string[]>([]);
   const [chkGcssReq, setChkGcssReq] = useState(false);
   const [chkGcssRep, setChkGcssRep] = useState(false);
+  const [chkGcssNotiIn, setChkGcssNotiIn] = useState(false);
+  const [chkGcssNotiOut, setChkGcssNotiOut] = useState(false);
   const [gcssAuthor, setGcssAuthor] = useState<string[]>([]);
   const [gcssServiceTypes, setGcssServiceTypes] = useState<ServiceTypes[]>([ServiceTypes.EMS]);
   const initialized = useRef(false);
@@ -29,11 +34,15 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
   useEffect(() => {
     if (!initialized.current) {
       console.log("GENERAL SETTINGS INITIALIZING: ", initialized);
-      SetChkIcareRep(settings.current.IcareUnreadReplies);
+      setChkIcareRep(settings.current.IcareUnreadReplies);
       setChkIcareReq(settings.current.IcareUnreadRequests);
+      setChkIcareNotiIn(settings.current.IcareUnreadNotificationInbound);
+      setChkIcareNotiOut(settings.current.IcareUnreadNotificationOutbound);
       setIcareAuthor(settings.current.IcareAuthor);
       setChkGcssRep(settings.current.GcssUnreadReplies);
       setChkGcssReq(settings.current.GcssUnreadRequests);
+      setChkGcssNotiIn(settings.current.GcssUnreadNotificationInbound);
+      setChkGcssNotiOut(settings.current.GcssUnreadNotificationOutbound);
       if (!Array.isArray(settings.current.GcssAuthor))
         settings.current.GcssAuthor = [settings.current.GcssAuthor];
       setGcssAuthor(settings.current.GcssAuthor);
@@ -48,14 +57,30 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
       void SaveSettings();
       console.log("GENERALSETTINGS SAVE SETTINGS: ", initialized.current);
     } else initialized.current = true;
-  }, [chkIcareRep, chkIcareReq, icareAuthor, chkGcssRep, chkGcssReq, gcssAuthor, gcssServiceTypes]);
+  }, [
+    chkIcareRep,
+    chkIcareReq,
+    icareAuthor,
+    chkGcssRep,
+    chkGcssReq,
+    gcssAuthor,
+    gcssServiceTypes,
+    chkIcareNotiIn,
+    chkIcareNotiOut,
+    chkGcssNotiIn,
+    chkGcssNotiOut,
+  ]);
 
   async function SaveSettings() {
     settings.current.IcareUnreadReplies = chkIcareRep;
     settings.current.IcareUnreadRequests = chkIcareReq;
+    settings.current.IcareUnreadNotificationInbound = chkIcareNotiIn;
+    settings.current.IcareUnreadNotificationOutbound = chkIcareNotiOut;
     settings.current.IcareAuthor = icareAuthor;
     settings.current.GcssUnreadRequests = chkGcssReq;
     settings.current.GcssUnreadReplies = chkGcssRep;
+    settings.current.GcssUnreadNotificationInbound = chkGcssNotiIn;
+    settings.current.GcssUnreadNotificationOutbound = chkGcssNotiOut;
     settings.current.GcssAuthor = gcssAuthor;
     settings.current.GcssServiceTypes = gcssServiceTypes.sort((a, b) => {
       const serviceOrder = [
@@ -100,35 +125,68 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
       <Stack spacing={4} sx={{ width: 500 }}>
         <Paper sx={{ p: 3 }}>
           <Grid container width="100%" rowSpacing={1}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h5" fontWeight={100}>
                 iCare
               </Typography>
               <Divider sx={{ mt: 1, mb: 2 }} />
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={{ xs: 6 }}>
               <FormControlLabel
                 label="iCare 도착 문의 알림"
                 control={
                   <Checkbox checked={chkIcareReq} onChange={onCheckboxChanged} color="primary" />
                 }
               />
+              {chkIcareReq ? (
+                <FormControlLabel
+                  sx={{ transform: "scale(0.9)", ml: "10px" }}
+                  label="도착 통지 알림"
+                  control={
+                    <Stack direction="row" alignItems="center">
+                      <SubdirectoryArrowRight sx={{ paddingBottom: 1 }} />
+                      <Checkbox
+                        checked={chkIcareNotiIn}
+                        onChange={(e, c) => setChkIcareNotiIn(c)}
+                        color="error"
+                      />
+                    </Stack>
+                  }
+                />
+              ) : null}
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={{ xs: 6 }}>
               <FormControlLabel
                 label="iCare 발송 회신 알림"
                 control={
                   <Checkbox
                     checked={chkIcareRep}
-                    onChange={(e, c) => SetChkIcareRep(c)}
+                    onChange={(e, c) => setChkIcareRep(c)}
                     color="primary"
                   />
                 }
               />
+
+              {chkIcareRep ? (
+                <FormControlLabel
+                  sx={{ transform: "scale(0.9)", ml: "10px" }}
+                  label="발송 통지 알림"
+                  control={
+                    <Stack direction="row" alignItems="center">
+                      <SubdirectoryArrowRight sx={{ paddingBottom: 1 }} />
+                      <Checkbox
+                        checked={chkIcareNotiOut}
+                        onChange={(e, c) => setChkIcareNotiOut(c)}
+                        color="error"
+                      />
+                    </Stack>
+                  }
+                />
+              ) : null}
             </Grid>
             {chkIcareRep ? (
-              <Grid item xs={12}>
-                <Divider sx={{ marginY: 2 }} />
+              <Grid size={{ xs: 12 }}>
+                <Divider sx={{ marginTop: 1, marginBottom: 2 }} />
                 <Stack direction="row" alignItems="end" justifyContent="end">
                   <Typography
                     textAlign="center"
@@ -158,13 +216,13 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
         </Paper>
         <Paper sx={{ p: 3 }}>
           <Grid container width="100%" rowSpacing={1}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h5" fontWeight={100}>
                 GCSS
               </Typography>
               <Divider sx={{ mt: 1, mb: 2 }} />
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={{ xs: 6 }}>
               <FormControlLabel
                 label="GCSS 도착 문의 알림"
                 control={
@@ -175,8 +233,25 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                   />
                 }
               />
+
+              {chkGcssReq ? (
+                <FormControlLabel
+                  sx={{ transform: "scale(0.9)", ml: "10px" }}
+                  label="도착 통지 알림"
+                  control={
+                    <Stack direction="row" alignItems="center">
+                      <SubdirectoryArrowRight sx={{ paddingBottom: 1 }} />
+                      <Checkbox
+                        checked={chkGcssNotiIn}
+                        onChange={(e, c) => setChkGcssNotiIn(c)}
+                        color="error"
+                      />
+                    </Stack>
+                  }
+                />
+              ) : null}
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={{ xs: 6 }}>
               <FormControlLabel
                 label="GCSS 발송 회신 알림"
                 control={
@@ -190,10 +265,27 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                   />
                 }
               />
+
+              {chkGcssRep ? (
+                <FormControlLabel
+                  sx={{ transform: "scale(0.9)", ml: "10px" }}
+                  label="발송 통지 알림"
+                  control={
+                    <Stack direction="row" alignItems="center">
+                      <SubdirectoryArrowRight sx={{ paddingBottom: 1 }} />
+                      <Checkbox
+                        checked={chkGcssNotiOut}
+                        onChange={(e, c) => setChkGcssNotiOut(c)}
+                        color="error"
+                      />
+                    </Stack>
+                  }
+                />
+              ) : null}
             </Grid>
             {chkGcssRep ? (
-              <Grid item xs={12}>
-                <Divider sx={{ marginTop: 2 }} />
+              <Grid size={{ xs: 12 }}>
+                <Divider sx={{ marginTop: 1 }} />
                 <Stack direction="row" alignItems="end" justifyContent="space-evenly">
                   <FormControlLabel
                     label="EMS"

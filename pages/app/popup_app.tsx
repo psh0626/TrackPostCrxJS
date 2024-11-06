@@ -9,6 +9,7 @@ import PopupTrack from "../../src/lib/PopupTrack";
 import { GcssItem, WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
 import { IMICSettings } from "../../src/lib/OptionElement";
 import { ServiceNames, ServiceTypes } from "../../src/background/GetUnreadReplies/GcssReplies";
+import { COMMANDS } from "../../src/lib/Message";
 
 function PopUpApp() {
   // TODO: GCSS Author Name Separation.
@@ -18,16 +19,26 @@ function PopUpApp() {
 
   const [icare_items, set_icare_items] = useState<WorkflowItem[]>([]);
   const [icare_req_items, set_icare_req] = useState<WorkflowItem[]>([]);
+  const [icare_notif_in_items, set_icare_notif_in_items] = useState<WorkflowItem[]>([]);
+  const [icare_notif_out_items, set_icare_notif_out_items] = useState<WorkflowItem[]>([]);
   const [icare_author, set_icare_author] = useState<string[]>([]);
+
   const [gcss_items, set_gcss_items] = useState<GcssItem[]>([]);
   const [gcss_req_items, set_gcss_req] = useState<GcssItem[]>([]);
+  const [gcss_notif_in_items, set_gcss_notif_in_items] = useState<GcssItem[]>([]);
+  const [gcss_notif_out_items, set_gcss_notif_out_items] = useState<GcssItem[]>([]);
   const [gcss_author, set_gcss_author] = useState<string[]>([]);
   const [gcss_services, set_gcss_services] = useState<ServiceTypes[]>([ServiceTypes.EMS]);
 
   const [chk_rep, set_chk_rep] = useState(false);
   const [chk_req, set_chk_req] = useState(false);
+  const [chk_notif_in, set_chk_notif_in] = useState(false);
+  const [chk_notif_out, set_chk_notif_out] = useState(false);
+
   const [chk_gcss_rep, set_chk_gcssrep] = useState(false);
   const [chk_gcss_req, set_chk_gcssreq] = useState(false);
+  const [chk_gcss_notif_in, set_chk_gcss_notif_in] = useState(false);
+  const [chk_gcss_notif_out, set_chk_gcss_notif_out] = useState(false);
 
   const textfield_ref = useRef<HTMLInputElement>(null);
   const settings = useRef(new IMICSettings());
@@ -64,9 +75,13 @@ function PopUpApp() {
       await settings.current.LoadOptions();
       set_chk_rep(settings.current.IcareUnreadReplies);
       set_chk_req(settings.current.IcareUnreadRequests);
+      set_chk_notif_in(settings.current.IcareUnreadNotificationInbound);
+      set_chk_notif_out(settings.current.IcareUnreadNotificationOutbound);
       set_icare_author(settings.current.IcareAuthor);
       set_chk_gcssrep(settings.current.GcssUnreadReplies);
       set_chk_gcssreq(settings.current.GcssUnreadRequests);
+      set_chk_gcss_notif_in(settings.current.GcssUnreadNotificationInbound);
+      set_chk_gcss_notif_out(settings.current.GcssUnreadNotificationOutbound);
       set_gcss_author(settings.current.GcssAuthor);
       set_gcss_services(
         settings.current.GcssServiceTypes.sort((a, b) => {
@@ -108,6 +123,34 @@ function PopUpApp() {
         const dict = (await chrome.storage.session.get("GCSS_UNREAD_REQUESTS"))
           .GCSS_UNREAD_REQUESTS as GcssItem[];
         if (typeof dict !== "undefined" && dict.length > 0) set_gcss_req(dict);
+      }
+
+      if (settings.current.IcareUnreadNotificationInbound) {
+        const dict = (await chrome.storage.session.get(COMMANDS.ICARE_UNREAD_NOTIF_INBOUND))[
+          COMMANDS.ICARE_UNREAD_NOTIF_INBOUND
+        ] as WorkflowItem[];
+        if (typeof dict !== "undefined" && dict.length > 0) set_icare_notif_in_items(dict);
+      }
+
+      if (settings.current.IcareUnreadNotificationOutbound) {
+        const dict = (await chrome.storage.session.get(COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND))[
+          COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND
+        ] as WorkflowItem[];
+        if (typeof dict !== "undefined" && dict.length > 0) set_icare_notif_out_items(dict);
+      }
+
+      if (settings.current.GcssUnreadNotificationInbound) {
+        const dict = (await chrome.storage.session.get(COMMANDS.GCSS_UNREAD_NOTIF_INBOUND))[
+          COMMANDS.GCSS_UNREAD_NOTIF_INBOUND
+        ] as GcssItem[];
+        if (typeof dict !== "undefined" && dict.length > 0) set_gcss_notif_in_items(dict);
+      }
+
+      if (settings.current.GcssUnreadNotificationOutbound) {
+        const dict = (await chrome.storage.session.get(COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND))[
+          COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND
+        ] as GcssItem[];
+        if (typeof dict !== "undefined" && dict.length > 0) set_gcss_notif_out_items(dict);
       }
 
       // chrome.storage.session.onChanged.addListener((dict) => {
@@ -187,6 +230,126 @@ function PopUpApp() {
     }
   };
 
+  const render_gcss_notifications = () => {
+    if (!chk_gcss_notif_in) {
+      return null;
+    }
+    if (gcss_notif_in_items.length < 1) {
+      return (
+        <Stack alignItems="center">
+          <Typography
+            variant="subtitle2"
+            color="initial"
+            sx={{ userSelect: "none", fontWeight: "300" }}>
+            GCSS 도착 통지: 모두 읽음 ✔️
+          </Typography>
+        </Stack>
+      );
+    }
+    return MyList({
+      items: gcss_notif_in_items,
+      type: "requests",
+      service: "GCSS",
+      isNotification: true,
+    });
+  };
+
+  const render_gcss_inbound_notifications = () => {
+    if (!chk_gcss_notif_in) {
+      return null;
+    }
+    if (gcss_notif_in_items.length < 1) {
+      return (
+        <Stack alignItems="center">
+          <Typography
+            variant="subtitle2"
+            color="initial"
+            sx={{ userSelect: "none", fontWeight: "300" }}>
+            GCSS 도착 통지: 모두 읽음 ✔️
+          </Typography>
+        </Stack>
+      );
+    }
+    return MyList({
+      items: gcss_notif_in_items,
+      type: "requests",
+      service: "GCSS",
+      isNotification: true,
+    });
+  };
+
+  const render_gcss_outbound_notifications = () => {
+    if (!chk_gcss_notif_out) {
+      return null;
+    }
+    if (gcss_notif_out_items.length < 1) {
+      return (
+        <Stack alignItems="center">
+          <Typography
+            variant="subtitle2"
+            color="initial"
+            sx={{ userSelect: "none", fontWeight: "300" }}>
+            GCSS 발송 통지: 모두 읽음 ✔️
+          </Typography>
+        </Stack>
+      );
+    }
+    return MyList({
+      items: gcss_notif_out_items,
+      type: "replies",
+      service: "GCSS",
+      isNotification: true,
+    });
+  };
+
+  const render_icare_inbound_notifications = () => {
+    if (!chk_notif_in) {
+      return null;
+    }
+    if (icare_notif_in_items.length < 1) {
+      return (
+        <Stack alignItems="center">
+          <Typography
+            variant="subtitle2"
+            color="initial"
+            sx={{ userSelect: "none", fontWeight: "300" }}>
+            iCare 도착 통지: 모두 읽음 ✔️
+          </Typography>
+        </Stack>
+      );
+    }
+    return MyList({
+      items: icare_notif_in_items,
+      type: "requests",
+      service: "iCare",
+      isNotification: true,
+    });
+  };
+
+  const render_icare_outbound_notifications = () => {
+    if (!chk_notif_out) {
+      return null;
+    }
+    if (icare_notif_out_items.length < 1) {
+      return (
+        <Stack alignItems="center">
+          <Typography
+            variant="subtitle2"
+            color="initial"
+            sx={{ userSelect: "none", fontWeight: "300" }}>
+            iCare 발송 통지: 모두 읽음 ✔️
+          </Typography>
+        </Stack>
+      );
+    }
+    return MyList({
+      items: icare_notif_out_items,
+      type: "replies",
+      service: "iCare",
+      isNotification: true,
+    });
+  };
+
   return (
     <Stack spacing={0} margin={6} marginTop={0} width="300px">
       <StyledTextField
@@ -233,8 +396,11 @@ function PopUpApp() {
       ) : (
         ""
       )}
+      {render_gcss_inbound_notifications()}
 
       {render_gcss_replies()}
+
+      {render_gcss_outbound_notifications()}
       <Divider variant="middle" sx={{ m: "15px" }}></Divider>
 
       {chk_req ? (
@@ -253,6 +419,9 @@ function PopUpApp() {
       ) : (
         ""
       )}
+
+      {render_icare_inbound_notifications()}
+
       {chk_rep ? (
         icare_items.length > 0 ? (
           icare_author.length > 1 ? (
@@ -282,6 +451,7 @@ function PopUpApp() {
       ) : (
         ""
       )}
+      {render_icare_outbound_notifications()}
     </Stack>
   );
 }

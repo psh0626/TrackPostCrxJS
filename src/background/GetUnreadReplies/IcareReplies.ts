@@ -7,8 +7,12 @@ export class IcareAPI2 {
   //static UserId: string = "";
   static settings = new IMICSettings();
   static readonly BASE_URL = "https://icare.post/?module=workflow&tab=active";
+  static readonly BASE_NOTIF_URL =
+    "https://icare.post/?module=notification&tab=active&origin=received&read=unread";
   static readonly FETCH_URL =
     "https://icare.post/?module=workflow&tab=active&action=overviewJson&mode=ajax";
+  static readonly FETCH_NOTIF_URL =
+    "https://icare.post/?module=notification&tab=active&action=overviewJson&mode=ajax";
   static readonly MAX_RETRY_COUNT = 3;
   static readonly RETRY_TIMEOUT_MS = 2 * 1000;
   private static readonly FETCH_HEADERS = {
@@ -26,11 +30,11 @@ export class IcareAPI2 {
     "x-requested-with": "XMLHttpRequest",
   };
 
-  private static async FetchFromAPI(bodyStr: string) {
-    return await fetch(this.FETCH_URL, {
+  private static async FetchFromAPI(bodyStr: string, notification: boolean = false) {
+    return await fetch(notification ? this.FETCH_NOTIF_URL : this.FETCH_URL, {
       method: "POST",
       headers: this.FETCH_HEADERS,
-      referrer: this.BASE_URL,
+      referrer: notification ? this.BASE_NOTIF_URL : this.BASE_URL,
       referrerPolicy: "strict-origin-when-cross-origin",
       body: bodyStr,
       mode: "cors",
@@ -71,6 +75,7 @@ export class IcareAPI2 {
     if (response.ok) {
       console.log(`[FetchUnreadReplies] Attempt No.${trialNo} successful`, result);
       if (this.settings.IcareUnreadRequests) await this.FetchUnreadRequests(this.LastCsrfToken);
+      await this.FetchNotifications(this.LastCsrfToken);
       await this.OnSuccess(result!);
     } else {
       console.log(
@@ -111,6 +116,49 @@ export class IcareAPI2 {
       console.log(`[FetchUnreadRequests] Attempt successful`, result);
       const request_items = result!.content.data.map((data) => new WorkflowItem(data));
       await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REQUESTS, request_items));
+      await this.FetchNotifications(this.LastCsrfToken);
+    } else {
+      console.log(
+        `[FetchUnreadRequests] Attempt failed with CSRF Token:`,
+        csrfToken,
+        "\nResponse:",
+        result
+      );
+    }
+  }
+
+  private static async FetchNotifications(csrfToken: string) {
+    if (
+      !this.settings.IcareUnreadNotificationInbound ||
+      !this.settings.IcareUnreadNotificationOutbound
+    ) {
+      return;
+    }
+    const bodyStr = this.GetBodyStringForUnreadNotifications(csrfToken);
+
+    const response = await this.FetchFromAPI(bodyStr, true);
+
+    let result: IcareResponse | undefined;
+    let see_other = false;
+    try {
+      result = (await response.json()) as IcareResponse;
+      this.UpdateCsrfToken(result.control.csrfToken);
+    } catch (e) {
+      console.error(`[FetchUnreadRequests] Network request failed:`, e);
+      see_other = true;
+    }
+
+    if (response.ok && !see_other) {
+      console.log(`[FetchUnreadRequests] Attempt successful`, result);
+      const notif_items = result!.content.data.map((data) => new WorkflowItem(data));
+      if (this.settings.IcareUnreadNotificationInbound) {
+        const inbound = notif_items.filter((item) => item.tracking_id.slice(-2) !== "KR");
+        await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_NOTIF_INBOUND, inbound));
+      }
+      if (this.settings.IcareUnreadNotificationOutbound) {
+        const outbound = notif_items.filter((item) => item.tracking_id.slice(-2) === "KR");
+        await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND, outbound));
+      }
     } else {
       console.log(
         `[FetchUnreadRequests] Attempt failed with CSRF Token:`,
@@ -154,6 +202,14 @@ export class IcareAPI2 {
       "draw=6&columns%5B0%5D%5Bdata%5D=0&columns%5B0%5D%5Bname%5D=&columns%5B0%5D%5Bsearchable%5D=true&columns%5B0%5D%5Borderable%5D=false&columns%5B0%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B0%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B1%5D%5Bdata%5D=1&columns%5B1%5D%5Bname%5D=&columns%5B1%5D%5Bsearchable%5D=true&columns%5B1%5D%5Borderable%5D=false&columns%5B1%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B1%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B2%5D%5Bdata%5D=2&columns%5B2%5D%5Bname%5D=&columns%5B2%5D%5Bsearchable%5D=true&columns%5B2%5D%5Borderable%5D=true&columns%5B2%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B2%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B3%5D%5Bdata%5D=3&columns%5B3%5D%5Bname%5D=&columns%5B3%5D%5Bsearchable%5D=true&columns%5B3%5D%5Borderable%5D=true&columns%5B3%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B3%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B4%5D%5Bdata%5D=4&columns%5B4%5D%5Bname%5D=&columns%5B4%5D%5Bsearchable%5D=true&columns%5B4%5D%5Borderable%5D=true&columns%5B4%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B4%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B5%5D%5Bdata%5D=5&columns%5B5%5D%5Bname%5D=&columns%5B5%5D%5Bsearchable%5D=true&columns%5B5%5D%5Borderable%5D=true&columns%5B5%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B5%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B6%5D%5Bdata%5D=6&columns%5B6%5D%5Bname%5D=&columns%5B6%5D%5Bsearchable%5D=true&columns%5B6%5D%5Borderable%5D=true&columns%5B6%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B6%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B7%5D%5Bdata%5D=7&columns%5B7%5D%5Bname%5D=&columns%5B7%5D%5Bsearchable%5D=true&columns%5B7%5D%5Borderable%5D=true&columns%5B7%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B7%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B8%5D%5Bdata%5D=8&columns%5B8%5D%5Bname%5D=&columns%5B8%5D%5Bsearchable%5D=true&columns%5B8%5D%5Borderable%5D=false&columns%5B8%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B8%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B9%5D%5Bdata%5D=9&columns%5B9%5D%5Bname%5D=&columns%5B9%5D%5Bsearchable%5D=true&columns%5B9%5D%5Borderable%5D=true&columns%5B9%5D%5Bsearch%5D%5Bvalue%5D=-1&columns%5B9%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B10%5D%5Bdata%5D=10&columns%5B10%5D%5Bname%5D=&columns%5B10%5D%5Bsearchable%5D=true&columns%5B10%5D%5Borderable%5D=true&columns%5B10%5D%5Bsearch%5D%5Bvalue%5D=-1&columns%5B10%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B11%5D%5Bdata%5D=11&columns%5B11%5D%5Bname%5D=&columns%5B11%5D%5Bsearchable%5D=true&columns%5B11%5D%5Borderable%5D=true&columns%5B11%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B11%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B12%5D%5Bdata%5D=12&columns%5B12%5D%5Bname%5D=&columns%5B12%5D%5Bsearchable%5D=true&columns%5B12%5D%5Borderable%5D=true&columns%5B12%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B12%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B13%5D%5Bdata%5D=13&columns%5B13%5D%5Bname%5D=&columns%5B13%5D%5Bsearchable%5D=true&columns%5B13%5D%5Borderable%5D=true&columns%5B13%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B13%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B14%5D%5Bdata%5D=14&columns%5B14%5D%5Bname%5D=&columns%5B14%5D%5Bsearchable%5D=true&columns%5B14%5D%5Borderable%5D=true&columns%5B14%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B14%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B15%5D%5Bdata%5D=15&columns%5B15%5D%5Bname%5D=&columns%5B15%5D%5Bsearchable%5D=true&columns%5B15%5D%5Borderable%5D=true&columns%5B15%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B15%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B15%5D%5Bsearch%5D%5Bmin%5D=&columns%5B15%5D%5Bsearch%5D%5Bmax%5D=&columns%5B16%5D%5Bdata%5D=16&columns%5B16%5D%5Bname%5D=&columns%5B16%5D%5Bsearchable%5D=true&columns%5B16%5D%5Borderable%5D=false&columns%5B16%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B16%5D%5Bsearch%5D%5Bregex%5D=false&order%5B0%5D%5Bcolumn%5D=15&order%5B0%5D%5Bdir%5D=desc&start=0&length=100&search%5Bvalue%5D=&search%5Bregex%5D=false";
     const bodyConfig =
       "&origin=replying&dueDate=-1&postalOperator=-1&read=unread&responsibleUser=-1";
+    const bodyCsrfToken = "&csrfToken=" + encodeURIComponent(csrfToken);
+    return bodyData + bodyConfig + bodyCsrfToken;
+  }
+  private static GetBodyStringForUnreadNotifications(csrfToken: string): string {
+    const bodyData =
+      "draw=2&columns%5B0%5D%5Bdata%5D=0&columns%5B0%5D%5Bname%5D=&columns%5B0%5D%5Bsearchable%5D=true&columns%5B0%5D%5Borderable%5D=false&columns%5B0%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B0%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B1%5D%5Bdata%5D=1&columns%5B1%5D%5Bname%5D=&columns%5B1%5D%5Bsearchable%5D=true&columns%5B1%5D%5Borderable%5D=true&columns%5B1%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B1%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B2%5D%5Bdata%5D=2&columns%5B2%5D%5Bname%5D=&columns%5B2%5D%5Bsearchable%5D=true&columns%5B2%5D%5Borderable%5D=false&columns%5B2%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B2%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B3%5D%5Bdata%5D=3&columns%5B3%5D%5Bname%5D=&columns%5B3%5D%5Bsearchable%5D=true&columns%5B3%5D%5Borderable%5D=true&columns%5B3%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B3%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B4%5D%5Bdata%5D=4&columns%5B4%5D%5Bname%5D=&columns%5B4%5D%5Bsearchable%5D=true&columns%5B4%5D%5Borderable%5D=true&columns%5B4%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B4%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B5%5D%5Bdata%5D=5&columns%5B5%5D%5Bname%5D=&columns%5B5%5D%5Bsearchable%5D=true&columns%5B5%5D%5Borderable%5D=true&columns%5B5%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B5%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B6%5D%5Bdata%5D=6&columns%5B6%5D%5Bname%5D=&columns%5B6%5D%5Bsearchable%5D=true&columns%5B6%5D%5Borderable%5D=true&columns%5B6%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B6%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B7%5D%5Bdata%5D=7&columns%5B7%5D%5Bname%5D=&columns%5B7%5D%5Bsearchable%5D=true&columns%5B7%5D%5Borderable%5D=true&columns%5B7%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B7%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B8%5D%5Bdata%5D=8&columns%5B8%5D%5Bname%5D=&columns%5B8%5D%5Bsearchable%5D=true&columns%5B8%5D%5Borderable%5D=true&columns%5B8%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B8%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B9%5D%5Bdata%5D=9&columns%5B9%5D%5Bname%5D=&columns%5B9%5D%5Bsearchable%5D=true&columns%5B9%5D%5Borderable%5D=true&columns%5B9%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B9%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B10%5D%5Bdata%5D=10&columns%5B10%5D%5Bname%5D=&columns%5B10%5D%5Bsearchable%5D=true&columns%5B10%5D%5Borderable%5D=true&columns%5B10%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B10%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B11%5D%5Bdata%5D=11&columns%5B11%5D%5Bname%5D=&columns%5B11%5D%5Bsearchable%5D=true&columns%5B11%5D%5Borderable%5D=true&columns%5B11%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B11%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B12%5D%5Bdata%5D=12&columns%5B12%5D%5Bname%5D=&columns%5B12%5D%5Bsearchable%5D=true&columns%5B12%5D%5Borderable%5D=true&columns%5B12%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B12%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B12%5D%5Bsearch%5D%5Bmin%5D=&columns%5B12%5D%5Bsearch%5D%5Bmax%5D=&columns%5B13%5D%5Bdata%5D=13&columns%5B13%5D%5Bname%5D=&columns%5B13%5D%5Bsearchable%5D=true&columns%5B13%5D%5Borderable%5D=false&columns%5B13%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B13%5D%5Bsearch%5D%5Bregex%5D=false&order%5B0%5D%5Bcolumn%5D=12&order%5B0%5D%5Bdir%5D=desc&order%5B0%5D%5Bname%5D=";
+    const bodyConfig =
+      "&start=0&length=50&search%5Bvalue%5D=&search%5Bregex%5D=false&origin=received&postalOperator=-1&read=unread";
     const bodyCsrfToken = "&csrfToken=" + encodeURIComponent(csrfToken);
     return bodyData + bodyConfig + bodyCsrfToken;
   }

@@ -36,6 +36,7 @@ export class GcssItem {
   InternalMessageId = -1;
   InternalTaskId = -1;
   WorkflowLink = "";
+  MessageType = "";
   numberOfSum = -1;
 
   constructor(data?: Partial<GcssItem>) {
@@ -64,6 +65,7 @@ export class GcssItem {
       InternalMessageId: rawItem.messageId,
       InternalTaskId: rawItem.taskId,
       numberOfSum: rawItem.numberOfSum,
+      MessageType: rawItem.messageType,
     });
   }
 }
@@ -146,6 +148,7 @@ export class WorkflowItem {
   last_updated: string = "";
   created: string = "";
   read_status: string = "";
+  is_notification: boolean = false;
 
   constructor(data?: RawData | Partial<WorkflowItem>) {
     if (!data) {
@@ -153,6 +156,23 @@ export class WorkflowItem {
     }
 
     if (this.isRawData(data)) {
+      this.is_notification = data[3].includes("module=notification");
+      if (this.is_notification) {
+        this.internal_id = this.extractNameAttribute(data[0]);
+        this.tracking_id = this.extractInnerText(data[3]);
+        this.link = this.extractHrefAndPrefix(data[3]);
+        this.last_trace = data[4];
+        this.request_type = this.convertNotificationType(data[5]);
+        this.workflow_status = data[6];
+        this.requesting_op = data[7];
+        this.replying_op = data[8];
+        this.author = data[9];
+        this.dispatch_no = data[10];
+        this.last_updated = this.extractInnerText(data[11]);
+        this.created = this.extractInnerText(data[12]);
+        this.read_status = data.DT_RowClass;
+        return;
+      }
       this.internal_id = this.extractNameAttribute(data[0]);
       this.tracking_id = this.extractInnerText(data[3]);
       this.link = this.extractHrefAndPrefix(data[3]);
@@ -178,6 +198,22 @@ export class WorkflowItem {
     return typeof data[0] === "string" || typeof data[1] === "string";
   }
 
+  private convertNotificationType(type: string) {
+    switch (type) {
+      case "Item damaged":
+        return "CN24";
+      case "Item delayed":
+        return "Delayed";
+      case "Item retained":
+        return "Retained";
+      case "Operational irregularity":
+        return "Irregularity";
+      case "Item undeliverable":
+        return "Undeliverable";
+      default:
+        return type;
+    }
+  }
   private convertRequestType(reqTypeString: string) {
     switch (reqTypeString) {
       case "Update/confirmation item status":

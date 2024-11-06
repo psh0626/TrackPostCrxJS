@@ -76,6 +76,7 @@ interface MyListProps {
   service?: "GCSS" | "iCare";
   author?: string;
   serviceType?: ServiceNames;
+  isNotification?: boolean;
 }
 export const MyList: React.FC<MyListProps> = ({
   items,
@@ -83,9 +84,11 @@ export const MyList: React.FC<MyListProps> = ({
   service = "iCare",
   author = "",
   serviceType = ServiceNames.EMS,
+  isNotification = false,
 }) => {
   let list_title =
     type === "replies" ? `${service} - ${serviceType} 발송 회신` : `${service} - EMS 도착 문의`;
+  if (isNotification) list_title = list_title.replace("회신", "통지").replace("문의", "통지");
   list_title += `: ${items.length}건`;
   if (author !== "") list_title += ` (${author})`;
 
@@ -124,9 +127,7 @@ export const MyList: React.FC<MyListProps> = ({
     }
   };
 
-  return items.length === 0 ? (
-    null
-  ) : (
+  return items.length === 0 ? null : (
     <List>
       <Accordion>
         <AccordionSummary
@@ -150,7 +151,11 @@ export const MyList: React.FC<MyListProps> = ({
             let primary_string: string;
             if (service === "iCare") {
               const i = item as WorkflowItem;
-              primary_string = `${i.tracking_id.slice(-2) === "KR" ? i.replying_op.substring(0, 2) : i.requesting_op.substring(0, 2)} - L${i.current_level}\n${i.request_type}`;
+              if (isNotification) {
+                primary_string = `${i.requesting_op.substring(0, 2)} - NQ\n${i.request_type}`;
+              } else {
+                primary_string = `${i.tracking_id.slice(-2) === "KR" ? i.replying_op.substring(0, 2) : i.requesting_op.substring(0, 2)} - L${i.current_level}\n${i.request_type}`;
+              }
             } else {
               const i = item as GcssItem;
               primary_string = `${i.OriginCountry === "KR" ? `${i.DestinationCountry}` : `${i.OriginCountry}`} - ${i.WorkflowLevel} ${i.RequestType}`;

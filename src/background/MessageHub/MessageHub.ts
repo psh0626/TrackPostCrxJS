@@ -88,6 +88,26 @@ export default function ProcessMessage(
       })();
       return;
 
+    case COMMANDS.GCSS_UNREAD_NOTIF_INBOUND:
+    case COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND:
+      void (async () => {
+        const session_store: { [key: string]: GcssItem[] } = {};
+        session_store[Message.Command] = Message.Param as GcssItem[];
+        await chrome.storage.session.set(session_store);
+        await CreateNotification();
+      })();
+      return;
+
+    case COMMANDS.ICARE_UNREAD_NOTIF_INBOUND:
+    case COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND:
+      void (async () => {
+        const session_store: { [key: string]: WorkflowItem[] } = {};
+        session_store[Message.Command] = Message.Param as WorkflowItem[];
+        await chrome.storage.session.set(session_store);
+        await CreateNotification();
+      })();
+      return;
+
     case COMMANDS.POPUP_TRACK_SET:
       Object.assign(PopupTracker, Message.Param);
       void (async () => {

@@ -17,10 +17,14 @@ export class PersonalRemark {
 export class IMICSettings {
   IcareUnreadReplies = false;
   IcareUnreadRequests: boolean = false;
+  IcareUnreadNotificationInbound = false;
+  IcareUnreadNotificationOutbound = false;
   IcareAuthor: string[] = [];
   PersonalRemarks: PersonalRemark[] = [];
   GcssUnreadReplies = false;
   GcssUnreadRequests = false;
+  GcssUnreadNotificationInbound = false;
+  GcssUnreadNotificationOutbound = false;
   GcssAuthor: string[] = [];
   GcssServiceTypes: ServiceTypes[] = [ServiceTypes.EMS];
   SavingFinished: NodeJS.Timeout | null = null;

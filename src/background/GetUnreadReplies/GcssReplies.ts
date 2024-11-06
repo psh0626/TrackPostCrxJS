@@ -23,7 +23,7 @@ export class GcssAPI {
     }, 15000);
   }
   private static async PostFetch(
-    folder: "RPLYRCVD" | "TODO" = "RPLYRCVD",
+    folder: "RPLYRCVD" | "TODO" | "NOTIFRCVD" = "RPLYRCVD",
     serviceType: ServiceTypes[] | string = ServiceTypes.EMS
   ) {
     if (Array.isArray(serviceType)) serviceType = serviceType.join('", "');
@@ -37,6 +37,40 @@ export class GcssAPI {
       method: "POST",
       credentials: "include",
     });
+  }
+  private static async FetchNotifications() {
+    if (
+      !this.settings.GcssUnreadNotificationInbound &&
+      !this.settings.GcssUnreadNotificationOutbound
+    ) {
+      return;
+    }
+
+    const response = await this.PostFetch("NOTIFRCVD", ServiceTypes.EMS);
+
+    if (!response.ok) {
+      console.error(response.status);
+      return;
+    }
+
+    const trimmed = TrimObject(await response.json()) as GcssRawItem[];
+    console.log("GCSS NOTIFICATIONS FETCHED: ", trimmed);
+
+    const unread = trimmed
+      .filter((item) => item.readStatus === "UNREAD" || item.readStatus === "MARKED_UNREAD")
+      .map((item) => GcssItem.FromRawItem(item));
+    console.log("GCSS NOTIFICATIONS FILTERED: ", unread);
+
+    if (this.settings.GcssUnreadNotificationInbound) {
+      const inbound = unread.filter((item) => item.ItemId.slice(-2) !== "KR");
+      console.log("GCSS NOTIFICATIONS INOUND: ", inbound);
+      await chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_NOTIF_INBOUND, inbound));
+    }
+    if (this.settings.GcssUnreadNotificationOutbound) {
+      const outbound = unread.filter((item) => item.ItemId.slice(-2) === "KR");
+      console.log("GCSS NOTIFICATIONS OUTBOUND: ", outbound);
+      await chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND, outbound));
+    }
   }
   private static async FetchRequests() {
     const response = await this.PostFetch("TODO", ServiceTypes.EMS);
@@ -60,6 +94,7 @@ export class GcssAPI {
   static async FetchReplies(repeat: boolean = true) {
     if (!this.settings.GcssUnreadReplies) {
       if (this.settings.GcssUnreadRequests) await this.FetchRequests();
+      this.FetchNotifications();
       return;
     }
 
@@ -91,6 +126,7 @@ export class GcssAPI {
     await chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, unread_msgs));
 
     if (this.settings.GcssUnreadRequests) await this.FetchRequests();
+    await this.FetchNotifications();
 
     if (repeat) this.ScheduleAnotherFetch();
   }

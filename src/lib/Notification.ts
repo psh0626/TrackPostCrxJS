@@ -34,6 +34,23 @@ export default async function CreateNotification(force_update = false) {
       ...(Array.isArray(reqs) ? reqs : []),
     ];
   }
+  if (settings.IcareUnreadNotificationInbound) {
+    dict = await chrome.storage.session.get(COMMANDS.ICARE_UNREAD_NOTIF_INBOUND);
+    const inbound = dict[COMMANDS.ICARE_UNREAD_NOTIF_INBOUND] as WorkflowItem[];
+    WorkFlowItems = [
+      ...(Array.isArray(WorkFlowItems) ? WorkFlowItems : []),
+      ...(Array.isArray(inbound) ? inbound : []),
+    ];
+  }
+  if (settings.IcareUnreadNotificationOutbound) {
+    dict = await chrome.storage.session.get(COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND);
+    const outbound = dict[COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND] as WorkflowItem[];
+    WorkFlowItems = [
+      ...(Array.isArray(WorkFlowItems) ? WorkFlowItems : []),
+      ...(Array.isArray(outbound) ? outbound : []),
+    ];
+  }
+
   let current_num = Array.isArray(WorkFlowItems) ? WorkFlowItems.length : 0;
 
   if (settings.GcssUnreadReplies) {
@@ -47,6 +64,24 @@ export default async function CreateNotification(force_update = false) {
     GcssItems = [
       ...(Array.isArray(GcssItems) ? GcssItems : []),
       ...(Array.isArray(reqs) ? reqs : []),
+    ];
+  }
+
+  if (settings.GcssUnreadNotificationInbound) {
+    dict = await chrome.storage.session.get(COMMANDS.GCSS_UNREAD_NOTIF_INBOUND);
+    const inbound = dict[COMMANDS.GCSS_UNREAD_NOTIF_INBOUND] as GcssItem[];
+    GcssItems = [
+      ...(Array.isArray(GcssItems) ? GcssItems : []),
+      ...(Array.isArray(inbound) ? inbound : []),
+    ];
+  }
+
+  if (settings.GcssUnreadNotificationOutbound) {
+    dict = await chrome.storage.session.get(COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND);
+    const outbound = dict[COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND] as GcssItem[];
+    GcssItems = [
+      ...(Array.isArray(GcssItems) ? GcssItems : []),
+      ...(Array.isArray(outbound) ? outbound : []),
     ];
   }
 
@@ -85,8 +120,9 @@ export default async function CreateNotification(force_update = false) {
   if (Array.isArray(GcssItems)) {
     gcss_mapped_items = GcssItems.map((item) => {
       const is_outbound = item.OriginCountry === "KR";
+      const is_notif = item.MessageType === "NQ" ? "NQ" : item.WorkflowLevel;
       return {
-        title: `GCSS ${item.WorkflowLevel} ${is_outbound ? "발송" : "도착"}`,
+        title: `GCSS ${is_notif} ${is_outbound ? "발송" : "도착"}`,
         message: `${item.ItemId} ${is_outbound ? "(" + item.DestinationCountry + ")" : ""}`,
       } as chrome.notifications.ItemOptions;
     });
