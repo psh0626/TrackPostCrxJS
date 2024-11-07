@@ -14,133 +14,123 @@ async function CheckFetchError() {
   }
   return false;
 }
+
+interface StorageItem {
+  key: string;
+  items: WorkflowItem[] | GcssItem[];
+  setting: boolean;
+}
+
+async function GetStorageItems<T>(key: string): Promise<T[]> {
+  const dict = await chrome.storage.session.get(key);
+  return (dict[key] as T[]) || [];
+}
+
+async function GatherStorageItems(items: StorageItem[]): Promise<(WorkflowItem | GcssItem)[]> {
+  const results: (WorkflowItem | GcssItem)[] = [];
+
+  for (const item of items) {
+    if (!item.setting) continue;
+    const storedItems = await GetStorageItems<WorkflowItem | GcssItem>(item.key);
+    if (Array.isArray(storedItems)) {
+      results.push(...storedItems);
+    }
+  }
+
+  return results;
+}
+
+function MapToNotificationItem(item: WorkflowItem | GcssItem): chrome.notifications.ItemOptions {
+  const isOutbound = ("tracking_id" in item ? item.tracking_id : item.ItemId).slice(-2) === "KR";
+
+  if ("MessageType" in item) {
+    // GcssItem
+    if (item.MessageType === "NQ") {
+      return {
+        title: `GCSS NQ ${isOutbound ? "발송" : "도착"}`,
+        message: `${item.ItemId} ${isOutbound ? "(" + item.OriginCountry + ")" : ""}`,
+      };
+    }
+    return {
+      title: `GCSS ${item.WorkflowLevel} ${isOutbound ? "발송" : "도착"}`,
+      message: `${item.ItemId} ${isOutbound ? "(" + item.DestinationCountry + ")" : ""}`,
+    };
+  }
+
+  // WorkflowItem
+  if (item.is_notification) {
+    return {
+      title: `iCare NQ ${isOutbound ? "발송" : "도착"}`,
+      message: `${item.tracking_id} ${isOutbound ? "(" + item.requesting_op.substring(0, 2) + ")" : ""}`,
+    };
+  }
+  return {
+    title: `iCare L${item.current_level} ${isOutbound ? "발송" : "도착"}`,
+    message: `${item.tracking_id} ${isOutbound ? "(" + item.replying_op.substring(0, 2) + ")" : ""}`,
+  };
+}
+
 export default async function CreateNotification(force_update = false) {
   const settings = new IMICSettings();
   await settings.LoadOptions();
-
   const fetch_error = await CheckFetchError();
 
-  let WorkFlowItems: WorkflowItem[];
-  let GcssItems: GcssItem[] = [];
+  // Define storage items to fetch
+  const icareItems: StorageItem[] = [
+    { key: COMMANDS.ICARE_UNREAD_REPLIES, setting: settings.IcareUnreadReplies, items: [] },
+    { key: COMMANDS.ICARE_UNREAD_REQUESTS, setting: settings.IcareUnreadRequests, items: [] },
+    {
+      key: COMMANDS.ICARE_UNREAD_NOTIF_INBOUND,
+      setting: settings.IcareUnreadNotificationInbound,
+      items: [],
+    },
+    {
+      key: COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND,
+      setting: settings.IcareUnreadNotificationOutbound,
+      items: [],
+    },
+  ];
 
-  let dict = await chrome.storage.session.get("ICARE_UNREAD_REPLIES");
-  WorkFlowItems = dict.ICARE_UNREAD_REPLIES as WorkflowItem[];
+  const gcssItems: StorageItem[] = [
+    { key: COMMANDS.GCSS_UNREAD_REPLIES, setting: settings.GcssUnreadReplies, items: [] },
+    { key: COMMANDS.GCSS_UNREAD_REQUESTS, setting: settings.GcssUnreadRequests, items: [] },
+    {
+      key: COMMANDS.GCSS_UNREAD_NOTIF_INBOUND,
+      setting: settings.GcssUnreadNotificationInbound,
+      items: [],
+    },
+    {
+      key: COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND,
+      setting: settings.GcssUnreadNotificationOutbound,
+      items: [],
+    },
+  ];
 
-  if (settings.IcareUnreadRequests) {
-    dict = await chrome.storage.session.get("ICARE_UNREAD_REQUESTS");
-    const reqs = dict.ICARE_UNREAD_REQUESTS as WorkflowItem[];
-    WorkFlowItems = [
-      ...(Array.isArray(WorkFlowItems) ? WorkFlowItems : []),
-      ...(Array.isArray(reqs) ? reqs : []),
-    ];
-  }
-  if (settings.IcareUnreadNotificationInbound) {
-    dict = await chrome.storage.session.get(COMMANDS.ICARE_UNREAD_NOTIF_INBOUND);
-    const inbound = dict[COMMANDS.ICARE_UNREAD_NOTIF_INBOUND] as WorkflowItem[];
-    WorkFlowItems = [
-      ...(Array.isArray(WorkFlowItems) ? WorkFlowItems : []),
-      ...(Array.isArray(inbound) ? inbound : []),
-    ];
-  }
-  if (settings.IcareUnreadNotificationOutbound) {
-    dict = await chrome.storage.session.get(COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND);
-    const outbound = dict[COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND] as WorkflowItem[];
-    WorkFlowItems = [
-      ...(Array.isArray(WorkFlowItems) ? WorkFlowItems : []),
-      ...(Array.isArray(outbound) ? outbound : []),
-    ];
-  }
+  // Fetch and combine items
+  const workflowItems = await GatherStorageItems(icareItems);
+  const gcssStoredItems = await GatherStorageItems(gcssItems);
 
-  let current_num = Array.isArray(WorkFlowItems) ? WorkFlowItems.length : 0;
-
-  if (settings.GcssUnreadReplies) {
-    dict = await chrome.storage.session.get("GCSS_UNREAD_REPLIES");
-    GcssItems = dict.GCSS_UNREAD_REPLIES as GcssItem[];
-  }
-
-  if (settings.GcssUnreadRequests) {
-    dict = await chrome.storage.session.get("GCSS_UNREAD_REQUESTS");
-    const reqs = dict.GCSS_UNREAD_REQUESTS as GcssItem[];
-    GcssItems = [
-      ...(Array.isArray(GcssItems) ? GcssItems : []),
-      ...(Array.isArray(reqs) ? reqs : []),
-    ];
-  }
-
-  if (settings.GcssUnreadNotificationInbound) {
-    dict = await chrome.storage.session.get(COMMANDS.GCSS_UNREAD_NOTIF_INBOUND);
-    const inbound = dict[COMMANDS.GCSS_UNREAD_NOTIF_INBOUND] as GcssItem[];
-    GcssItems = [
-      ...(Array.isArray(GcssItems) ? GcssItems : []),
-      ...(Array.isArray(inbound) ? inbound : []),
-    ];
-  }
-
-  if (settings.GcssUnreadNotificationOutbound) {
-    dict = await chrome.storage.session.get(COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND);
-    const outbound = dict[COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND] as GcssItem[];
-    GcssItems = [
-      ...(Array.isArray(GcssItems) ? GcssItems : []),
-      ...(Array.isArray(outbound) ? outbound : []),
-    ];
-  }
-
-  current_num += Array.isArray(GcssItems) ? GcssItems.length : 0;
-
-  let last_num = parseInt(await chrome.action.getBadgeText({})) ?? 0;
-  if (isNaN(last_num)) last_num = 0;
+  const current_num = workflowItems.length + gcssStoredItems.length;
+  const last_num = parseInt(await chrome.action.getBadgeText({})) || 0;
 
   console.log("current number: ", current_num, "  last number: ", last_num);
 
+  // Update badge
   if (last_num >= current_num) {
-    let item_count: string;
-    if (current_num > 0) {
-      item_count = current_num.toString();
-    } else {
-      item_count = "";
-    }
+    const item_count = current_num > 0 ? current_num.toString() : "";
     if (!fetch_error) await chrome.action.setBadgeText({ text: item_count });
     if (!force_update) return;
-  } else await chrome.action.setBadgeText({ text: `${current_num}` });
+  } else {
+    await chrome.action.setBadgeText({ text: `${current_num}` });
+  }
 
   if (fetch_error && !force_update) return;
 
-  let mapped_items: chrome.notifications.ItemOptions[] = [];
-  let gcss_mapped_items: chrome.notifications.ItemOptions[] = [];
+  // Map items to notification format
+  const combined = [...gcssStoredItems, ...workflowItems].map(MapToNotificationItem);
+  if (combined.length < 1) return;
 
-  if (Array.isArray(WorkFlowItems)) {
-    mapped_items = WorkFlowItems.map((item) => {
-      const is_outbound = item.tracking_id.slice(-2) === "KR";
-      return {
-        title: `iCare L${item.current_level} ${is_outbound ? "발송" : "도착"}`,
-        message: `${item.tracking_id} ${is_outbound ? "(" + item.replying_op.substring(0, 2) + ")" : ""}`,
-      } as chrome.notifications.ItemOptions;
-    });
-  }
-  if (Array.isArray(GcssItems)) {
-    gcss_mapped_items = GcssItems.map((item) => {
-      if (item.MessageType === "NQ") {
-        const is_outbound = item.ItemId.slice(-2) === "KR";
-        return {
-          title: `GCSS NQ ${is_outbound ? "발송" : "도착"}`,
-          message: `${item.ItemId} ${is_outbound ? "(" + item.OriginCountry + ")" : ""}`,
-        } as chrome.notifications.ItemOptions;
-      } else {
-        const is_outbound = item.ItemId.slice(-2) === "KR";
-        return {
-          title: `GCSS ${item.WorkflowLevel} ${is_outbound ? "발송" : "도착"}`,
-          message: `${item.ItemId} ${is_outbound ? "(" + item.DestinationCountry + ")" : ""}`,
-        } as chrome.notifications.ItemOptions;
-      }
-    });
-  }
-  const combined = [
-    ...(Array.isArray(gcss_mapped_items) ? gcss_mapped_items : []),
-    ...(Array.isArray(mapped_items) ? mapped_items : []),
-  ];
-
-  if (!Array.isArray(combined) || combined.length < 1) return;
-
+  // Create notification
   const err_msg = fetch_error ? (fetch_error.GCSS ? "(GCSS 에러)\n" : "(i-Care 에러)\n") : "";
 
   const options: chrome.notifications.NotificationOptions<true> = {
@@ -154,7 +144,9 @@ export default async function CreateNotification(force_update = false) {
     items: combined,
     buttons: [{ title: "확인" }],
   };
-  chrome.notifications.clear(COMMANDS.ICARE_UNREAD_REPLIES);
-  chrome.notifications.create(COMMANDS.ICARE_UNREAD_REPLIES, options);
+
+  chrome.notifications.clear(COMMANDS.ICARE_UNREAD_REPLIES, () => {
+    chrome.notifications.create(COMMANDS.ICARE_UNREAD_REPLIES, options);
+  });
   return true;
 }
