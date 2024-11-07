@@ -168,21 +168,25 @@ export const MyList: React.FC<MyListProps> = ({
           </Typography>
         </AccordionSummary>
         <Stack alignItems="center" justifyContent="space-around" direction="row">
-          <Button variant="outlined" size="small" onClick={async () => CopyIDs()} sx={{ p: 1 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={async () => CopyIDs()}
+            sx={{ padding: "0.5 1 0.5 1" }}>
             ID 복사
           </Button>
           <Button
             variant="outlined"
             size="small"
             onClick={async () => CopyCountries()}
-            sx={{ m: 1, p: 1 }}>
+            sx={{ m: 1, padding: "0.5 1 0.5 1" }}>
             국가 복사
           </Button>
           <Button
             variant="outlined"
             size="small"
             onClick={async () => await OpenAll()}
-            sx={{ p: 1 }}>
+            sx={{ padding: "0.5 1 0.5 1" }}>
             Open All
           </Button>
         </Stack>

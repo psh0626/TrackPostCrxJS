@@ -68,7 +68,7 @@ export class GcssItem {
       });
     } else
       return new GcssItem({
-        OriginCountry: rawItem.originCountry!,
+        OriginCountry: rawItem.origCountry,
         DestinationCountry: rawItem.destCountry,
         ItemId: rawItem.itemId,
         WorkflowLevel: rawItem.taskDescription,
@@ -110,8 +110,11 @@ export class GcssItem {
     }
   }
   private static ConvertDate(dateSerial: number) {
-    const date = new Date(dateSerial)
-    const result = (date.getMonth()+1).toString().padStart(2, "0") + "/" + date.getDate().toString().padStart(2, "0");
+    const date = new Date(dateSerial);
+    const result =
+      (date.getMonth() + 1).toString().padStart(2, "0") +
+      "/" +
+      date.getDate().toString().padStart(2, "0");
     return result;
   }
 }
