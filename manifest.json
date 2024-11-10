@@ -1,47 +1,47 @@
 {
-  "manifest_version": 3,
-  "name": "IMIC TrackPost",
-  "description": "박성훈이 만든 멋쟁이 Chrome/Edge 확장프로그램 - iCare, GCSS 사무 자동화",
-  "version": "2.52",
-  "icons": {
-    "16": "src/ext-icon.png",
-    "32": "src/ext-icon.png",
-    "48": "src/ext-icon.png",
-    "128": "src/ext-icon.png"
-  },
-  "options_page": "pages/options.html",
-  "action": {
-    "default_popup": "pages/popup.html",
-    "default_title": "IMIC TRACKPOST V2"
-  },
-  "permissions": [
-    "storage",
-    "tabs",
-    "tabGroups",
-    "sidePanel",
-    "webRequest",
-    "clipboardWrite",
-    "notifications",
-    "unlimitedStorage"
-  ],
-  "side_panel": {
-    "default_path": "pages/sidepanel.html"
-  },
-  "background": {
-    "service_worker": "src/background/serviceworker.ts",
-    "type": "module"
-  },
-  "host_permissions": [
-    "https://ems.epost.go.kr/*",
-    "https://icare.post/*",
-    "https://gcss.ipc.be/*",
-    "https://github.com/shawnpark9494/TrackPostExtZip/commits/main/"
-  ],
-  "content_scripts": [
-    {
-      "matches": ["https://icare.post/*", "https://gcss.ipc.be/*"],
-      "js": ["src/background/contentscript.tsx"],
-      "run_at": "document_start"
-    }
-  ]
+    "manifest_version": 3,
+    "name": "IMIC TrackPost",
+    "description": "박성훈이 만든 멋쟁이 Chrome/Edge 확장프로그램 - iCare, GCSS 사무 자동화",
+    "version": "2.52",
+    "icons": {
+        "16": "src/ext-icon.png",
+        "32": "src/ext-icon.png",
+        "48": "src/ext-icon.png",
+        "128": "src/ext-icon.png"
+    },
+    "options_page": "pages/options.html",
+    "action": {
+        "default_popup": "pages/popup.html",
+        "default_title": "IMIC TRACKPOST V2"
+    },
+    "permissions": [
+        "storage",
+        "tabs",
+        "tabGroups",
+        "sidePanel",
+        "webRequest",
+        "clipboardWrite",
+        "notifications",
+        "unlimitedStorage"
+    ],
+    "side_panel": {
+        "default_path": "pages/sidepanel.html"
+    },
+    "background": {
+        "service_worker": "src/background/serviceworker.ts",
+        "type": "module"
+    },
+    "host_permissions": [
+        "https://ems.epost.go.kr/*",
+        "https://icare.post/*",
+        "https://gcss.ipc.be/*",
+        "https://github.com/shawnpark9494/TrackPostExtZip/commits/main/"
+    ],
+    "content_scripts": [
+        {
+            "matches": ["https://icare.post/*", "https://gcss.ipc.be/*"],
+            "js": ["src/background/contentscript.tsx"],
+            "run_at": "document_start"
+        }
+    ]
 }
