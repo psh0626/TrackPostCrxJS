@@ -189,12 +189,8 @@ void (async () => {
 
     function SetItemValueCurrency(
         item_value_currency: HTMLSelectElement,
-<<<<<<< HEAD
         item_value: HTMLInputElement,
         is_registered: boolean
-=======
-        item_value: HTMLInputElement
->>>>>>> 1967e533805e514dcea10468fa0c9479e2b529c9
     ) {
         // Item value
         if (item_value_currency.value !== "3") {
@@ -209,11 +205,7 @@ void (async () => {
                     item_value_currency,
                     calc_item_value.toString()
                 );
-<<<<<<< HEAD
             } else if (is_registered) {
-=======
-            } else {
->>>>>>> 1967e533805e514dcea10468fa0c9479e2b529c9
                 item_value.value = "0";
             }
             item_value_currency.value = "3"; // SDR
@@ -222,12 +214,8 @@ void (async () => {
 
     function SetPostagePaidCurrency(
         postage_paid_currency: HTMLSelectElement,
-<<<<<<< HEAD
         postage_paid: HTMLInputElement,
         is_registered: boolean
-=======
-        postage_paid: HTMLInputElement
->>>>>>> 1967e533805e514dcea10468fa0c9479e2b529c9
     ) {
         // Postage paid
         if (postage_paid_currency.value !== "3") {
@@ -239,11 +227,7 @@ void (async () => {
                     postage_paid_currency,
                     calc_postage_paid.toString()
                 );
-<<<<<<< HEAD
             } else if (is_registered) {
-=======
-            } else {
->>>>>>> 1967e533805e514dcea10468fa0c9479e2b529c9
                 postage_paid.value = "30";
             }
             postage_paid_currency.value = "3"; // SDR
@@ -293,12 +277,8 @@ void (async () => {
             pod_required_no: getInput("txt_podRequired_2"),
         };
 
-<<<<<<< HEAD
         const is_reg = post_element.ItemID.startsWith("L") || post_element.ItemID.startsWith("R");
         if (is_reg) {
-=======
-        if (post_element.ItemID.startsWith("L") || post_element.ItemID.startsWith("R")) {
->>>>>>> 1967e533805e514dcea10468fa0c9479e2b529c9
             if (dom.item_type.value === "") dom.item_type.value = "Packet";
         }
 
@@ -306,13 +286,8 @@ void (async () => {
         if (dom.content_type.value === "") {
             dom.content_type.value = "Other/various";
         }
-<<<<<<< HEAD
         SetItemValueCurrency(dom.item_value_currency, dom.item_value, is_reg);
         SetPostagePaidCurrency(dom.postage_paid_currency, dom.postage_paid, is_reg);
-=======
-        SetItemValueCurrency(dom.item_value_currency, dom.item_value);
-        SetPostagePaidCurrency(dom.postage_paid_currency, dom.postage_paid);
->>>>>>> 1967e533805e514dcea10468fa0c9479e2b529c9
         SetIndemnityCurrency(
             dom.indemnity_amount_currency,
             dom.indemnity_amount,
@@ -363,12 +338,8 @@ void (async () => {
         };
 
         // 등기 Packet 입력
-<<<<<<< HEAD
         const is_reg = post_element.ItemID.startsWith("L") || post_element.ItemID.startsWith("R");
         if (is_reg) {
-=======
-        if (post_element.ItemID.startsWith("L") || post_element.ItemID.startsWith("R")) {
->>>>>>> 1967e533805e514dcea10468fa0c9479e2b529c9
             dom.physical_desc.value = "Packet";
             dom.item_type.value = "Packet";
         }
@@ -387,13 +358,8 @@ void (async () => {
         // Content type
         dom.content_type.value = "Other/various";
 
-<<<<<<< HEAD
         SetItemValueCurrency(dom.item_value_currency, dom.item_value, is_reg);
         SetPostagePaidCurrency(dom.postage_paid_currency, dom.postage_paid, is_reg);
-=======
-        SetItemValueCurrency(dom.item_value_currency, dom.item_value);
-        SetPostagePaidCurrency(dom.postage_paid_currency, dom.postage_paid);
->>>>>>> 1967e533805e514dcea10468fa0c9479e2b529c9
         SetIndemnityCurrency(
             dom.indemnity_amount_currency,
             dom.indemnity_amount,
