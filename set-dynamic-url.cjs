@@ -5,13 +5,13 @@ const manifest = require("./dist/manifest.json");
 const webAccessibleResources = manifest.web_accessible_resources;
 
 const updateWebAccessibleResources = webAccessibleResources.map((resource) => {
-  if (resource.use_dynamic_url) {
-    return {
-      ...resource,
-      use_dynamic_url: false,
-    };
-  }
-  return resource;
+    if (resource.use_dynamic_url) {
+        return {
+            ...resource,
+            use_dynamic_url: false,
+        };
+    }
+    return resource;
 });
 
 manifest.web_accessible_resources = updateWebAccessibleResources;
