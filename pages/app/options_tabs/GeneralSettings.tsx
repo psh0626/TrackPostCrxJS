@@ -74,13 +74,13 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
     async function SaveSettings() {
         settings.current.IcareUnreadReplies = chkIcareRep;
         settings.current.IcareUnreadRequests = chkIcareReq;
-        settings.current.IcareUnreadNotificationInbound = chkIcareNotiIn;
-        settings.current.IcareUnreadNotificationOutbound = chkIcareNotiOut;
+        settings.current.IcareUnreadNotificationInbound = chkIcareReq ? chkIcareNotiIn : false;
+        settings.current.IcareUnreadNotificationOutbound = chkIcareRep ? chkIcareNotiOut : false;
         settings.current.IcareAuthor = icareAuthor;
         settings.current.GcssUnreadRequests = chkGcssReq;
         settings.current.GcssUnreadReplies = chkGcssRep;
-        settings.current.GcssUnreadNotificationInbound = chkGcssNotiIn;
-        settings.current.GcssUnreadNotificationOutbound = chkGcssNotiOut;
+        settings.current.GcssUnreadNotificationInbound = chkGcssReq ? chkGcssNotiIn : false;
+        settings.current.GcssUnreadNotificationOutbound = chkGcssRep ? chkGcssNotiOut : false;
         settings.current.GcssAuthor = gcssAuthor;
         settings.current.GcssServiceTypes = gcssServiceTypes.sort((a, b) => {
             const serviceOrder = [
@@ -92,10 +92,6 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
         });
         await settings.current.SaveOptions();
-    }
-
-    function onCheckboxChanged(event: React.ChangeEvent<HTMLInputElement>, checked: boolean) {
-        setChkIcareReq(checked);
     }
 
     function TrimArray(str_arr: string[]) {
@@ -137,7 +133,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                 control={
                                     <Checkbox
                                         checked={chkIcareReq}
-                                        onChange={onCheckboxChanged}
+                                        onChange={(e, c) => setChkIcareReq(c)}
                                         color="primary"
                                     />
                                 }
@@ -205,7 +201,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                         variant="standard"
                                         value={icareAuthor.join(", ")}
                                         onChange={(e) =>
-                                            setIcareAuthor(TrimArray(e.target.value.split(",")))
+                                            setIcareAuthor(TrimArray(e.target.value.split(", ")))
                                         }
                                     />
                                 </Stack>
@@ -376,7 +372,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                         variant="standard"
                                         value={gcssAuthor.join(", ")}
                                         onChange={(e) =>
-                                            setGcssAuthor(TrimArray(e.target.value.split(",")))
+                                            setGcssAuthor(TrimArray(e.target.value.split(", ")))
                                         }
                                     />
                                 </Stack>
