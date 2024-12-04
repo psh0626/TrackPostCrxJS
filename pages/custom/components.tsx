@@ -102,7 +102,8 @@ export const MyList: React.FC<MyListProps> = ({
     };
 
     const OpenAll = async () => {
-        const tabPromises = items.map(async (wf) => {
+        const reversed_items = [...items].reverse();
+        const tab_promises = reversed_items.map(async (wf) => {
             let tab: chrome.tabs.Tab;
             if (service === "GCSS") tab = await OpenNewTab((wf as GcssItem).WorkflowLink);
             else tab = await OpenNewTab(wf.link);
@@ -114,7 +115,7 @@ export const MyList: React.FC<MyListProps> = ({
             return -1; // Return -1 for any tab that couldn't be opened
         });
 
-        const tab_ids = (await Promise.all(tabPromises)).filter((id) => id !== -1); // Filter out any -1
+        const tab_ids = (await Promise.all(tab_promises)).filter((id) => id !== -1); // Filter out any -1
         console.log("tab ids: ", tab_ids);
 
         if (tab_ids.length > 0) {
