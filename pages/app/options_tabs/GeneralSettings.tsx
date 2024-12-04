@@ -22,11 +22,13 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
     const [chkIcareRep, setChkIcareRep] = useState(false);
     const [chkIcareNotiIn, setChkIcareNotiIn] = useState(false);
     const [chkIcareNotiOut, setChkIcareNotiOut] = useState(false);
+    const [icareAuthorRaw, setIcareAuthorRaw] = useState("");
     const [icareAuthor, setIcareAuthor] = useState<string[]>([]);
     const [chkGcssReq, setChkGcssReq] = useState(false);
     const [chkGcssRep, setChkGcssRep] = useState(false);
     const [chkGcssNotiIn, setChkGcssNotiIn] = useState(false);
     const [chkGcssNotiOut, setChkGcssNotiOut] = useState(false);
+    const [gcssAuthorRaw, setGcssAuthorRaw] = useState("");
     const [gcssAuthor, setGcssAuthor] = useState<string[]>([]);
     const [gcssServiceTypes, setGcssServiceTypes] = useState<ServiceTypes[]>([ServiceTypes.EMS]);
     const initialized = useRef(false);
@@ -107,6 +109,24 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             if (!gcssServiceTypes.includes(type)) return;
             if (gcssServiceTypes.length === 1) setChkGcssRep(false);
             setGcssServiceTypes((prev) => prev.filter((el) => el !== type));
+        }
+    }
+
+    function HandleAuthor(
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+        targetRaw: React.Dispatch<React.SetStateAction<string>>,
+        targetState: React.Dispatch<React.SetStateAction<string[]>>
+    ) {
+        const input = e.target.value;
+        targetRaw(input);
+
+        // Only process the input when there's no trailing comma
+        if (!input.endsWith(",")) {
+            const authors = input
+                .split(",")
+                .map((name) => name.trim())
+                .filter((name) => name !== "");
+            targetState(authors);
         }
     }
 
@@ -199,14 +219,11 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                         label="author"
                                         size="small"
                                         variant="standard"
-                                        value={icareAuthor.join(", ")}
+                                        value={icareAuthorRaw}
                                         onChange={(e) =>
-                                            setIcareAuthor(
-                                                TrimArray(e.target.value.split(",")).filter(
-                                                    (i) => i !== ""
-                                                )
-                                            )
+                                            HandleAuthor(e, setIcareAuthorRaw, setIcareAuthor)
                                         }
+                                        onBlur={() => setIcareAuthorRaw(icareAuthor.join(", "))}
                                     />
                                 </Stack>
                                 <Typography
@@ -374,14 +391,11 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                         label="author"
                                         size="small"
                                         variant="standard"
-                                        value={gcssAuthor.join(", ")}
+                                        value={gcssAuthorRaw}
                                         onChange={(e) =>
-                                            setGcssAuthor(
-                                                TrimArray(e.target.value.split(",")).filter(
-                                                    (i) => i !== ""
-                                                )
-                                            )
+                                            HandleAuthor(e, setGcssAuthorRaw, setGcssAuthor)
                                         }
+                                        onBlur={() => setGcssAuthorRaw(gcssAuthor.join(", "))}
                                     />
                                 </Stack>
                                 <Typography
