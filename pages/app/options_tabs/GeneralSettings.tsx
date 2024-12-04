@@ -201,7 +201,11 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                         variant="standard"
                                         value={icareAuthor.join(", ")}
                                         onChange={(e) =>
-                                            setIcareAuthor(TrimArray(e.target.value.split(", ")))
+                                            setIcareAuthor(
+                                                TrimArray(e.target.value.split(",")).filter(
+                                                    (i) => i !== ""
+                                                )
+                                            )
                                         }
                                     />
                                 </Stack>
@@ -372,7 +376,11 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                         variant="standard"
                                         value={gcssAuthor.join(", ")}
                                         onChange={(e) =>
-                                            setGcssAuthor(TrimArray(e.target.value.split(", ")))
+                                            setGcssAuthor(
+                                                TrimArray(e.target.value.split(",")).filter(
+                                                    (i) => i !== ""
+                                                )
+                                            )
                                         }
                                     />
                                 </Stack>
