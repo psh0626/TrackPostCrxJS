@@ -41,6 +41,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             setChkIcareNotiIn(settings.current.IcareUnreadNotificationInbound);
             setChkIcareNotiOut(settings.current.IcareUnreadNotificationOutbound);
             setIcareAuthor(settings.current.IcareAuthor);
+            setIcareAuthorRaw(settings.current.IcareAuthor.join(", "));
             setChkGcssRep(settings.current.GcssUnreadReplies);
             setChkGcssReq(settings.current.GcssUnreadRequests);
             setChkGcssNotiIn(settings.current.GcssUnreadNotificationInbound);
@@ -48,6 +49,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             if (!Array.isArray(settings.current.GcssAuthor))
                 settings.current.GcssAuthor = [settings.current.GcssAuthor];
             setGcssAuthor(settings.current.GcssAuthor);
+            setGcssAuthorRaw(settings.current.GcssAuthor.join(","));
             setGcssServiceTypes(settings.current.GcssServiceTypes);
             initialized.current = true;
         }
