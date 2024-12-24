@@ -52,16 +52,37 @@ class InjectUtil {
         );
     }
 
-    static InjectGcssQueryInput() {
+    static InjectGcssQueryInput(trial = 0) {
         const old_input = document.querySelector("input[name='itemId']") as HTMLInputElement;
         const form = document.querySelector("form:has(input[name='itemId'])") as HTMLFormElement;
 
+        if (!old_input) {
+            if (trial < 2) {
+                setTimeout(() => {
+                    this.InjectGcssQueryInput(++trial);
+                }, 1000);
+            }
+            return;
+        }
         old_input.setAttribute("pattern", String.raw`[A-Z]{2}\d{9}[A-Z]{2}`);
+        old_input.setAttribute("maxlength", "13");
         old_input.setAttribute("title", "EB123456789KR");
         old_input.classList.add("uppercase");
-        old_input.onkeyup = () => {
-            old_input.value = old_input.value.toUpperCase();
-        };
+
+        old_input.addEventListener("input", (e) => {
+            const old_position = old_input.selectionStart;
+            const input = e.target as HTMLInputElement;
+            const regex = /^[A-Z]{0,2}(\d{0,9}([A-Z]{0,2})?)?$/;
+            const value = input.value.toUpperCase();
+            input.value = value;
+
+            if (!regex.test(value)) {
+                input.value = value.slice(0, -1);
+            }
+            if (old_input.selectionStart !== old_position) {
+                old_input.setSelectionRange(old_position, old_position);
+            }
+        });
         form.onsubmit = () => {
             old_input.value = old_input.value.toUpperCase();
         };
