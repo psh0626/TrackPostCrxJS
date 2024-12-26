@@ -2,6 +2,7 @@ import React, { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import FloatingHelper from "./DomInject";
 import PersonalRemarksSelect from "./PersonalRemarks";
+import { ElevatorSharp } from "@mui/icons-material";
 
 class InjectUtil {
     private static InsertReact(
@@ -52,43 +53,69 @@ class InjectUtil {
         );
     }
 
-    static InjectGcssQueryInput(trial = 0) {
-        const old_input = document.querySelector("input[name='itemId']") as HTMLInputElement;
-        const form = document.querySelector("form:has(input[name='itemId'])") as HTMLFormElement;
-
-        if (!old_input) {
+    static ChangeAttributes(
+        target_input: HTMLInputElement,
+        target_form: HTMLFormElement,
+        trial = 0
+    ) {
+        console.log("[ChangeAttributes] start");
+        if (!target_input) {
             if (trial < 2) {
                 setTimeout(() => {
-                    this.InjectGcssQueryInput(++trial);
+                    this.ChangeAttributes(target_input, target_form, ++trial);
                 }, 1000);
+                console.log("[ChangeAttributes] input not found");
             }
             return;
         }
-        old_input.setAttribute("pattern", String.raw`[A-Z]{2}\d{9}[A-Z]{2}`);
-        old_input.setAttribute("maxlength", "13");
-        old_input.setAttribute("title", "EB123456789KR");
-        old_input.classList.add("uppercase");
+        target_input.setAttribute("pattern", String.raw`[A-Z]{2}\d{9}[A-Z]{2}`);
+        target_input.setAttribute("maxlength", "13");
+        // target_input.setAttribute("title", "EE123456789KR");
+        target_input.setAttribute("placeholder", "EE123456789KR");
+        target_input.classList.add("uppercase");
 
-        old_input.addEventListener("input", (e) => {
-            const old_position = old_input.selectionStart;
+        target_input.addEventListener("input", (e) => {
+            const old_position = target_input.selectionStart;
             const input = e.target as HTMLInputElement;
-            const regex = /^[A-Z]{0,2}(\d{0,9}([A-Z]{0,2})?)?$/;
             const value = input.value.toUpperCase();
-            input.value = value;
+            let new_value = "";
 
-            if (!regex.test(value)) {
-                input.value = value.slice(0, -1);
+            for (let i = 0; i < value.length && i < 13; i++) {
+                const char = value[i];
+                if (i < 2 || i > 10) {
+                    if (char >= "A" && char <= "Z") {
+                        new_value += char;
+                    }
+                } else {
+                    if (char >= "0" && char <= "9") {
+                        new_value += char;
+                    }
+                }
             }
-            if (old_input.selectionStart !== old_position) {
-                old_input.setSelectionRange(old_position, old_position);
+
+            input.value = new_value;
+            if (input.selectionStart !== old_position) {
+                input.setSelectionRange(old_position, old_position);
             }
         });
-        form.onsubmit = () => {
-            old_input.value = old_input.value.toUpperCase();
+        target_form.onsubmit = () => {
+            target_input.value = target_input.value.toUpperCase();
         };
-        // const target = old_input?.closest("div") as HTMLDivElement;
-        // const new_div = this.InsertReact(<DomTextField old_input={old_input}/>, target, "beforebegin");
-        // new_div?.setAttribute("style", "z-index: 1; position: absolute; width: 100%");
+    }
+    static InjectGcssIdSearchInput() {
+        const input = document.querySelector("input#txtItemId") as HTMLInputElement;
+        const form = document.querySelector("form:has(input#txtItemId)") as HTMLFormElement;
+        this.ChangeAttributes(input, form);
+    }
+    static InjectGcssQueryInput() {
+        const old_input = document.querySelector("input[name='itemId']") as HTMLInputElement;
+        const form = document.querySelector("form:has(input[name='itemId'])") as HTMLFormElement;
+        this.ChangeAttributes(old_input, form);
+    }
+    static InjectIcareIdSearchInput() {
+        const old_input = document.querySelector("input[type='text']") as HTMLInputElement;
+        const form = document.querySelector("form:has(input[type='text'])") as HTMLFormElement;
+        this.ChangeAttributes(old_input, form);
     }
 
     static InjectIcarePersonalRemarks(type: string = "REQ") {

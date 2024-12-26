@@ -70,6 +70,14 @@ void (async () => {
             if (settings.GcssUnreadReplies) await GcssAPI.FetchReplies(false);
 
             if (
+                currentURL.pathname.includes("/product-view") ||
+                currentURL.pathname.includes("/singleItemTracking")
+            ) {
+                setTimeout(() => {
+                    InjectUtil.InjectGcssIdSearchInput();
+                }, 100);
+            }
+            if (
                 currentURL.pathname.includes("/create/") ||
                 currentURL.pathname.includes("/reactivate/")
             ) {
@@ -101,9 +109,13 @@ void (async () => {
             }
         } else if (currentURL.origin === ICARE_URL) {
             if (settings.IcareUnreadReplies) await IcareAPI2.FetchUnreadReplies(csrfToken!);
-
+            const param_module = currentURL.searchParams.get("module");
             const param_action = currentURL.searchParams.get("action");
-            if (param_action === "new") {
+            if (param_module === "dashboard") {
+                setTimeout(() => {
+                    InjectUtil.InjectIcareIdSearchInput();
+                }, 100);
+            } else if (param_action === "new") {
                 if (currentURL.searchParams.get("module") === "notification") {
                     InjectUtil.InjectIcarePersonalRemarks("NOQ");
                     return;
