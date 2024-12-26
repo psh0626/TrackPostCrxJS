@@ -52,7 +52,41 @@ class InjectUtil {
             target_elm
         );
     }
+    private static kor2en(text: string) {
+        const mapping: { [key: string]: string } = {
+            ㅂ: "q",
+            ㅈ: "w",
+            ㄷ: "e",
+            ㄱ: "r",
+            ㅅ: "t",
+            ㅛ: "y",
+            ㅕ: "u",
+            ㅑ: "i",
+            ㅐ: "o",
+            ㅔ: "p",
+            ㅁ: "a",
+            ㄴ: "s",
+            ㅇ: "d",
+            ㄹ: "f",
+            ㅎ: "g",
+            ㅗ: "h",
+            ㅓ: "j",
+            ㅏ: "k",
+            ㅣ: "l",
+            ㅋ: "z",
+            ㅌ: "x",
+            ㅊ: "c",
+            ㅍ: "v",
+            ㅠ: "b",
+            ㅜ: "n",
+            ㅡ: "m",
+        };
 
+        return text
+            .split("")
+            .map((char) => mapping[char] || char)
+            .join("");
+    }
     static ChangeAttributes(
         target_input: HTMLInputElement,
         target_form: HTMLFormElement,
@@ -77,7 +111,7 @@ class InjectUtil {
         target_input.addEventListener("input", (e) => {
             const old_position = target_input.selectionStart;
             const input = e.target as HTMLInputElement;
-            const value = input.value.toUpperCase();
+            const value = this.kor2en(input.value).toUpperCase();
             let new_value = "";
 
             for (let i = 0; i < value.length && i < 13; i++) {
