@@ -104,7 +104,6 @@ class InjectUtil {
             return;
         }
 
-        target_input.setAttribute("maxlength", "13");
         // target_input.setAttribute("title", "EE123456789KR");
         target_input.setAttribute("placeholder", "등기번호를 입력하세요.");
         target_input.classList.add("uppercase");
@@ -115,6 +114,7 @@ class InjectUtil {
             const value = this.kor2en(input.value).toUpperCase();
 
             if (apply_pattern) {
+                target_input.setAttribute("maxlength", "13");
                 target_input.setAttribute("pattern", String.raw`[A-Z]{2}\d{9}[A-Z]{2}`);
                 let new_value = "";
                 for (let i = 0; i < value.length && i < 13; i++) {
