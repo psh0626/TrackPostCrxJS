@@ -90,44 +90,48 @@ class InjectUtil {
     static ChangeAttributes(
         target_input: HTMLInputElement,
         target_form: HTMLFormElement,
+        apply_pattern = true,
         trial = 0
     ) {
         console.log("[ChangeAttributes] start");
         if (!target_input) {
             if (trial < 2) {
                 setTimeout(() => {
-                    this.ChangeAttributes(target_input, target_form, ++trial);
+                    this.ChangeAttributes(target_input, target_form, apply_pattern, ++trial);
                 }, 1000);
                 console.log("[ChangeAttributes] input not found");
             }
             return;
         }
-        target_input.setAttribute("pattern", String.raw`[A-Z]{2}\d{9}[A-Z]{2}`);
+
         target_input.setAttribute("maxlength", "13");
         // target_input.setAttribute("title", "EE123456789KR");
-        target_input.setAttribute("placeholder", "EE123456789KR");
+        target_input.setAttribute("placeholder", "등기번호를 입력하세요.");
         target_input.classList.add("uppercase");
 
         target_input.addEventListener("input", (e) => {
             const old_position = target_input.selectionStart;
             const input = e.target as HTMLInputElement;
             const value = this.kor2en(input.value).toUpperCase();
-            let new_value = "";
 
-            for (let i = 0; i < value.length && i < 13; i++) {
-                const char = value[i];
-                if (i < 2 || i > 10) {
-                    if (char >= "A" && char <= "Z") {
-                        new_value += char;
-                    }
-                } else {
-                    if (char >= "0" && char <= "9") {
-                        new_value += char;
+            if (apply_pattern) {
+                target_input.setAttribute("pattern", String.raw`[A-Z]{2}\d{9}[A-Z]{2}`);
+                let new_value = "";
+                for (let i = 0; i < value.length && i < 13; i++) {
+                    const char = value[i];
+                    if (i < 2 || i > 10) {
+                        if (char >= "A" && char <= "Z") {
+                            new_value += char;
+                        }
+                    } else {
+                        if (char >= "0" && char <= "9") {
+                            new_value += char;
+                        }
                     }
                 }
+                input.value = new_value;
             }
 
-            input.value = new_value;
             if (input.selectionStart !== old_position) {
                 input.setSelectionRange(old_position, old_position);
             }
@@ -149,7 +153,7 @@ class InjectUtil {
     static InjectIcareIdSearchInput() {
         const old_input = document.querySelector("input[type='text']") as HTMLInputElement;
         const form = document.querySelector("form:has(input[type='text'])") as HTMLFormElement;
-        this.ChangeAttributes(old_input, form);
+        this.ChangeAttributes(old_input, form, false);
     }
 
     static InjectIcarePersonalRemarks(type: string = "REQ") {

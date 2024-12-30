@@ -102,8 +102,8 @@ export const MyList: React.FC<MyListProps> = ({
     };
 
     const OpenAll = async () => {
-        const reversed_items = [...items].reverse();
-        const tab_promises = reversed_items.map(async (wf) => {
+        // const reversed_items = [...items].reverse();
+        const tab_promises = items.map(async (wf) => {
             let tab: chrome.tabs.Tab;
             if (service === "GCSS") tab = await OpenNewTab((wf as GcssItem).WorkflowLink);
             else tab = await OpenNewTab(wf.link);
@@ -130,10 +130,11 @@ export const MyList: React.FC<MyListProps> = ({
 
     const CopyIDs = () => {
         let ids: string[];
+        const reversed_items = [...items].reverse();
         if (service === "GCSS") {
-            ids = items.map((item) => (item as GcssItem).ItemId);
+            ids = reversed_items.map((item) => (item as GcssItem).ItemId);
         } else {
-            ids = items.map((item) => (item as WorkflowItem).tracking_id);
+            ids = reversed_items.map((item) => (item as WorkflowItem).tracking_id);
         }
         const str_ids = ids.join("\n");
         void navigator.clipboard.writeText(str_ids);
@@ -141,17 +142,20 @@ export const MyList: React.FC<MyListProps> = ({
 
     const CopyCountries = () => {
         let countries: string[];
+        const reversed_items = [...items].reverse();
         if (service === "GCSS") {
             if (type === "replies" && !isNotification) {
-                countries = items.map((item) => (item as GcssItem).DestinationCountry);
+                countries = reversed_items.map((item) => (item as GcssItem).DestinationCountry);
             } else {
-                countries = items.map((item) => (item as GcssItem).OriginCountry);
+                countries = reversed_items.map((item) => (item as GcssItem).OriginCountry);
             }
         } else {
             if (type === "replies" && !isNotification) {
-                countries = items.map((item) => (item as WorkflowItem).replying_op.substring(0, 2));
+                countries = reversed_items.map((item) =>
+                    (item as WorkflowItem).replying_op.substring(0, 2)
+                );
             } else {
-                countries = items.map((item) =>
+                countries = reversed_items.map((item) =>
                     (item as WorkflowItem).requesting_op.substring(0, 2)
                 );
             }
@@ -194,7 +198,7 @@ export const MyList: React.FC<MyListProps> = ({
                     </Button>
                 </Stack>
                 <AccordionDetails>
-                    {items.map((item, id) => {
+                    {[...items].reverse().map((item, id) => {
                         let primary_string: string;
                         if (service === "iCare") {
                             const i = item as WorkflowItem;
