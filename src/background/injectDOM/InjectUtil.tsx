@@ -130,6 +130,8 @@ class InjectUtil {
                     }
                 }
                 input.value = new_value;
+            } else {
+                input.value = value;
             }
 
             if (input.selectionStart !== old_position) {
