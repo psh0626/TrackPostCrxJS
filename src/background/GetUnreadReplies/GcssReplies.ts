@@ -1,6 +1,8 @@
+import { create } from "@mui/material/styles/createTransitions";
 import { COMMANDS, Msg } from "../../lib/Message";
 import { IMICSettings } from "../../lib/OptionElement";
 import { GcssItem, GcssRawItem, TrimObject } from "./DataWrapper";
+import dayjs from "dayjs";
 
 export enum ServiceTypes {
     EMS = "EMS",
@@ -71,8 +73,16 @@ export class GcssAPI {
             await chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_NOTIF_INBOUND, inbound));
         }
         if (this.settings.GcssUnreadNotificationOutbound) {
-            const outbound = unread.filter((item) => item.ItemId.slice(-2) === "KR");
+            let outbound = unread.filter((item) => item.ItemId.slice(-2) === "KR");
             console.log("GCSS NOTIFICATIONS OUTBOUND: ", outbound);
+
+            if (this.settings.GcssOutboundNotificatioDate) {
+                outbound = outbound.filter((item) => {
+                    const created = dayjs(item.NotificationCreationDate);
+                    return created.isSame(dayjs(this.settings.GcssOutboundNotificatioDate), "week");
+                });
+            }
+
             await chrome.runtime.sendMessage(
                 new Msg(COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND, outbound)
             );

@@ -1,6 +1,7 @@
 import { IcareResponse, WorkflowItem } from "./DataWrapper";
 import { Msg, COMMANDS } from "../../lib/Message";
 import { IMICSettings } from "../../lib/OptionElement";
+import dayjs from "dayjs";
 
 export class IcareAPI2 {
     static LastCsrfToken: string = "";
@@ -165,8 +166,21 @@ export class IcareAPI2 {
                 );
             }
             if (this.settings.IcareUnreadNotificationOutbound) {
-                const outbound = notif_items.filter((item) => item.tracking_id.slice(-2) === "KR");
+                let outbound = notif_items.filter((item) => item.tracking_id.slice(-2) === "KR");
                 console.log(`[FetchNotifications] Notification outbound items filtered`, outbound);
+
+                if (this.settings.IcareOutboundNotificatioDate !== null) {
+                    outbound = outbound.filter((item) => {
+                        const created = dayjs(item.created, "YYYY-MM-DD HH:mm");
+                        return created.isSame(dayjs(this.settings.IcareOutboundNotificatioDate), "week");
+                    });
+
+                    console.log(
+                        `[FetchNotifications] Notification outbound DateRange filtered`,
+                        outbound
+                    );
+                }
+
                 await chrome.runtime.sendMessage(
                     new Msg(COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND, outbound)
                 );

@@ -8,6 +8,9 @@ import "@fontsource/noto-sans-kr";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { deepOrange, orange } from "@mui/material/colors";
 import OptionsApp from "../app/options_app";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import "dayjs/locale/ko";
 
 const myTheme = createTheme({
     palette: {
@@ -24,8 +27,10 @@ const myTheme = createTheme({
 });
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
-        <ThemeProvider theme={myTheme}>
-            <OptionsApp />
-        </ThemeProvider>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ko">
+            <ThemeProvider theme={myTheme}>
+                <OptionsApp />
+            </ThemeProvider>
+        </LocalizationProvider>
     </React.StrictMode>
 );

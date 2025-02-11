@@ -7,11 +7,17 @@ import {
     Stack,
     Typography,
     TextField,
+    Button,
+    IconButton,
+    styled,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import { IMICSettings } from "../../../src/lib/OptionElement";
 import { ServiceTypes } from "../../../src/background/GetUnreadReplies/GcssReplies";
 import { SubdirectoryArrowRight } from "@mui/icons-material";
+import { DateRangeIcon } from "@mui/x-date-pickers";
+import dayjs, { Dayjs } from "dayjs";
+import { WeekPicker } from "../../custom/week_picker";
 
 interface GeneralSettingsProps {
     settings: React.MutableRefObject<IMICSettings>;
@@ -22,16 +28,20 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
     const [chkIcareRep, setChkIcareRep] = useState(false);
     const [chkIcareNotiIn, setChkIcareNotiIn] = useState(false);
     const [chkIcareNotiOut, setChkIcareNotiOut] = useState(false);
+    const [icareNotiDateRange, setIcareNotiDateRange] = useState<Dayjs | null>(null);
     const [icareAuthorRaw, setIcareAuthorRaw] = useState("");
     const [icareAuthor, setIcareAuthor] = useState<string[]>([]);
     const [chkGcssReq, setChkGcssReq] = useState(false);
     const [chkGcssRep, setChkGcssRep] = useState(false);
     const [chkGcssNotiIn, setChkGcssNotiIn] = useState(false);
     const [chkGcssNotiOut, setChkGcssNotiOut] = useState(false);
+    const [gcssNotiDateRange, setGcssNotiDateRange] = useState<Dayjs | null>(null);
     const [gcssAuthorRaw, setGcssAuthorRaw] = useState("");
     const [gcssAuthor, setGcssAuthor] = useState<string[]>([]);
     const [gcssServiceTypes, setGcssServiceTypes] = useState<ServiceTypes[]>([ServiceTypes.EMS]);
     const initialized = useRef(false);
+    const [weekpickerForIcare, setWeekpickerForIcare] = useState(true);
+    const [weekpickerEnabled, setWeekpickerEnabled] = useState(false);
 
     useEffect(() => {
         if (!initialized.current) {
@@ -40,12 +50,14 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             setChkIcareReq(settings.current.IcareUnreadRequests);
             setChkIcareNotiIn(settings.current.IcareUnreadNotificationInbound);
             setChkIcareNotiOut(settings.current.IcareUnreadNotificationOutbound);
+            setIcareNotiDateRange(dayjs(settings.current.IcareOutboundNotificatioDate));
             setIcareAuthor(settings.current.IcareAuthor);
             setIcareAuthorRaw(settings.current.IcareAuthor.join(", "));
             setChkGcssRep(settings.current.GcssUnreadReplies);
             setChkGcssReq(settings.current.GcssUnreadRequests);
             setChkGcssNotiIn(settings.current.GcssUnreadNotificationInbound);
             setChkGcssNotiOut(settings.current.GcssUnreadNotificationOutbound);
+            setGcssNotiDateRange(dayjs(settings.current.GcssOutboundNotificatioDate));
             if (!Array.isArray(settings.current.GcssAuthor))
                 settings.current.GcssAuthor = [settings.current.GcssAuthor];
             setGcssAuthor(settings.current.GcssAuthor);
@@ -71,8 +83,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
         gcssServiceTypes,
         chkIcareNotiIn,
         chkIcareNotiOut,
+        // icareNotiDateRange,
         chkGcssNotiIn,
         chkGcssNotiOut,
+        // gcssNotiDateRange,
     ]);
 
     async function SaveSettings() {
@@ -95,6 +109,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             ];
             return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
         });
+        if (icareNotiDateRange)
+            settings.current.IcareOutboundNotificatioDate = icareNotiDateRange.toISOString();
+        if (gcssNotiDateRange)
+            settings.current.GcssOutboundNotificatioDate = gcssNotiDateRange.toISOString();
         await settings.current.SaveOptions();
     }
 
@@ -131,6 +149,35 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             targetState(authors);
         }
     }
+    function ShowWeekpicker(service: "iCare" | "GCSS") {
+        console.log(
+            "[ShowWeekpicker]",
+            icareNotiDateRange,
+            gcssNotiDateRange,
+            settings.current.IcareOutboundNotificatioDate,
+            settings.current.GcssOutboundNotificatioDate
+        );
+        setWeekpickerForIcare(service === "iCare" ? true : false);
+        setWeekpickerEnabled(true);
+    }
+    async function SaveWeekpicker() {
+        if (!weekpickerEnabled) return;
+        setWeekpickerEnabled(false);
+        await SaveSettings();
+    }
+
+    const MyWeekPicker = () => {
+        if (!weekpickerEnabled) return null;
+        if (!chkIcareNotiOut && !chkGcssNotiOut) return null;
+        return (
+            <WeekPicker
+                targetState={weekpickerForIcare ? icareNotiDateRange : gcssNotiDateRange}
+                saveTo={weekpickerForIcare ? setIcareNotiDateRange : setGcssNotiDateRange}
+                onSave={SaveWeekpicker}
+                onCancel={() => setWeekpickerEnabled(false)}
+            />
+        );
+    };
 
     return (
         <div>
@@ -140,6 +187,14 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                 </Typography>
             </Stack>
             <Divider sx={{ mb: 2 }} variant="fullWidth" />
+
+            <Paper
+                sx={{
+                    position: "absolute",
+                    left: "750px",
+                }}>
+                <MyWeekPicker />
+            </Paper>
             <Stack spacing={4} sx={{ width: 500 }}>
                 <Paper sx={{ p: 3 }}>
                     <Grid container width="100%" rowSpacing={1}>
@@ -190,20 +245,35 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                             />
 
                             {chkIcareRep ? (
-                                <FormControlLabel
-                                    sx={{ transform: "scale(0.9)", ml: "10px" }}
-                                    label="발송 통지 알림"
-                                    control={
-                                        <Stack direction="row" alignItems="center">
-                                            <SubdirectoryArrowRight sx={{ paddingBottom: 1 }} />
-                                            <Checkbox
-                                                checked={chkIcareNotiOut}
-                                                onChange={(e, c) => setChkIcareNotiOut(c)}
-                                                color="error"
-                                            />
-                                        </Stack>
-                                    }
-                                />
+                                <Stack direction="row">
+                                    <FormControlLabel
+                                        sx={{ transform: "scale(0.9)" }}
+                                        label="발송 통지 알림"
+                                        control={
+                                            <Stack direction="row" alignItems="center">
+                                                <SubdirectoryArrowRight
+                                                    sx={{ marginLeft: 0.5, paddingBottom: 1 }}
+                                                />
+                                                <Checkbox
+                                                    checked={chkIcareNotiOut}
+                                                    onChange={(e, c) => {
+                                                        setChkIcareNotiOut(c);
+                                                        if (!c) setIcareNotiDateRange(null);
+                                                    }}
+                                                    color="error"
+                                                />
+                                            </Stack>
+                                        }
+                                    />
+                                    <IconButton
+                                        aria-label=""
+                                        sx={{ transform: "scale(0.9)" }}
+                                        onClick={() => {
+                                            ShowWeekpicker("iCare");
+                                        }}>
+                                        <DateRangeIcon />
+                                    </IconButton>
+                                </Stack>
                             ) : null}
                         </Grid>
                         {chkIcareRep ? (
@@ -297,20 +367,36 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                             />
 
                             {chkGcssRep ? (
-                                <FormControlLabel
-                                    sx={{ transform: "scale(0.9)", ml: "10px" }}
-                                    label="발송 통지 알림"
-                                    control={
-                                        <Stack direction="row" alignItems="center">
-                                            <SubdirectoryArrowRight sx={{ paddingBottom: 1 }} />
-                                            <Checkbox
-                                                checked={chkGcssNotiOut}
-                                                onChange={(e, c) => setChkGcssNotiOut(c)}
-                                                color="error"
-                                            />
-                                        </Stack>
-                                    }
-                                />
+                                <Stack direction="row">
+                                    <FormControlLabel
+                                        sx={{ transform: "scale(0.9)" }}
+                                        label="발송 통지 알림"
+                                        control={
+                                            <Stack direction="row" alignItems="center">
+                                                <SubdirectoryArrowRight
+                                                    sx={{ marginLeft: 0.5, paddingBottom: 1 }}
+                                                />
+                                                <Checkbox
+                                                    checked={chkGcssNotiOut}
+                                                    onChange={(e, c) => {
+                                                        setChkGcssNotiOut(c);
+                                                        if (!c) setGcssNotiDateRange(null);
+                                                    }}
+                                                    color="error"
+                                                />
+                                            </Stack>
+                                        }
+                                    />
+
+                                    <IconButton
+                                        aria-label=""
+                                        sx={{ transform: "scale(0.9)" }}
+                                        onClick={() => {
+                                            ShowWeekpicker("GCSS");
+                                        }}>
+                                        <DateRangeIcon />
+                                    </IconButton>
+                                </Stack>
                             ) : null}
                         </Grid>
                         {chkGcssRep ? (

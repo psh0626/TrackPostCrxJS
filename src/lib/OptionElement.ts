@@ -1,3 +1,4 @@
+import { Dayjs } from "dayjs";
 import { ServiceTypes } from "../background/GetUnreadReplies/GcssReplies";
 import { COMMANDS, Msg, SendRequest } from "./Message";
 
@@ -19,12 +20,14 @@ export class IMICSettings {
     IcareUnreadRequests: boolean = false;
     IcareUnreadNotificationInbound = false;
     IcareUnreadNotificationOutbound = false;
+    IcareOutboundNotificatioDate: string | null = null;
     IcareAuthor: string[] = [];
     PersonalRemarks: PersonalRemark[] = [];
     GcssUnreadReplies = false;
     GcssUnreadRequests = false;
     GcssUnreadNotificationInbound = false;
     GcssUnreadNotificationOutbound = false;
+    GcssOutboundNotificatioDate: string | null = null;
     GcssAuthor: string[] = [];
     GcssServiceTypes: ServiceTypes[] = [ServiceTypes.EMS];
     SavingFinished: NodeJS.Timeout | null = null;
