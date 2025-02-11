@@ -78,9 +78,13 @@ export class GcssAPI {
 
             if (this.settings.GcssOutboundNotificatioDate) {
                 outbound = outbound.filter((item) => {
-                    const created = dayjs(item.NotificationCreationDate);
+                    const created = dayjs(item.NotificationCreationDate, "MM/dd").set(
+                        "year",
+                        dayjs().year()
+                    );
                     return created.isSame(dayjs(this.settings.GcssOutboundNotificatioDate), "week");
                 });
+                console.log("GCSS NOTIFICATIONS OUTBOUND DATE FILTERED: ", outbound);
             }
 
             await chrome.runtime.sendMessage(

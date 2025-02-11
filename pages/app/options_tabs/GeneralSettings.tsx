@@ -46,23 +46,33 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
     useEffect(() => {
         if (!initialized.current) {
             console.log("GENERAL SETTINGS INITIALIZING: ", initialized);
-            setChkIcareRep(settings.current.IcareUnreadReplies);
-            setChkIcareReq(settings.current.IcareUnreadRequests);
-            setChkIcareNotiIn(settings.current.IcareUnreadNotificationInbound);
-            setChkIcareNotiOut(settings.current.IcareUnreadNotificationOutbound);
-            setIcareNotiDateRange(dayjs(settings.current.IcareOutboundNotificatioDate));
-            setIcareAuthor(settings.current.IcareAuthor);
-            setIcareAuthorRaw(settings.current.IcareAuthor.join(", "));
-            setChkGcssRep(settings.current.GcssUnreadReplies);
-            setChkGcssReq(settings.current.GcssUnreadRequests);
-            setChkGcssNotiIn(settings.current.GcssUnreadNotificationInbound);
-            setChkGcssNotiOut(settings.current.GcssUnreadNotificationOutbound);
-            setGcssNotiDateRange(dayjs(settings.current.GcssOutboundNotificatioDate));
-            if (!Array.isArray(settings.current.GcssAuthor))
-                settings.current.GcssAuthor = [settings.current.GcssAuthor];
-            setGcssAuthor(settings.current.GcssAuthor);
-            setGcssAuthorRaw(settings.current.GcssAuthor.join(","));
-            setGcssServiceTypes(settings.current.GcssServiceTypes);
+            const curSet = settings.current;
+            setChkIcareRep(curSet.IcareUnreadReplies);
+            setChkIcareReq(curSet.IcareUnreadRequests);
+            setChkIcareNotiIn(curSet.IcareUnreadNotificationInbound);
+            setChkIcareNotiOut(curSet.IcareUnreadNotificationOutbound);
+            setIcareAuthor(curSet.IcareAuthor);
+            setIcareAuthorRaw(curSet.IcareAuthor.join(", "));
+            setChkGcssRep(curSet.GcssUnreadReplies);
+            setChkGcssReq(curSet.GcssUnreadRequests);
+            setChkGcssNotiIn(curSet.GcssUnreadNotificationInbound);
+            setChkGcssNotiOut(curSet.GcssUnreadNotificationOutbound);
+            if (!Array.isArray(curSet.GcssAuthor)) curSet.GcssAuthor = [curSet.GcssAuthor];
+            setGcssAuthor(curSet.GcssAuthor);
+            setGcssAuthorRaw(curSet.GcssAuthor.join(","));
+            setGcssServiceTypes(curSet.GcssServiceTypes);
+
+            if (
+                curSet.IcareOutboundNotificatioDate &&
+                dayjs(curSet.IcareOutboundNotificatioDate).isValid()
+            )
+                setIcareNotiDateRange(dayjs(curSet.IcareOutboundNotificatioDate));
+
+            if (
+                curSet.GcssOutboundNotificatioDate &&
+                dayjs(curSet.GcssOutboundNotificatioDate).isValid()
+            )
+                setGcssNotiDateRange(dayjs(curSet.GcssOutboundNotificatioDate));
             initialized.current = true;
         }
     }, []);
@@ -83,24 +93,23 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
         gcssServiceTypes,
         chkIcareNotiIn,
         chkIcareNotiOut,
-        // icareNotiDateRange,
         chkGcssNotiIn,
         chkGcssNotiOut,
-        // gcssNotiDateRange,
     ]);
 
     async function SaveSettings() {
-        settings.current.IcareUnreadReplies = chkIcareRep;
-        settings.current.IcareUnreadRequests = chkIcareReq;
-        settings.current.IcareUnreadNotificationInbound = chkIcareReq ? chkIcareNotiIn : false;
-        settings.current.IcareUnreadNotificationOutbound = chkIcareRep ? chkIcareNotiOut : false;
-        settings.current.IcareAuthor = icareAuthor;
-        settings.current.GcssUnreadRequests = chkGcssReq;
-        settings.current.GcssUnreadReplies = chkGcssRep;
-        settings.current.GcssUnreadNotificationInbound = chkGcssReq ? chkGcssNotiIn : false;
-        settings.current.GcssUnreadNotificationOutbound = chkGcssRep ? chkGcssNotiOut : false;
-        settings.current.GcssAuthor = gcssAuthor;
-        settings.current.GcssServiceTypes = gcssServiceTypes.sort((a, b) => {
+        const curSet = settings.current;
+        curSet.IcareUnreadReplies = chkIcareRep;
+        curSet.IcareUnreadRequests = chkIcareReq;
+        curSet.IcareUnreadNotificationInbound = chkIcareReq ? chkIcareNotiIn : false;
+        curSet.IcareUnreadNotificationOutbound = chkIcareRep ? chkIcareNotiOut : false;
+        curSet.IcareAuthor = icareAuthor;
+        curSet.GcssUnreadRequests = chkGcssReq;
+        curSet.GcssUnreadReplies = chkGcssRep;
+        curSet.GcssUnreadNotificationInbound = chkGcssReq ? chkGcssNotiIn : false;
+        curSet.GcssUnreadNotificationOutbound = chkGcssRep ? chkGcssNotiOut : false;
+        curSet.GcssAuthor = gcssAuthor;
+        curSet.GcssServiceTypes = gcssServiceTypes.sort((a, b) => {
             const serviceOrder = [
                 ServiceTypes.EMS,
                 ServiceTypes.Parcel,
@@ -109,11 +118,13 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             ];
             return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
         });
-        if (icareNotiDateRange)
-            settings.current.IcareOutboundNotificatioDate = icareNotiDateRange.toISOString();
-        if (gcssNotiDateRange)
-            settings.current.GcssOutboundNotificatioDate = gcssNotiDateRange.toISOString();
-        await settings.current.SaveOptions();
+        if (icareNotiDateRange && dayjs(icareNotiDateRange).isValid())
+            curSet.IcareOutboundNotificatioDate = icareNotiDateRange.toISOString();
+        else curSet.IcareOutboundNotificatioDate = null;
+        if (gcssNotiDateRange && dayjs(gcssNotiDateRange).isValid())
+            curSet.GcssOutboundNotificatioDate = gcssNotiDateRange.toISOString();
+        else curSet.GcssOutboundNotificatioDate = null;
+        await curSet.SaveOptions();
     }
 
     function TrimArray(str_arr: string[]) {
@@ -150,15 +161,16 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
         }
     }
     function ShowWeekpicker(service: "iCare" | "GCSS") {
-        console.log(
-            "[ShowWeekpicker]",
-            icareNotiDateRange,
-            gcssNotiDateRange,
-            settings.current.IcareOutboundNotificatioDate,
-            settings.current.GcssOutboundNotificatioDate
-        );
-        setWeekpickerForIcare(service === "iCare" ? true : false);
-        setWeekpickerEnabled(true);
+        if ((service === "iCare" && chkIcareNotiOut) || (service === "GCSS" && chkGcssNotiOut)) {
+            setWeekpickerForIcare(service === "iCare" ? true : false);
+            setWeekpickerEnabled(true);
+        }
+    }
+    async function ResetWeekpicker(forIcare = true) {
+        setWeekpickerEnabled(false);
+        if (forIcare) setIcareNotiDateRange(null);
+        else setGcssNotiDateRange(null);
+        await SaveSettings();
     }
     async function SaveWeekpicker() {
         if (!weekpickerEnabled) return;
@@ -258,7 +270,9 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                                     checked={chkIcareNotiOut}
                                                     onChange={(e, c) => {
                                                         setChkIcareNotiOut(c);
-                                                        if (!c) setIcareNotiDateRange(null);
+                                                        if (!c) {
+                                                            ResetWeekpicker();
+                                                        }
                                                     }}
                                                     color="error"
                                                 />
@@ -269,7 +283,8 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                         aria-label=""
                                         sx={{ transform: "scale(0.9)" }}
                                         onClick={() => {
-                                            ShowWeekpicker("iCare");
+                                            if (weekpickerEnabled) setWeekpickerEnabled(false);
+                                            else ShowWeekpicker("iCare");
                                         }}>
                                         <DateRangeIcon />
                                     </IconButton>
@@ -380,7 +395,9 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                                     checked={chkGcssNotiOut}
                                                     onChange={(e, c) => {
                                                         setChkGcssNotiOut(c);
-                                                        if (!c) setGcssNotiDateRange(null);
+                                                        if (!c) {
+                                                            ResetWeekpicker(false);
+                                                        }
                                                     }}
                                                     color="error"
                                                 />
@@ -392,7 +409,8 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                         aria-label=""
                                         sx={{ transform: "scale(0.9)" }}
                                         onClick={() => {
-                                            ShowWeekpicker("GCSS");
+                                            if (weekpickerEnabled) setWeekpickerEnabled(false);
+                                            else ShowWeekpicker("GCSS");
                                         }}>
                                         <DateRangeIcon />
                                     </IconButton>

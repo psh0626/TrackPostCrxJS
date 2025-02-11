@@ -89,8 +89,12 @@ export const WeekPicker: React.FC<WeekPickerProps> = ({
             <DateCalendar
                 value={targetState}
                 onChange={(v) => {
-                    saveTo(v);
-                    console.log("[WeekPicker] new value updated: ", v as Dayjs);
+                    if (v && v.isValid()) {
+                        saveTo(v);
+                        console.log("[WeekPicker] new value updated: ", v);
+                    } else {
+                        console.error("Invalid date value received:", v);
+                    }
                 }}
                 showDaysOutsideCurrentMonth
                 slots={{ day: Day }}

@@ -172,7 +172,10 @@ export class IcareAPI2 {
                 if (this.settings.IcareOutboundNotificatioDate !== null) {
                     outbound = outbound.filter((item) => {
                         const created = dayjs(item.created, "YYYY-MM-DD HH:mm");
-                        return created.isSame(dayjs(this.settings.IcareOutboundNotificatioDate), "week");
+                        return created.isSame(
+                            dayjs(this.settings.IcareOutboundNotificatioDate),
+                            "week"
+                        );
                     });
 
                     console.log(

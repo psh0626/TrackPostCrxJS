@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "IMIC TrackPost",
     "description": "박성훈이 만든 멋쟁이 Chrome/Edge 확장프로그램 - iCare, GCSS 사무 자동화",
-    "version": "2.58",
+    "version": "2.60",
     "icons": {
         "16": "src/ext-icon.png",
         "32": "src/ext-icon.png",
@@ -35,7 +35,8 @@
         "https://ems.epost.go.kr/*",
         "https://icare.post/*",
         "https://gcss.ipc.be/*",
-        "https://github.com/shawnpark9494/TrackPostExtZip/commits/main/"
+        "https://github.com/shawnpark9494/TrackPostExtZip/commits/main/",
+        "http://localhost:5173/"
     ],
     "content_scripts": [
         {

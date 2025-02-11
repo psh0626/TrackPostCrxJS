@@ -159,7 +159,6 @@ function PopUpApp() {
             // });
         })();
     }, []);
-
     const render_gcss_replies = () => {
         if (!chk_gcss_rep) return null;
 
@@ -177,54 +176,55 @@ function PopUpApp() {
         console.log("GCSS POPUP: services--", gcss_services, "author--", gcss_author);
         if (gcss_services.length === 1) {
             if (gcss_author.length <= 1) {
-                return MyList({
-                    items: gcss_items.filter((el) => el.ServiceType === gcss_services[0]),
-                    type: "replies",
-                    service: "GCSS",
-                });
-            } else {
-                // 이용자 2명 이상, 서비스 1개
-                return gcss_author.map((user) =>
-                    MyList({
-                        items: gcss_items.filter((el) =>
-                            el.RequestAuthor.toLowerCase().includes(user.toLowerCase())
-                        ),
-                        type: "replies",
-                        service: "GCSS",
-                        author: user,
-                        serviceType: ServiceNames[gcss_services[0]],
-                    })
+                return (
+                    <MyList
+                        items={gcss_items.filter((el) => el.ServiceType === gcss_services[0])}
+                        type="replies"
+                        service="GCSS"
+                    />
                 );
+            } else {
+                return gcss_author.map((user) => (
+                    <MyList
+                        key={user}
+                        items={gcss_items.filter((el) =>
+                            el.RequestAuthor.toLowerCase().includes(user.toLowerCase())
+                        )}
+                        type="replies"
+                        service="GCSS"
+                        author={user}
+                        serviceType={ServiceNames[gcss_services[0]]}
+                    />
+                ));
             }
         } else {
-            // 서비스 2개 이상
             if (gcss_author.length <= 1) {
-                // 이용자 1명 이하
-                return gcss_services.map((serv) =>
-                    MyList({
-                        items: gcss_items.filter((el) => el.ServiceType === serv),
-                        type: "replies",
-                        service: "GCSS",
-                        author: "",
-                        serviceType: ServiceNames[serv],
-                    })
-                );
+                return gcss_services.map((serv) => (
+                    <MyList
+                        key={serv}
+                        items={gcss_items.filter((el) => el.ServiceType === serv)}
+                        type="replies"
+                        service="GCSS"
+                        author=""
+                        serviceType={ServiceNames[serv]}
+                    />
+                ));
             } else {
-                // 이용자 2명 이상
                 return gcss_services.flatMap((serv) =>
-                    gcss_author.map((user) =>
-                        MyList({
-                            items: gcss_items.filter(
+                    gcss_author.map((user) => (
+                        <MyList
+                            key={`${serv}-${user}`}
+                            items={gcss_items.filter(
                                 (el) =>
                                     el.ServiceType === serv &&
                                     el.RequestAuthor.toLowerCase().includes(user.toLowerCase())
-                            ),
-                            type: "replies",
-                            service: "GCSS",
-                            author: user,
-                            serviceType: ServiceNames[serv],
-                        })
-                    )
+                            )}
+                            type="replies"
+                            service="GCSS"
+                            author={user}
+                            serviceType={ServiceNames[serv]}
+                        />
+                    ))
                 );
             }
         }
@@ -246,12 +246,14 @@ function PopUpApp() {
                 </Stack>
             );
         }
-        return MyList({
-            items: gcss_notif_in_items,
-            type: "requests",
-            service: "GCSS",
-            isNotification: true,
-        });
+        return (
+            <MyList
+                items={gcss_notif_in_items}
+                type="requests"
+                service="GCSS"
+                isNotification={true}
+            />
+        );
     };
 
     const render_gcss_inbound_notifications = () => {
@@ -270,12 +272,14 @@ function PopUpApp() {
                 </Stack>
             );
         }
-        return MyList({
-            items: gcss_notif_in_items,
-            type: "requests",
-            service: "GCSS",
-            isNotification: true,
-        });
+        return (
+            <MyList
+                items={gcss_notif_in_items}
+                type="requests"
+                service="GCSS"
+                isNotification={true}
+            />
+        );
     };
 
     const render_gcss_outbound_notifications = () => {
@@ -294,12 +298,14 @@ function PopUpApp() {
                 </Stack>
             );
         }
-        return MyList({
-            items: gcss_notif_out_items,
-            type: "replies",
-            service: "GCSS",
-            isNotification: true,
-        });
+        return (
+            <MyList
+                items={gcss_notif_out_items}
+                type="replies"
+                service="GCSS"
+                isNotification={true}
+            />
+        );
     };
 
     const render_icare_inbound_notifications = () => {
@@ -318,12 +324,14 @@ function PopUpApp() {
                 </Stack>
             );
         }
-        return MyList({
-            items: icare_notif_in_items,
-            type: "requests",
-            service: "iCare",
-            isNotification: true,
-        });
+        return (
+            <MyList
+                items={icare_notif_in_items}
+                type="requests"
+                service="iCare"
+                isNotification={true}
+            />
+        );
     };
 
     const render_icare_outbound_notifications = () => {
@@ -342,12 +350,14 @@ function PopUpApp() {
                 </Stack>
             );
         }
-        return MyList({
-            items: icare_notif_out_items,
-            type: "replies",
-            service: "iCare",
-            isNotification: true,
-        });
+        return (
+            <MyList
+                items={icare_notif_out_items}
+                type="replies"
+                service="iCare"
+                isNotification={true}
+            />
+        );
     };
 
     return (
@@ -358,16 +368,18 @@ function PopUpApp() {
                 label="Tracking Number"
                 error={!is_valid}
                 onFocus={(e) => e.target.select()}
-                inputProps={{
-                    style: { textTransform: "uppercase", textAlign: "center" },
-                    maxLength: 13,
-                    pattern: String.raw`[a-zA-Z]{2}\d{9}[a-zA-Z]{2}`,
-                }}
-                InputLabelProps={{
-                    style: { textAlign: "center" },
-                }}
-                FormHelperTextProps={{
-                    style: { textAlign: "center" },
+                slotProps={{
+                    htmlInput: {
+                        style: { textTransform: "uppercase", textAlign: "center" },
+                        maxLength: 13,
+                        pattern: String.raw`[a-zA-Z]{2}\d{9}[a-zA-Z]{2}`,
+                    },
+                    inputLabel: {
+                        style: { textAlign: "center" },
+                    },
+                    formHelperText: {
+                        style: { textAlign: "center" },
+                    },
                 }}
                 helperText={is_valid ? " " : "Invalid Tracking Number"}
                 onChange={(e) => CheckValue(e.target)}
@@ -382,7 +394,7 @@ function PopUpApp() {
             <Divider style={{ margin: "15px 0" }} />
             {chk_gcss_req ? (
                 gcss_req_items.length > 0 ? (
-                    MyList({ items: gcss_req_items, type: "requests", service: "GCSS" })
+                    <MyList items={gcss_req_items} type="requests" service="GCSS" />
                 ) : (
                     <Stack alignItems="center">
                         <Typography
@@ -393,9 +405,7 @@ function PopUpApp() {
                         </Typography>
                     </Stack>
                 )
-            ) : (
-                ""
-            )}
+            ) : null}
             {render_gcss_inbound_notifications()}
 
             {render_gcss_replies()}
@@ -405,7 +415,7 @@ function PopUpApp() {
 
             {chk_req ? (
                 icare_req_items.length > 0 ? (
-                    MyList({ items: icare_req_items, type: "requests" })
+                    <MyList items={icare_req_items} type="requests" />
                 ) : (
                     <Stack alignItems="center">
                         <Typography
@@ -416,27 +426,26 @@ function PopUpApp() {
                         </Typography>
                     </Stack>
                 )
-            ) : (
-                ""
-            )}
+            ) : null}
 
             {render_icare_inbound_notifications()}
 
             {chk_rep ? (
                 icare_items.length > 0 ? (
                     icare_author.length > 1 ? (
-                        icare_author.map((user) =>
-                            MyList({
-                                items: icare_items.filter((e) =>
+                        icare_author.map((user) => (
+                            <MyList
+                                key={user}
+                                items={icare_items.filter((e) =>
                                     e.author.toLowerCase().includes(user.toLowerCase())
-                                ),
-                                type: "replies",
-                                service: "iCare",
-                                author: user,
-                            })
-                        )
+                                )}
+                                type="replies"
+                                service="iCare"
+                                author={user}
+                            />
+                        ))
                     ) : (
-                        MyList({ items: icare_items })
+                        <MyList items={icare_items} />
                     )
                 ) : (
                     <Stack alignItems="center">
@@ -448,9 +457,7 @@ function PopUpApp() {
                         </Typography>
                     </Stack>
                 )
-            ) : (
-                ""
-            )}
+            ) : null}
             {render_icare_outbound_notifications()}
         </Stack>
     );
