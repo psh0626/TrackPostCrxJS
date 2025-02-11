@@ -74,14 +74,16 @@ function Day(
 interface WeekPickerProps {
     targetState: Dayjs | null;
     saveTo: React.Dispatch<React.SetStateAction<Dayjs | null>>;
-    onSave: Function | null;
-    onCancel: Function | null;
+    onSave?: Function | null;
+    onCancel?: Function | null;
+    onReset?: Function | null;
 }
 export const WeekPicker: React.FC<WeekPickerProps> = ({
     targetState,
     saveTo,
     onSave,
     onCancel,
+    onReset,
 }) => {
     const [hoveredDay, setHoveredDay] = useState<Dayjs | null>(null);
     return (
@@ -108,7 +110,19 @@ export const WeekPicker: React.FC<WeekPickerProps> = ({
                         }) as any,
                 }}
             />
-            <Stack direction="row" justifyContent="end" spacing={2} marginX={2} marginBottom={2}>
+            <Stack
+                direction="row"
+                justifyContent="space-evenly"
+                spacing={2}
+                marginX={2}
+                marginBottom={2}>
+                <Button
+                    variant="outlined"
+                    onClick={() => {
+                        if (onReset) onReset();
+                    }}>
+                    Reset
+                </Button>
                 <Button
                     variant="outlined"
                     onClick={() => {

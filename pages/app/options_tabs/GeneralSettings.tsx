@@ -23,6 +23,9 @@ interface GeneralSettingsProps {
     settings: React.MutableRefObject<IMICSettings>;
 }
 
+interface DatePickButtonProps {
+    service: "iCare" | "GCSS";
+}
 export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) => {
     const [chkIcareReq, setChkIcareReq] = useState(false);
     const [chkIcareRep, setChkIcareRep] = useState(false);
@@ -166,8 +169,8 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             setWeekpickerEnabled(true);
         }
     }
-    async function ResetWeekpicker(forIcare = true) {
-        setWeekpickerEnabled(false);
+    async function ResetWeekpicker(forIcare = true, closePicker = true) {
+        if (closePicker) setWeekpickerEnabled(false);
         if (forIcare) setIcareNotiDateRange(null);
         else setGcssNotiDateRange(null);
         await SaveSettings();
@@ -187,10 +190,32 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                 saveTo={weekpickerForIcare ? setIcareNotiDateRange : setGcssNotiDateRange}
                 onSave={SaveWeekpicker}
                 onCancel={() => setWeekpickerEnabled(false)}
+                onReset={() => ResetWeekpicker(weekpickerForIcare, false)}
             />
         );
     };
 
+    const DatePickButton: React.FC<DatePickButtonProps> = ({ service }) => {
+        if ((service === "iCare" && chkIcareNotiOut) || (service === "GCSS" && chkGcssNotiOut)) {
+            return (
+                <IconButton
+                    aria-label=""
+                    sx={{ transform: "scale(0.9)" }}
+                    onClick={() => {
+                        if (weekpickerEnabled) {
+                            if (
+                                (service === "iCare" && weekpickerForIcare) ||
+                                (service === "GCSS" && !weekpickerForIcare)
+                            )
+                                setWeekpickerEnabled(false);
+                            else ShowWeekpicker(service);
+                        } else ShowWeekpicker(service);
+                    }}>
+                    <DateRangeIcon />
+                </IconButton>
+            );
+        } else return null;
+    };
     return (
         <div>
             <Stack spacing={2} padding={1} direction="row" alignItems="end" sx={{ mb: 2 }}>
@@ -203,6 +228,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             <Paper
                 sx={{
                     position: "absolute",
+                    top: "30vh",
                     left: "750px",
                 }}>
                 <MyWeekPicker />
@@ -279,15 +305,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                             </Stack>
                                         }
                                     />
-                                    <IconButton
-                                        aria-label=""
-                                        sx={{ transform: "scale(0.9)" }}
-                                        onClick={() => {
-                                            if (weekpickerEnabled) setWeekpickerEnabled(false);
-                                            else ShowWeekpicker("iCare");
-                                        }}>
-                                        <DateRangeIcon />
-                                    </IconButton>
+                                    <DatePickButton service="iCare" />
                                 </Stack>
                             ) : null}
                         </Grid>
@@ -404,16 +422,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                             </Stack>
                                         }
                                     />
-
-                                    <IconButton
-                                        aria-label=""
-                                        sx={{ transform: "scale(0.9)" }}
-                                        onClick={() => {
-                                            if (weekpickerEnabled) setWeekpickerEnabled(false);
-                                            else ShowWeekpicker("GCSS");
-                                        }}>
-                                        <DateRangeIcon />
-                                    </IconButton>
+                                    <DatePickButton service="GCSS" />
                                 </Stack>
                             ) : null}
                         </Grid>
