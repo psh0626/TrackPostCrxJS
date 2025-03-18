@@ -20,7 +20,7 @@ export class IMICSettings {
     IcareUnreadRequests: boolean = false;
     IcareUnreadNotificationInbound = false;
     IcareUnreadNotificationOutbound = false;
-    IcareOutboundNotificatioDate: string | null = null;
+    IcareOutboundNotificationDate: string | null = null;
     IcareAuthor: string[] = [];
     PersonalRemarks: PersonalRemark[] = [];
     GcssUnreadReplies = false;

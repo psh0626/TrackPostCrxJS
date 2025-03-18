@@ -66,10 +66,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             setGcssServiceTypes(curSet.GcssServiceTypes);
 
             if (
-                curSet.IcareOutboundNotificatioDate &&
-                dayjs(curSet.IcareOutboundNotificatioDate).isValid()
+                curSet.IcareOutboundNotificationDate &&
+                dayjs(curSet.IcareOutboundNotificationDate).isValid()
             )
-                setIcareNotiDateRange(dayjs(curSet.IcareOutboundNotificatioDate));
+                setIcareNotiDateRange(dayjs(curSet.IcareOutboundNotificationDate));
 
             if (
                 curSet.GcssOutboundNotificatioDate &&
@@ -122,8 +122,8 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
         });
         if (icareNotiDateRange && dayjs(icareNotiDateRange).isValid())
-            curSet.IcareOutboundNotificatioDate = icareNotiDateRange.toISOString();
-        else curSet.IcareOutboundNotificatioDate = null;
+            curSet.IcareOutboundNotificationDate = icareNotiDateRange.toISOString();
+        else curSet.IcareOutboundNotificationDate = null;
         if (gcssNotiDateRange && dayjs(gcssNotiDateRange).isValid())
             curSet.GcssOutboundNotificatioDate = gcssNotiDateRange.toISOString();
         else curSet.GcssOutboundNotificatioDate = null;

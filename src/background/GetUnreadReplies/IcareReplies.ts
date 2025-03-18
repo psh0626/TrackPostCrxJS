@@ -169,20 +169,19 @@ export class IcareAPI2 {
                 let outbound = notif_items.filter((item) => item.tracking_id.slice(-2) === "KR");
                 console.log(`[FetchNotifications] Notification outbound items filtered`, outbound);
 
-                if (this.settings.IcareOutboundNotificatioDate !== null) {
+                if (this.settings.IcareOutboundNotificationDate !== null) {
                     outbound = outbound.filter((item) => {
                         const created = dayjs(item.created, "YYYY-MM-DD HH:mm");
+                        console.log(
+                            `[FetchNotifications] Notification Created at `,
+                            created,
+                            ` DateInSettings `,
+                            dayjs(this.settings.IcareOutboundNotificationDate)
+                        );
                         return created.isSame(
-                            dayjs(this.settings.IcareOutboundNotificatioDate),
+                            dayjs(this.settings.IcareOutboundNotificationDate),
                             "week"
-                        )
-                            ? true
-                            : () => {
-                                  console.log(
-                                      `[FetchNotifications] Notification Created at ${created} is not in the same week of ${dayjs(this.settings.IcareOutboundNotificatioDate)}`
-                                  );
-                                  return false;
-                              };
+                        );
                     });
 
                     console.log(
