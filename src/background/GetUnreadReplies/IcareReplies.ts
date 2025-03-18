@@ -175,7 +175,14 @@ export class IcareAPI2 {
                         return created.isSame(
                             dayjs(this.settings.IcareOutboundNotificatioDate),
                             "week"
-                        );
+                        )
+                            ? true
+                            : () => {
+                                  console.log(
+                                      `[FetchNotifications] Notification Created at ${created} is not in the same week of ${dayjs(this.settings.IcareOutboundNotificatioDate)}`
+                                  );
+                                  return false;
+                              };
                     });
 
                     console.log(
