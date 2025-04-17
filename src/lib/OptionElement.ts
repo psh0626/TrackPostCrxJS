@@ -21,6 +21,8 @@ export class IMICSettings {
     IcareUnreadNotificationInbound = false;
     IcareUnreadNotificationOutbound = false;
     IcareOutboundNotificationDate: string | null = null;
+    IcareOutboundNotificationCountries: string[] = [];
+    IcareOutboundNotificationExcludedCountries: string[] = [];
     IcareAuthor: string[] = [];
     PersonalRemarks: PersonalRemark[] = [];
     GcssUnreadReplies = false;
@@ -28,6 +30,8 @@ export class IMICSettings {
     GcssUnreadNotificationInbound = false;
     GcssUnreadNotificationOutbound = false;
     GcssOutboundNotificatioDate: string | null = null;
+    GcssOutboundNotificationCountries: string[] = [];
+    GcssOutboundNotificationExcludedCountries: string[] = [];
     GcssAuthor: string[] = [];
     GcssServiceTypes: ServiceTypes[] = [ServiceTypes.EMS];
     SavingFinished: NodeJS.Timeout | null = null;

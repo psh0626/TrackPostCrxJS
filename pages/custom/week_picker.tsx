@@ -1,8 +1,8 @@
 import { Margin } from "@mui/icons-material";
-import { Button, Paper, Stack, styled } from "@mui/material";
+import { Button, Input, Paper, Stack, styled, Typography } from "@mui/material";
 import { PickersDayProps, PickersDay, DateCalendar } from "@mui/x-date-pickers";
 import { Dayjs } from "dayjs";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 interface CustomPickerDayProps extends PickersDayProps<Dayjs> {
     isSelected: boolean;
@@ -77,6 +77,10 @@ interface WeekPickerProps {
     onSave?: Function | null;
     onCancel?: Function | null;
     onReset?: Function | null;
+    targetCountries: string[];
+    excludedCountries: string[];
+    setTargetCountries: React.Dispatch<React.SetStateAction<string[]>>;
+    setExcludedCountries: React.Dispatch<React.SetStateAction<string[]>>;
 }
 export const WeekPicker: React.FC<WeekPickerProps> = ({
     targetState,
@@ -84,11 +88,63 @@ export const WeekPicker: React.FC<WeekPickerProps> = ({
     onSave,
     onCancel,
     onReset,
+    targetCountries,
+    excludedCountries,
+    setTargetCountries,
+    setExcludedCountries,
 }) => {
     const [hoveredDay, setHoveredDay] = useState<Dayjs | null>(null);
+
+    const CountryInput = (prop: {
+        text: string;
+        loadedValue: string[];
+        returnedValue: React.Dispatch<React.SetStateAction<string[]>>;
+    }) => {
+        const [rawValue, setRawValue] = useState("");
+
+        useEffect(() => {
+            setRawValue(prop.loadedValue.join(","));
+            console.log("PROP LOADED");
+        }, []);
+
+        return (
+            <Stack
+                direction="row"
+                justifyContent="space-evenly"
+                spacing={2}
+                marginX={2}
+                marginBottom={0}>
+                <Typography
+                    alignContent={"center"}
+                    fontWeight={100}
+                    sx={{ mt: 2 }}
+                    variant="subtitle2">
+                    {prop.text}
+                </Typography>
+                <Input
+                    value={rawValue}
+                    onChange={(e) => {
+                        let changedValue = e.target.value.toUpperCase();
+                        console.log("PROP uppercase: ", changedValue);
+                        setRawValue(changedValue);
+                        if (!changedValue.endsWith(",")) {
+                            const countries = changedValue
+                                .split(",")
+                                .map((el) => el.trim())
+                                .filter((el) => el !== "");
+                            prop.returnedValue(countries);
+                            console.log("PROP split: ", countries);
+                        }
+                    }}
+                    onBlur={() => setRawValue(prop.loadedValue.join(", "))}></Input>
+            </Stack>
+        );
+    };
+
     return (
         <Stack>
             <DateCalendar
+                sx={{ paddingBottom: 0, height: "300px" }}
                 value={targetState}
                 onChange={(v) => {
                     if (v && v.isValid()) {
@@ -110,12 +166,22 @@ export const WeekPicker: React.FC<WeekPickerProps> = ({
                         }) as any,
                 }}
             />
+            <CountryInput
+                text="국가 알림 지정"
+                loadedValue={targetCountries}
+                returnedValue={setTargetCountries}
+            />
+            <CountryInput
+                text="국가 알림 제외"
+                loadedValue={excludedCountries}
+                returnedValue={setExcludedCountries}
+            />
             <Stack
                 direction="row"
                 justifyContent="space-evenly"
                 spacing={2}
                 marginX={2}
-                marginBottom={2}>
+                marginY={2}>
                 <Button
                     variant="outlined"
                     onClick={() => {

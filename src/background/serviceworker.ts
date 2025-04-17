@@ -22,6 +22,22 @@ function main() {
     GlobalTimer.Callback = async () => await APICalls(count++);
     GlobalTimer.Interval = 30 * 1000;
     GlobalTimer.Start();
+
+    setInterval(
+        () => {
+            void (async () => {
+                const [ext_mail_tab] = await chrome.tabs.query({
+                    url: "https://kmmbox.korea.kr/mail/*",
+                    active: false,
+                });
+                if (ext_mail_tab) {
+                    chrome.tabs.reload(ext_mail_tab.id!);
+                    console.log("[Interval] Mail tab has been reloaded.", ext_mail_tab);
+                }
+            })();
+        },
+        1000 * 60 * 20
+    );
 }
 async function APICalls(count: number, final = false) {
     const today = new Date();

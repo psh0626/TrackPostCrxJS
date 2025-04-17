@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
     Checkbox,
     Divider,
@@ -45,6 +45,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
     const initialized = useRef(false);
     const [weekpickerForIcare, setWeekpickerForIcare] = useState(true);
     const [weekpickerEnabled, setWeekpickerEnabled] = useState(false);
+    const [icareNotiCountries, setIcareNotiCountries] = useState<string[]>([]);
+    const [icareNotiExcCountries, setIcareNotiExcCountries] = useState<string[]>([]);
+    const [gcssNotiCountries, setGcssNotiCountries] = useState<string[]>([]);
+    const [gcssNotiExcCountries, setGcssNotiExcCountries] = useState<string[]>([]);
 
     useEffect(() => {
         if (!initialized.current) {
@@ -54,12 +58,16 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             setChkIcareReq(curSet.IcareUnreadRequests);
             setChkIcareNotiIn(curSet.IcareUnreadNotificationInbound);
             setChkIcareNotiOut(curSet.IcareUnreadNotificationOutbound);
+            setIcareNotiCountries(curSet.IcareOutboundNotificationCountries);
+            setIcareNotiExcCountries(curSet.IcareOutboundNotificationExcludedCountries);
             setIcareAuthor(curSet.IcareAuthor);
             setIcareAuthorRaw(curSet.IcareAuthor.join(", "));
             setChkGcssRep(curSet.GcssUnreadReplies);
             setChkGcssReq(curSet.GcssUnreadRequests);
             setChkGcssNotiIn(curSet.GcssUnreadNotificationInbound);
             setChkGcssNotiOut(curSet.GcssUnreadNotificationOutbound);
+            setGcssNotiCountries(curSet.GcssOutboundNotificationCountries);
+            setGcssNotiExcCountries(curSet.GcssOutboundNotificationExcludedCountries);
             if (!Array.isArray(curSet.GcssAuthor)) curSet.GcssAuthor = [curSet.GcssAuthor];
             setGcssAuthor(curSet.GcssAuthor);
             setGcssAuthorRaw(curSet.GcssAuthor.join(","));
@@ -106,11 +114,19 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
         curSet.IcareUnreadRequests = chkIcareReq;
         curSet.IcareUnreadNotificationInbound = chkIcareReq ? chkIcareNotiIn : false;
         curSet.IcareUnreadNotificationOutbound = chkIcareRep ? chkIcareNotiOut : false;
+        curSet.IcareOutboundNotificationCountries = chkIcareNotiOut ? icareNotiCountries : [];
+        curSet.IcareOutboundNotificationExcludedCountries = chkIcareNotiOut
+            ? icareNotiExcCountries
+            : [];
         curSet.IcareAuthor = icareAuthor;
         curSet.GcssUnreadRequests = chkGcssReq;
         curSet.GcssUnreadReplies = chkGcssRep;
         curSet.GcssUnreadNotificationInbound = chkGcssReq ? chkGcssNotiIn : false;
         curSet.GcssUnreadNotificationOutbound = chkGcssRep ? chkGcssNotiOut : false;
+        curSet.GcssOutboundNotificationCountries = chkGcssNotiOut ? gcssNotiCountries : [];
+        curSet.GcssOutboundNotificationExcludedCountries = chkIcareNotiOut
+            ? gcssNotiExcCountries
+            : [];
         curSet.GcssAuthor = gcssAuthor;
         curSet.GcssServiceTypes = gcssServiceTypes.sort((a, b) => {
             const serviceOrder = [
@@ -184,14 +200,27 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
     const MyWeekPicker = () => {
         if (!weekpickerEnabled) return null;
         if (!chkIcareNotiOut && !chkGcssNotiOut) return null;
-        return (
-            <WeekPicker
-                targetState={weekpickerForIcare ? icareNotiDateRange : gcssNotiDateRange}
-                saveTo={weekpickerForIcare ? setIcareNotiDateRange : setGcssNotiDateRange}
-                onSave={SaveWeekpicker}
-                onCancel={() => setWeekpickerEnabled(false)}
-                onReset={() => ResetWeekpicker(weekpickerForIcare, false)}
-            />
+        return useMemo(
+            () => (
+                <WeekPicker
+                    targetState={weekpickerForIcare ? icareNotiDateRange : gcssNotiDateRange}
+                    saveTo={weekpickerForIcare ? setIcareNotiDateRange : setGcssNotiDateRange}
+                    targetCountries={weekpickerForIcare ? icareNotiCountries : gcssNotiCountries}
+                    excludedCountries={
+                        weekpickerForIcare ? icareNotiExcCountries : gcssNotiExcCountries
+                    }
+                    setTargetCountries={
+                        weekpickerForIcare ? setIcareNotiCountries : setGcssNotiCountries
+                    }
+                    setExcludedCountries={
+                        weekpickerForIcare ? setIcareNotiExcCountries : setGcssNotiExcCountries
+                    }
+                    onSave={SaveWeekpicker}
+                    onCancel={() => setWeekpickerEnabled(false)}
+                    onReset={() => ResetWeekpicker(weekpickerForIcare, false)}
+                />
+            ),
+            [weekpickerEnabled, weekpickerForIcare]
         );
     };
 
