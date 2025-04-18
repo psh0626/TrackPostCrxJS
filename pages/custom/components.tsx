@@ -12,13 +12,59 @@ import {
     Stack,
     Typography,
     AccordionDetails,
+    Input,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import { GcssItem, WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ServiceNames } from "../../src/background/GetUnreadReplies/GcssReplies";
 
+export const CountryInput = (prop: {
+    text: string;
+    state: string[];
+    setState: React.Dispatch<React.SetStateAction<string[]>>;
+}) => {
+    const [rawValue, setRawValue] = useState("");
+
+    useEffect(() => {
+        setRawValue(prop.state.join(","));
+        console.log("PROP LOADED");
+    }, []);
+
+    return (
+        <Stack
+            direction="row"
+            justifyContent="space-evenly"
+            spacing={2}
+            marginX={2}
+            marginBottom={0}>
+            <Typography
+                alignContent={"center"}
+                fontWeight={100}
+                sx={{ mt: 2 }}
+                variant="subtitle2">
+                {prop.text}
+            </Typography>
+            <Input
+                value={rawValue}
+                onChange={(e) => {
+                    let changedValue = e.target.value.toUpperCase();
+                    console.log("PROP uppercase: ", changedValue);
+                    setRawValue(changedValue);
+                    if (!changedValue.endsWith(",")) {
+                        const countries = changedValue
+                            .split(",")
+                            .map((el) => el.trim())
+                            .filter((el) => el !== "");
+                        prop.setState(countries);
+                        console.log("PROP split: ", countries);
+                    }
+                }}
+                onBlur={() => setRawValue(prop.state.join(", "))}></Input>
+        </Stack>
+    );
+};
 export const StyledTextField = styled(TextField)({
     "& .MuiInputLabel-root": {
         right: 0,

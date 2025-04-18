@@ -18,9 +18,10 @@ import { SubdirectoryArrowRight } from "@mui/icons-material";
 import { DateRangeIcon } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
 import { WeekPicker } from "../../custom/week_picker";
+import { CountryInput } from "../../custom/components";
 
 interface GeneralSettingsProps {
-    settings: React.MutableRefObject<IMICSettings>;
+    settings: React.RefObject<IMICSettings>;
 }
 
 interface DatePickButtonProps {
@@ -106,6 +107,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
         chkIcareNotiOut,
         chkGcssNotiIn,
         chkGcssNotiOut,
+        icareNotiCountries,
+        icareNotiExcCountries,
+        gcssNotiCountries,
+        gcssNotiExcCountries,        
     ]);
 
     async function SaveSettings() {
@@ -200,28 +205,15 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
     const MyWeekPicker = () => {
         if (!weekpickerEnabled) return null;
         if (!chkIcareNotiOut && !chkGcssNotiOut) return null;
-        return useMemo(
-            () => (
+        return (
                 <WeekPicker
                     targetState={weekpickerForIcare ? icareNotiDateRange : gcssNotiDateRange}
                     saveTo={weekpickerForIcare ? setIcareNotiDateRange : setGcssNotiDateRange}
-                    targetCountries={weekpickerForIcare ? icareNotiCountries : gcssNotiCountries}
-                    excludedCountries={
-                        weekpickerForIcare ? icareNotiExcCountries : gcssNotiExcCountries
-                    }
-                    setTargetCountries={
-                        weekpickerForIcare ? setIcareNotiCountries : setGcssNotiCountries
-                    }
-                    setExcludedCountries={
-                        weekpickerForIcare ? setIcareNotiExcCountries : setGcssNotiExcCountries
-                    }
                     onSave={SaveWeekpicker}
                     onCancel={() => setWeekpickerEnabled(false)}
                     onReset={() => ResetWeekpicker(weekpickerForIcare, false)}
                 />
-            ),
-            [weekpickerEnabled, weekpickerForIcare]
-        );
+            )
     };
 
     const DatePickButton: React.FC<DatePickButtonProps> = ({ service }) => {
@@ -312,29 +304,33 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                             />
 
                             {chkIcareRep ? (
-                                <Stack direction="row">
-                                    <FormControlLabel
-                                        sx={{ transform: "scale(0.9)" }}
-                                        label="발송 통지 알림"
-                                        control={
-                                            <Stack direction="row" alignItems="center">
-                                                <SubdirectoryArrowRight
-                                                    sx={{ marginLeft: 0.5, paddingBottom: 1 }}
-                                                />
-                                                <Checkbox
-                                                    checked={chkIcareNotiOut}
-                                                    onChange={(e, c) => {
-                                                        setChkIcareNotiOut(c);
-                                                        if (!c) {
-                                                            ResetWeekpicker();
-                                                        }
-                                                    }}
-                                                    color="error"
-                                                />
-                                            </Stack>
-                                        }
-                                    />
-                                    <DatePickButton service="iCare" />
+                                <Stack>
+                                    <Stack direction="row">
+                                        <FormControlLabel
+                                            sx={{ transform: "scale(0.9)" }}
+                                            label="발송 통지 알림"
+                                            control={
+                                                <Stack direction="row" alignItems="center">
+                                                    <SubdirectoryArrowRight
+                                                        sx={{ marginLeft: 0.5, paddingBottom: 1 }}
+                                                    />
+                                                    <Checkbox
+                                                        checked={chkIcareNotiOut}
+                                                        onChange={(e, c) => {
+                                                            setChkIcareNotiOut(c);
+                                                            if (!c) {
+                                                                ResetWeekpicker();
+                                                            }
+                                                        }}
+                                                        color="error"
+                                                    />
+                                                </Stack>
+                                            }
+                                        />
+                                        <DatePickButton service="iCare" />
+                                    </Stack>
+                                    <CountryInput text="다음 국가만 알림" state={icareNotiCountries} setState={setIcareNotiCountries} />
+                                    <CountryInput text="다음 국가는 제외" state={icareNotiExcCountries} setState={setIcareNotiExcCountries} />
                                 </Stack>
                             ) : null}
                         </Grid>
@@ -429,29 +425,33 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                             />
 
                             {chkGcssRep ? (
-                                <Stack direction="row">
-                                    <FormControlLabel
-                                        sx={{ transform: "scale(0.9)" }}
-                                        label="발송 통지 알림"
-                                        control={
-                                            <Stack direction="row" alignItems="center">
-                                                <SubdirectoryArrowRight
-                                                    sx={{ marginLeft: 0.5, paddingBottom: 1 }}
-                                                />
-                                                <Checkbox
-                                                    checked={chkGcssNotiOut}
-                                                    onChange={(e, c) => {
-                                                        setChkGcssNotiOut(c);
-                                                        if (!c) {
-                                                            ResetWeekpicker(false);
-                                                        }
-                                                    }}
-                                                    color="error"
-                                                />
-                                            </Stack>
-                                        }
-                                    />
-                                    <DatePickButton service="GCSS" />
+                                <Stack>
+                                    <Stack direction="row">
+                                        <FormControlLabel
+                                            sx={{ transform: "scale(0.9)" }}
+                                            label="발송 통지 알림"
+                                            control={
+                                                <Stack direction="row" alignItems="center">
+                                                    <SubdirectoryArrowRight
+                                                        sx={{ marginLeft: 0.5, paddingBottom: 1 }}
+                                                    />
+                                                    <Checkbox
+                                                        checked={chkGcssNotiOut}
+                                                        onChange={(e, c) => {
+                                                            setChkGcssNotiOut(c);
+                                                            if (!c) {
+                                                                ResetWeekpicker(false);
+                                                            }
+                                                        }}
+                                                        color="error"
+                                                    />
+                                                </Stack>
+                                            }
+                                        />
+                                        <DatePickButton service="GCSS" />
+                                        </Stack>                                    
+                                    <CountryInput text="다음 국가만 알림" state={gcssNotiCountries} setState={setGcssNotiCountries} />
+                                    <CountryInput text="다음 국가는 제외" state={gcssNotiExcCountries} setState={setGcssNotiExcCountries} />
                                 </Stack>
                             ) : null}
                         </Grid>
