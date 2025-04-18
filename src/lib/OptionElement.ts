@@ -1,4 +1,3 @@
-import { Dayjs } from "dayjs";
 import { ServiceTypes } from "../background/GetUnreadReplies/GcssReplies";
 import { COMMANDS, Msg, SendRequest } from "./Message";
 export class PersonalRemark {
@@ -33,7 +32,7 @@ export class IMICSettings {
     GcssOutboundNotificationExcludedCountries: string[] = [];
     GcssAuthor: string[] = [];
     GcssServiceTypes: ServiceTypes[] = [ServiceTypes.EMS];
-    SavingFinished: NodeJS.Timeout | null = null;
+    static SavingFinished: NodeJS.Timeout | null = null;
     private async NotifyTabs() {
         const work_tabs = await chrome.tabs.query({
             url: ["https://icare.post/*", "https://gcss.ipc.be/*"],
@@ -42,20 +41,23 @@ export class IMICSettings {
         if (!work_tabs || !Array.isArray(work_tabs)) {
             return;
         }
-        work_tabs.forEach(async (tab) => {
-            if (tab.id) await chrome.tabs.sendMessage(tab.id, new Msg(COMMANDS.SETTINGS_CHANGED));
+        work_tabs.forEach(async (tab, index) => {
+            if (tab.id) {
+                if (index === 0) chrome.tabs.reload(tab.id!);
+                else await chrome.tabs.sendMessage(tab.id, new Msg(COMMANDS.SETTINGS_CHANGED));
+            }
         });
     }
     async SaveOptions() {
-        await chrome.storage.local.set({ IMICSettings: this });
-        console.log("Options Saved as ", this);
-
-        if (this.SavingFinished) clearTimeout(this.SavingFinished);
-        this.SavingFinished = setTimeout(() => {
+        if (IMICSettings.SavingFinished) clearTimeout(IMICSettings.SavingFinished);
+        IMICSettings.SavingFinished = setTimeout(() => {
             void (async () => {
+                await chrome.storage.local.set({ IMICSettings: this });
+                console.log("Options Saved as ", this);
                 await this.NotifyTabs();
+                IMICSettings.SavingFinished = null;
             })();
-        }, 5000);
+        }, 2000);
     }
     async LoadOptions() {
         const newThis = await chrome.storage.local.get("IMICSettings");

@@ -49,15 +49,19 @@ const AuthorInput: React.FC<{
 const CountrySettings: React.FC<{
     countries: string[];
     excludedCountries: string[];
-    onCountriesChange: React.Dispatch<React.SetStateAction<string[]>>;
-    onExcludedCountriesChange: React.Dispatch<React.SetStateAction<string[]>>;
+    onCountriesChange: (countries: string[]) => void;
+    onExcludedCountriesChange: (countries: string[]) => void;
 }> = ({ countries, excludedCountries, onCountriesChange, onExcludedCountriesChange }) => (
     <Stack direction={"row"}>
-        <CountryInput text="다음 국가만 알림" state={countries} setState={(value) => onCountriesChange(value)} />
+        <CountryInput
+            text="다음 국가만 알림"
+            state={countries}
+            onChange={(countries) => onCountriesChange(countries)}
+        />
         <CountryInput
             text="다음 국가만 제외"
             state={excludedCountries}
-            setState={(value) => onExcludedCountriesChange(value)}
+            onChange={(countries) => onExcludedCountriesChange(countries)}
         />
     </Stack>
 );
@@ -66,9 +70,9 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
     const [settingsState, setSettingsState] = useState<IMICSettings>(new IMICSettings());
     const [icareAuthorRaw, setIcareAuthorRaw] = useState("");
     const [gcssAuthorRaw, setGcssAuthorRaw] = useState("");
-    const initialized = useRef(false);
     const [weekpickerForIcare, setWeekpickerForIcare] = useState(true);
     const [weekpickerEnabled, setWeekpickerEnabled] = useState(false);
+    const initialized = useRef(false);
 
     useEffect(() => {
         if (!initialized.current) {
@@ -205,9 +209,9 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
         } else return null;
     };
 
-    function handleCountryInput<K extends keyof IMICSettings>(key: K) {
-        return (v: IMICSettings[K]) => updateSetting(key, v);
-    }
+    // function handleCountryInput<K extends keyof IMICSettings>(key: K) {
+    //     return (v: IMICSettings[K]) => updateSetting(key, v)
+    // }
 
     return (
         <div>
@@ -296,14 +300,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                                     settingsState.IcareOutboundNotificationExcludedCountries
                                                 }
                                                 onCountriesChange={(value) =>
-                                                    handleCountryInput("IcareOutboundNotificationCountries")(
-                                                        value as string[]
-                                                    )
+                                                    updateSetting("IcareOutboundNotificationCountries", value)
                                                 }
                                                 onExcludedCountriesChange={(value) =>
-                                                    handleCountryInput("IcareOutboundNotificationExcludedCountries")(
-                                                        value as string[]
-                                                    )
+                                                    updateSetting("IcareOutboundNotificationExcludedCountries", value)
                                                 }
                                             />
                                         )}
@@ -406,14 +406,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                                     settingsState.GcssOutboundNotificationExcludedCountries
                                                 }
                                                 onCountriesChange={(value) =>
-                                                    handleCountryInput("GcssOutboundNotificationCountries")(
-                                                        value as string[]
-                                                    )
+                                                    updateSetting("GcssOutboundNotificationCountries", value)
                                                 }
                                                 onExcludedCountriesChange={(value) =>
-                                                    handleCountryInput("GcssOutboundNotificationExcludedCountries")(
-                                                        value as string[]
-                                                    )
+                                                    updateSetting("GcssOutboundNotificationExcludedCountries", value)
                                                 }
                                             />
                                         )}

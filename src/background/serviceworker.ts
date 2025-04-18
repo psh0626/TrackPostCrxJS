@@ -1,8 +1,7 @@
-import { Msg, COMMANDS } from "../lib/Message";
-import PopupTrack from "../lib/PopupTrack";
+import { COMMANDS, Msg } from "../lib/Message";
 import CreateNotification from "../lib/Notification";
+import PopupTrack from "../lib/PopupTrack";
 import ProcessMessage from "./MessageHub/MessageHub";
-import { GlobalTimer } from "./GetUnreadReplies/Timer";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
 void chrome.action.setBadgeBackgroundColor({ color: "#424242" });
@@ -19,25 +18,26 @@ main();
 
 function main() {
     let count = 0;
-    GlobalTimer.Callback = async () => await APICalls(count++);
-    GlobalTimer.Interval = 30 * 1000;
-    GlobalTimer.Start();
+    // GlobalTimer.Callback = async () => await APICalls(count++);
+    // GlobalTimer.Interval = 30 * 1000;
+    // GlobalTimer.Start();
 
-    setInterval(
-        () => {
-            void (async () => {
-                const [ext_mail_tab] = await chrome.tabs.query({
-                    url: "https://kmmbox.korea.kr/mail/*",
-                    active: false,
-                });
-                if (ext_mail_tab) {
-                    chrome.tabs.reload(ext_mail_tab.id!);
-                    console.log("[Interval] Mail tab has been reloaded.", ext_mail_tab);
-                }
-            })();
-        },
-        1000 * 60 * 20
-    );
+    setInterval(() => {
+        APICalls(count++);
+    }, "30".toSeconds());
+
+    setInterval(() => {
+        void (async () => {
+            const [ext_mail_tab] = await chrome.tabs.query({
+                url: "https://kmmbox.korea.kr/mail/*",
+                active: false,
+            });
+            if (ext_mail_tab) {
+                chrome.tabs.reload(ext_mail_tab.id!);
+                console.log("[Interval] Mail tab has been reloaded.", ext_mail_tab);
+            }
+        })();
+    }, "20".toMinutes());
 }
 async function APICalls(count: number, final = false) {
     const today = new Date();
@@ -67,8 +67,9 @@ async function APICalls(count: number, final = false) {
                 await chrome.action.setBadgeText({ text: "?" });
             } else {
                 setTimeout(async () => {
+                    console.log("Global timer could not find icare or gcss tab. Retrying in 2 seconds..");
                     await APICalls(count, true);
-                }, 2000);
+                }, "2".toSeconds());
             }
             return;
         }
@@ -86,13 +87,8 @@ async function APICalls(count: number, final = false) {
 chrome.webRequest.onCompleted.addListener(
     function (details) {
         console.log("[onBeforeRequest]", details);
-        if (
-            details.url.includes("https://github.com/shawnpark9494/TrackPostExtZip/commits/main/")
-        ) {
-            console.log(
-                "[onBeforeRequest] github commits page requested, extention reload begins..",
-                details
-            );
+        if (details.url.includes("https://github.com/shawnpark9494/TrackPostExtZip/commits/main/")) {
+            console.log("[onBeforeRequest] github commits page requested, extention reload begins..", details);
             chrome.runtime.reload();
         }
     },
@@ -109,9 +105,7 @@ chrome.webRequest.onCompleted.addListener(
                     const [tab] = await chrome.tabs.query({ url: ICARE_URL + "/*" });
                     if (tab) {
                         if (!MsgPort) {
-                            console.log(
-                                "Message port is not open. Unable to send a message to the content script"
-                            );
+                            console.log("Message port is not open. Unable to send a message to the content script");
                             return;
                         }
                         MsgPort[details.tabId].postMessage(new Msg(COMMANDS.WEB_REQUEST_COMPLETE));
@@ -129,9 +123,7 @@ chrome.webRequest.onCompleted.addListener(
                         return false;
                     }
                     if (!MsgPort) {
-                        console.log(
-                            "Message port is not open. Unable to send a message to the content script"
-                        );
+                        console.log("Message port is not open. Unable to send a message to the content script");
                         return;
                     }
                     MsgPort[details.tabId].postMessage(new Msg(COMMANDS.WEB_REQUEST_COMPLETE));
@@ -187,14 +179,36 @@ chrome.notifications.onClicked.addListener((id) => {
 chrome.notifications.onButtonClicked.addListener((noti_id) => {
     if (noti_id === COMMANDS.ICARE_UNREAD_REPLIES) {
         chrome.tabs.getCurrent((tab) => {
-            if (tab)
-                chrome.windows.update(tab.windowId, { focused: true }, () =>
-                    chrome.action.openPopup()
-                );
+            if (tab) chrome.windows.update(tab.windowId, { focused: true }, () => chrome.action.openPopup());
         });
     }
 });
 
+// Adding extension methods to the String prototype
+declare global {
+    interface String {
+        toMilliseconds(): number;
+        toSeconds(): number;
+        toMinutes(): number;
+        toHours(): number;
+    }
+}
+
+String.prototype.toMilliseconds = function (): number {
+    return parseFloat(this.toString());
+};
+
+String.prototype.toSeconds = function (): number {
+    return parseFloat(this.toString()) * 1000;
+};
+
+String.prototype.toMinutes = function (): number {
+    return parseFloat(this.toString()) * 60 * 1000;
+};
+
+String.prototype.toHours = function (): number {
+    return parseFloat(this.toString()) * 60 * 60 * 1000;
+};
 // chrome.tabs.onUpdated.addListener((tabId, changed, tab: chrome.tabs.Tab) => {
 //   if (tab.url == null) {
 //     return;

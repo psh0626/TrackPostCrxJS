@@ -23,9 +23,23 @@ import { ServiceNames } from "../../src/background/GetUnreadReplies/GcssReplies"
 export const CountryInput = (prop: {
     text: string;
     state: string[];
-    setState: React.Dispatch<React.SetStateAction<string[]>>;
+    onChange: (countries: string[]) => void;
 }) => {
     const [rawValue, setRawValue] = useState("");
+
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {        
+        const changedValue = e.target.value.toUpperCase();
+        // console.log("PROP uppercase: ", changedValue);
+        setRawValue(changedValue);
+        if (!changedValue.endsWith(",")) {
+            const countries = changedValue
+                .split(",")
+                .map((el) => el.trim())
+                .filter((el) => el !== "");
+            // console.log("PROP split: ", countries);
+            prop.onChange(countries);
+        }
+    }
 
     useEffect(() => {
         setRawValue(prop.state.join(", "));
@@ -48,19 +62,7 @@ export const CountryInput = (prop: {
                 size="small"
                 sx={{ marginBottom: 0 }}
                 value={rawValue}
-                onChange={(e) => {
-                    let changedValue = e.target.value.toUpperCase();
-                    console.log("PROP uppercase: ", changedValue);
-                    setRawValue(changedValue);
-                    if (!changedValue.endsWith(",")) {
-                        const countries = changedValue
-                            .split(",")
-                            .map((el) => el.trim())
-                            .filter((el) => el !== "");
-                        prop.setState(countries);
-                        console.log("PROP split: ", countries);
-                    }
-                }}
+                onChange={handleChange}
                 onBlur={() => setRawValue(prop.state.join(", "))}
             ></Input>
         </Stack>
@@ -103,8 +105,10 @@ export const InfoTextField: React.FC<InfoFieldType> = ({ label_text, binding_val
             value={binding_value}
             label={label_text}
             onFocus={TextFieldFocused}
-            InputLabelProps={{ shrink: binding_shrink }}
-            inputProps={{ style: { fontSize: "14px" } }}
+            slotProps={{
+                inputLabel: { shrink: binding_shrink },
+                input: { style: { fontSize: "14px" } },
+            }}
             multiline={multiline}
         />
     );
