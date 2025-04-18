@@ -11,7 +11,7 @@ import {
     IconButton,
     styled,
 } from "@mui/material";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import { IMICSettings } from "../../../src/lib/OptionElement";
 import { ServiceTypes } from "../../../src/background/GetUnreadReplies/GcssReplies";
 import { SubdirectoryArrowRight } from "@mui/icons-material";
@@ -110,7 +110,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
         icareNotiCountries,
         icareNotiExcCountries,
         gcssNotiCountries,
-        gcssNotiExcCountries,        
+        gcssNotiExcCountries,
     ]);
 
     async function SaveSettings() {
@@ -206,14 +206,14 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
         if (!weekpickerEnabled) return null;
         if (!chkIcareNotiOut && !chkGcssNotiOut) return null;
         return (
-                <WeekPicker
-                    targetState={weekpickerForIcare ? icareNotiDateRange : gcssNotiDateRange}
-                    saveTo={weekpickerForIcare ? setIcareNotiDateRange : setGcssNotiDateRange}
-                    onSave={SaveWeekpicker}
-                    onCancel={() => setWeekpickerEnabled(false)}
-                    onReset={() => ResetWeekpicker(weekpickerForIcare, false)}
-                />
-            )
+            <WeekPicker
+                targetState={weekpickerForIcare ? icareNotiDateRange : gcssNotiDateRange}
+                saveTo={weekpickerForIcare ? setIcareNotiDateRange : setGcssNotiDateRange}
+                onSave={SaveWeekpicker}
+                onCancel={() => setWeekpickerEnabled(false)}
+                onReset={() => ResetWeekpicker(weekpickerForIcare, false)}
+            />
+        );
     };
 
     const DatePickButton: React.FC<DatePickButtonProps> = ({ service }) => {
@@ -246,12 +246,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             </Stack>
             <Divider sx={{ mb: 2 }} variant="fullWidth" />
 
-            <Paper
-                sx={{
-                    position: "absolute",
-                    top: "30vh",
-                    left: "750px",
-                }}>
+            <Paper sx={{ position: "absolute", top: "30vh", left: "750px" }}>
                 <MyWeekPicker />
             </Paper>
             <Stack spacing={4} sx={{ width: 500 }}>
@@ -329,8 +324,20 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                         />
                                         <DatePickButton service="iCare" />
                                     </Stack>
-                                    <CountryInput text="다음 국가만 알림" state={icareNotiCountries} setState={setIcareNotiCountries} />
-                                    <CountryInput text="다음 국가는 제외" state={icareNotiExcCountries} setState={setIcareNotiExcCountries} />
+                                    {chkIcareNotiOut ? (
+                                        <Stack direction={"row"}>
+                                            <CountryInput
+                                                text="다음 국가만 알림"
+                                                state={icareNotiCountries}
+                                                setState={setIcareNotiCountries}
+                                            />
+                                            <CountryInput
+                                                text="다음 국가는 제외"
+                                                state={icareNotiExcCountries}
+                                                setState={setIcareNotiExcCountries}
+                                            />
+                                        </Stack>
+                                    ) : null}
                                 </Stack>
                             ) : null}
                         </Grid>
@@ -449,9 +456,21 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                             }
                                         />
                                         <DatePickButton service="GCSS" />
-                                        </Stack>                                    
-                                    <CountryInput text="다음 국가만 알림" state={gcssNotiCountries} setState={setGcssNotiCountries} />
-                                    <CountryInput text="다음 국가는 제외" state={gcssNotiExcCountries} setState={setGcssNotiExcCountries} />
+                                    </Stack>
+                                    {chkGcssNotiOut ? (
+                                        <Stack direction={"row"}>
+                                            <CountryInput
+                                                text="다음 국가만 알림"
+                                                state={gcssNotiCountries}
+                                                setState={setGcssNotiCountries}
+                                            />
+                                            <CountryInput
+                                                text="다음 국가는 제외"
+                                                state={gcssNotiExcCountries}
+                                                setState={setGcssNotiExcCountries}
+                                            />
+                                        </Stack>
+                                    ) : null}
                                 </Stack>
                             ) : null}
                         </Grid>

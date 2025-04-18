@@ -169,6 +169,32 @@ export class IcareAPI2 {
                 let outbound = notif_items.filter((item) => item.tracking_id.slice(-2) === "KR");
                 console.log(`[FetchNotifications] Notification outbound items filtered`, outbound);
 
+                if (this.settings.IcareOutboundNotificationCountries.length > 0) {
+                    outbound = outbound.filter((item) =>
+                        this.IncludesOneOf(
+                            item.requesting_op,
+                            this.settings.IcareOutboundNotificationCountries
+                        )
+                    );
+                    console.log(
+                        `[FetchNotifications] Notification outbound items countries filtered`,
+                        outbound
+                    );
+                }
+                if (this.settings.IcareOutboundNotificationExcludedCountries.length > 0) {
+                    outbound = outbound.filter(
+                        (item) =>
+                            !this.IncludesOneOf(
+                                item.requesting_op,
+                                this.settings.IcareOutboundNotificationExcludedCountries
+                            )
+                    );
+                    console.log(
+                        `[FetchNotifications] Notification outbound items excluded countries filtered`,
+                        outbound
+                    );
+                }
+
                 if (this.settings.IcareOutboundNotificationDate !== null) {
                     outbound = outbound.filter((item) => {
                         const created = dayjs(item.created, "YYYY-MM-DD HH:mm");

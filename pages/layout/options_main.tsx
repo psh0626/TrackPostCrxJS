@@ -25,6 +25,7 @@ const myTheme = createTheme({
         fontWeightMedium: 500,
     },
 });
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ko">

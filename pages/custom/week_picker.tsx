@@ -4,43 +4,45 @@ import { PickersDayProps, PickersDay, DateCalendar } from "@mui/x-date-pickers";
 import { Dayjs } from "dayjs";
 import React, { useEffect, useMemo, useState } from "react";
 
-interface CustomPickerDayProps extends PickersDayProps<Dayjs> {
+interface CustomPickerDayProps extends PickersDayProps {
     isSelected: boolean;
     isHovered: boolean;
 }
 
-const CustomPickersDay = styled(PickersDay, {
-    shouldForwardProp: (prop) => prop !== "isSelected" && prop !== "isHovered",
-})<CustomPickerDayProps>(({ theme, isSelected, isHovered, day }) => ({
-    borderRadius: 0,
-    ...(isSelected && {
-        backgroundColor: theme.palette.primary.main,
-        color: theme.palette.primary.contrastText,
-        "&:hover, &:focus": {
+const CustomPickersDay = styled(PickersDay)<CustomPickerDayProps>(
+    ({ theme, isSelected, isHovered, day }) => ({
+        borderRadius: 0,
+        ...(isSelected && {
             backgroundColor: theme.palette.primary.main,
-        },
-    }),
-    ...(isHovered && {
-        backgroundColor: theme.palette.primary.light,
-        "&:hover, &:focus": {
-            backgroundColor: theme.palette.primary.light,
-        },
-        ...theme.applyStyles("dark", {
-            backgroundColor: theme.palette.primary.dark,
+            color: theme.palette.primary.contrastText,
             "&:hover, &:focus": {
-                backgroundColor: theme.palette.primary.dark,
+                backgroundColor: theme.palette.primary.main,
             },
         }),
-    }),
-    ...(day.day() === 0 && {
-        borderTopLeftRadius: "50%",
-        borderBottomLeftRadius: "50%",
-    }),
-    ...(day.day() === 6 && {
-        borderTopRightRadius: "50%",
-        borderBottomRightRadius: "50%",
-    }),
-})) as React.ComponentType<CustomPickerDayProps>;
+        ...(isHovered && {
+            backgroundColor: theme.palette.primary.light,
+            "&:hover, &:focus": {
+                backgroundColor: theme.palette.primary.light,
+            },
+            ...(theme.palette.mode === "dark"
+                ? {
+                      backgroundColor: theme.palette.primary.dark,
+                      "&:hover, &:focus": {
+                          backgroundColor: theme.palette.primary.dark,
+                      },
+                  }
+                : {}),
+        }),
+        ...(day.day() === 0 && {
+            borderTopLeftRadius: "50%",
+            borderBottomLeftRadius: "50%",
+        }),
+        ...(day.day() === 6 && {
+            borderTopRightRadius: "50%",
+            borderBottomRightRadius: "50%",
+        }),
+    })
+);
 
 const isInSameWeek = (dayA: Dayjs, dayB: Dayjs | null | undefined) => {
     if (dayB == null) {
@@ -51,7 +53,7 @@ const isInSameWeek = (dayA: Dayjs, dayB: Dayjs | null | undefined) => {
 };
 
 function Day(
-    props: PickersDayProps<Dayjs> & {
+    props: PickersDayProps & {
         selectedDay?: Dayjs | null;
         hoveredDay?: Dayjs | null;
     }
@@ -101,15 +103,16 @@ export const WeekPicker: React.FC<WeekPickerProps> = ({
                     }
                 }}
                 showDaysOutsideCurrentMonth
-                slots={{ day: Day }}
-                slotProps={{
-                    day: (ownerState) =>
-                        ({
-                            selectedDay: targetState,
-                            hoveredDay,
-                            onPointerEnter: () => setHoveredDay(ownerState.day),
-                            onPointerLeave: () => setHoveredDay(null),
-                        }) as any,
+                slots={{
+                    day: (props) => (
+                        <Day
+                            {...props}
+                            selectedDay={targetState}
+                            hoveredDay={hoveredDay}
+                            onMouseEnter={() => setHoveredDay(props.day)}
+                            onMouseLeave={() => setHoveredDay(null)}
+                        />
+                    ),
                 }}
             />
             <Stack

@@ -21,7 +21,7 @@ void (async () => {
     //   console.log("CSRF Token not found, forged randomly", csrfToken);
     // }
 
-    window.addEventListener("load", main, false);
+    // window.addEventListener("load", main, false);
 
     chrome.runtime.onMessage.addListener((message: Msg) => {
         switch (message.Command) {

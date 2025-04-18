@@ -34,19 +34,22 @@ export const CountryInput = (prop: {
 
     return (
         <Stack
-            direction="row"
+            direction="column"
             justifyContent="space-evenly"
-            spacing={2}
-            marginX={2}
-            marginBottom={0}>
+            spacing={0}
+            paddingX={0.5}>
             <Typography
-                alignContent={"center"}
+                alignContent={"end"}
+                textAlign={"start"}
                 fontWeight={100}
-                sx={{ mt: 2 }}
+                fontSize={12}
+                sx={{ mt: 0 }}
                 variant="subtitle2">
                 {prop.text}
             </Typography>
             <Input
+                size="small"
+                sx={{marginBottom: 0}}
                 value={rawValue}
                 onChange={(e) => {
                     let changedValue = e.target.value.toUpperCase();
@@ -66,10 +69,7 @@ export const CountryInput = (prop: {
     );
 };
 export const StyledTextField = styled(TextField)({
-    "& .MuiInputLabel-root": {
-        right: 0,
-        textAlign: "center",
-    },
+    "& .MuiInputLabel-root": { right: 0, textAlign: "center" },
     "& .MuiInputLabel-shrink": {
         margin: "0 auto",
         position: "absolute",

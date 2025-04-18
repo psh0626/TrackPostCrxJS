@@ -76,6 +76,26 @@ export class GcssAPI {
             let outbound = unread.filter((item) => item.ItemId.slice(-2) === "KR");
             console.log("GCSS NOTIFICATIONS OUTBOUND: ", outbound);
 
+            if (this.settings.GcssOutboundNotificationCountries.length > 0) {
+                outbound = outbound.filter((item) =>
+                    this.IncludesOneOf(
+                        item.OriginCountry,
+                        this.settings.GcssOutboundNotificationCountries
+                    )
+                );
+                console.log("GCSS NOTIFICATIONS OUTBOUND COUNTRIES FILTERED: ", outbound);
+            }
+            if (this.settings.GcssOutboundNotificationExcludedCountries.length > 0) {
+                outbound = outbound.filter(
+                    (item) =>
+                        !this.IncludesOneOf(
+                            item.OriginCountry,
+                            this.settings.GcssOutboundNotificationExcludedCountries
+                        )
+                );
+                console.log("GCSS NOTIFICATIONS OUTBOUND EXCLUDED COUNTRIES FILTERED: ", outbound);
+            }
+
             if (this.settings.GcssOutboundNotificatioDate) {
                 outbound = outbound.filter((item) => {
                     const created = dayjs(item.NotificationCreationDate, "MM/dd").set(
