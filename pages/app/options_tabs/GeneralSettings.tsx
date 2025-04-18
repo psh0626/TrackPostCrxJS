@@ -328,7 +328,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                                 setState={setIcareNotiCountries}
                                             />
                                             <CountryInput
-                                                text="다음 국가는 제외"
+                                                text="다음 국가만 제외"
                                                 state={icareNotiExcCountries}
                                                 setState={setIcareNotiExcCountries}
                                             />
@@ -461,7 +461,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                                 setState={setGcssNotiCountries}
                                             />
                                             <CountryInput
-                                                text="다음 국가는 제외"
+                                                text="다음 국가만 제외"
                                                 state={gcssNotiExcCountries}
                                                 setState={setGcssNotiExcCountries}
                                             />

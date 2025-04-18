@@ -21,7 +21,8 @@ void (async () => {
     //   console.log("CSRF Token not found, forged randomly", csrfToken);
     // }
 
-    // window.addEventListener("load", main, false);
+    console.log("Content script loaded at: " + document.readyState);
+    await main();
 
     chrome.runtime.onMessage.addListener((message: Msg) => {
         switch (message.Command) {
@@ -47,9 +48,6 @@ void (async () => {
                 break;
         }
     });
-
-    console.log("Content script loaded at: " + document.readyState);
-    await main();
 
     async function main() {
         console.log("Content script loaded");

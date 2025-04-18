@@ -15,8 +15,9 @@
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
-  "plugins": ["@typescript-eslint", "react"],
+  "plugins": ["@typescript-eslint", "react", "eslint-plugin-react-compiler"], 
   "rules": {
+    "react-compiler/react-compiler": "error",
     "indent": ["error", 4, { "SwitchCase": 1 }],
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-floating-promises": "warn",
