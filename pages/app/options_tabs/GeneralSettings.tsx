@@ -119,19 +119,15 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
         curSet.IcareUnreadRequests = chkIcareReq;
         curSet.IcareUnreadNotificationInbound = chkIcareReq ? chkIcareNotiIn : false;
         curSet.IcareUnreadNotificationOutbound = chkIcareRep ? chkIcareNotiOut : false;
-        curSet.IcareOutboundNotificationCountries = chkIcareNotiOut ? icareNotiCountries : [];
-        curSet.IcareOutboundNotificationExcludedCountries = chkIcareNotiOut
-            ? icareNotiExcCountries
-            : [];
+        curSet.IcareOutboundNotificationCountries = icareNotiCountries;
+        curSet.IcareOutboundNotificationExcludedCountries = icareNotiExcCountries;
         curSet.IcareAuthor = icareAuthor;
         curSet.GcssUnreadRequests = chkGcssReq;
         curSet.GcssUnreadReplies = chkGcssRep;
         curSet.GcssUnreadNotificationInbound = chkGcssReq ? chkGcssNotiIn : false;
         curSet.GcssUnreadNotificationOutbound = chkGcssRep ? chkGcssNotiOut : false;
-        curSet.GcssOutboundNotificationCountries = chkGcssNotiOut ? gcssNotiCountries : [];
-        curSet.GcssOutboundNotificationExcludedCountries = chkIcareNotiOut
-            ? gcssNotiExcCountries
-            : [];
+        curSet.GcssOutboundNotificationCountries = gcssNotiCountries;
+        curSet.GcssOutboundNotificationExcludedCountries = gcssNotiExcCountries;
         curSet.GcssAuthor = gcssAuthor;
         curSet.GcssServiceTypes = gcssServiceTypes.sort((a, b) => {
             const serviceOrder = [
