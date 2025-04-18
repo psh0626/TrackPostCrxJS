@@ -1,9 +1,11 @@
 import { ExpandMore, OpenInBrowser } from "@mui/icons-material";
 import {
     Accordion,
+    AccordionDetails,
     AccordionSummary,
     Button,
     Card,
+    Input,
     List,
     ListItem,
     ListItemButton,
@@ -11,13 +13,11 @@ import {
     ListItemText,
     Stack,
     Typography,
-    AccordionDetails,
-    Input,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
-import { GcssItem, WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
 import React, { useEffect, useState } from "react";
+import { GcssItem, WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
 import { ServiceNames } from "../../src/background/GetUnreadReplies/GcssReplies";
 
 export const CountryInput = (prop: {
@@ -28,28 +28,25 @@ export const CountryInput = (prop: {
     const [rawValue, setRawValue] = useState("");
 
     useEffect(() => {
-        setRawValue(prop.state.join(","));
+        setRawValue(prop.state.join(", "));
         console.log("PROP LOADED");
     }, []);
 
     return (
-        <Stack
-            direction="column"
-            justifyContent="space-evenly"
-            spacing={0}
-            paddingX={0.5}>
+        <Stack direction="column" justifyContent="space-evenly" spacing={0} paddingX={0.5}>
             <Typography
                 alignContent={"end"}
                 textAlign={"start"}
                 fontWeight={100}
                 fontSize={12}
                 sx={{ mt: 0 }}
-                variant="subtitle2">
+                variant="subtitle2"
+            >
                 {prop.text}
             </Typography>
             <Input
                 size="small"
-                sx={{marginBottom: 0}}
+                sx={{ marginBottom: 0 }}
                 value={rawValue}
                 onChange={(e) => {
                     let changedValue = e.target.value.toUpperCase();
@@ -64,7 +61,8 @@ export const CountryInput = (prop: {
                         console.log("PROP split: ", countries);
                     }
                 }}
-                onBlur={() => setRawValue(prop.state.join(", "))}></Input>
+                onBlur={() => setRawValue(prop.state.join(", "))}
+            ></Input>
         </Stack>
     );
 };
@@ -93,12 +91,7 @@ interface InfoFieldType {
     binding_shrink: boolean;
     multiline?: boolean;
 }
-export const InfoTextField: React.FC<InfoFieldType> = ({
-    label_text,
-    binding_value,
-    binding_shrink,
-    multiline,
-}) => {
+export const InfoTextField: React.FC<InfoFieldType> = ({ label_text, binding_value, binding_shrink, multiline }) => {
     const TextFieldFocused = (e: React.FocusEvent<HTMLInputElement>) => {
         e.target.select();
         void navigator.clipboard.writeText(e.target.value);
@@ -132,8 +125,7 @@ export const MyList: React.FC<MyListProps> = ({
     serviceType = ServiceNames.EMS,
     isNotification = false,
 }) => {
-    let list_title =
-        type === "replies" ? `${service} - ${serviceType} 발송 회신` : `${service} - EMS 도착 문의`;
+    let list_title = type === "replies" ? `${service} - ${serviceType} 발송 회신` : `${service} - EMS 도착 문의`;
     if (isNotification) list_title = list_title.replace("회신", "통지").replace("문의", "통지");
     list_title += `: ${items.length}건`;
     if (author !== "") list_title += ` (${author})`;
@@ -197,13 +189,9 @@ export const MyList: React.FC<MyListProps> = ({
             }
         } else {
             if (type === "replies" && !isNotification) {
-                countries = reversed_items.map((item) =>
-                    (item as WorkflowItem).replying_op.substring(0, 2)
-                );
+                countries = reversed_items.map((item) => (item as WorkflowItem).replying_op.substring(0, 2));
             } else {
-                countries = reversed_items.map((item) =>
-                    (item as WorkflowItem).requesting_op.substring(0, 2)
-                );
+                countries = reversed_items.map((item) => (item as WorkflowItem).requesting_op.substring(0, 2));
             }
         }
         const str_ids = countries.join("\n");
@@ -215,7 +203,8 @@ export const MyList: React.FC<MyListProps> = ({
             <Accordion>
                 <AccordionSummary
                     expandIcon={<ExpandMore />}
-                    sx={{ "& .MuiAccordionSummary-content": { justifyContent: "center" } }}>
+                    sx={{ "& .MuiAccordionSummary-content": { justifyContent: "center" } }}
+                >
                     <Typography variant="body1" fontWeight="300" letterSpacing="-1px">
                         {list_title}
                     </Typography>
@@ -225,21 +214,24 @@ export const MyList: React.FC<MyListProps> = ({
                         variant="outlined"
                         size="small"
                         onClick={async () => CopyIDs()}
-                        sx={{ padding: "0.5 1 0.5 1" }}>
+                        sx={{ padding: "0.5 1 0.5 1" }}
+                    >
                         ID 복사
                     </Button>
                     <Button
                         variant="outlined"
                         size="small"
                         onClick={async () => CopyCountries()}
-                        sx={{ m: 1, padding: "0.5 1 0.5 1" }}>
+                        sx={{ m: 1, padding: "0.5 1 0.5 1" }}
+                    >
                         국가 복사
                     </Button>
                     <Button
                         variant="outlined"
                         size="small"
                         onClick={async () => await OpenAll()}
-                        sx={{ padding: "0.5 1 0.5 1" }}>
+                        sx={{ padding: "0.5 1 0.5 1" }}
+                    >
                         Open All
                     </Button>
                 </Stack>
@@ -270,21 +262,17 @@ export const MyList: React.FC<MyListProps> = ({
                                         onClick={async () => {
                                             if (service === "iCare") await OpenNewTab(item.link);
                                             else {
-                                                if (isNotification)
-                                                    await OpenNewTab(item.NotificationLink);
+                                                if (isNotification) await OpenNewTab(item.NotificationLink);
                                                 else await OpenNewTab(item.WorkflowLink);
                                             }
-                                        }}>
+                                        }}
+                                    >
                                         <ListItemIcon>
                                             <OpenInBrowser />
                                         </ListItemIcon>
                                         <ListItemText
                                             primary={primary_string}
-                                            secondary={
-                                                service === "iCare"
-                                                    ? `${item.tracking_id}`
-                                                    : `${item.ItemId}`
-                                            }
+                                            secondary={service === "iCare" ? `${item.tracking_id}` : `${item.ItemId}`}
                                         />
                                     </ListItemButton>
                                 </ListItem>

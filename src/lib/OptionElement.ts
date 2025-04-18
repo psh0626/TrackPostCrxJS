@@ -1,7 +1,6 @@
 import { Dayjs } from "dayjs";
 import { ServiceTypes } from "../background/GetUnreadReplies/GcssReplies";
 import { COMMANDS, Msg, SendRequest } from "./Message";
-
 export class PersonalRemark {
     Section: string;
     Id: number;
