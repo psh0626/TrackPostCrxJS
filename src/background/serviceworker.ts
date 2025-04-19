@@ -1,6 +1,7 @@
 import { COMMANDS, Msg } from "../lib/Message";
 import CreateNotification from "../lib/Notification";
 import PopupTrack from "../lib/PopupTrack";
+import "../lib/TimespanExtension";
 import ProcessMessage from "./MessageHub/MessageHub";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
@@ -18,13 +19,13 @@ main();
 
 function main() {
     let count = 0;
-    // GlobalTimer.Callback = async () => await APICalls(count++);
-    // GlobalTimer.Interval = 30 * 1000;
-    // GlobalTimer.Start();
+    const GLOBAL_INTERVAL = "30".toSeconds();
+    const MAIL_TAB_INTERVAL = "20".toMinutes();
 
     setInterval(() => {
-        APICalls(count++);
-    }, "30".toSeconds());
+        void APICalls(count++);
+    }, GLOBAL_INTERVAL);
+    console.log("Global Timer has been started. Interval: ", GLOBAL_INTERVAL);
 
     setInterval(() => {
         void (async () => {
@@ -37,7 +38,8 @@ function main() {
                 console.log("[Interval] Mail tab has been reloaded.", ext_mail_tab);
             }
         })();
-    }, "20".toMinutes());
+    }, MAIL_TAB_INTERVAL);
+    console.log("Mail tab reloading timer has been started. Interval: ", MAIL_TAB_INTERVAL);
 }
 async function APICalls(count: number, final = false) {
     const today = new Date();
@@ -184,31 +186,6 @@ chrome.notifications.onButtonClicked.addListener((noti_id) => {
     }
 });
 
-// Adding extension methods to the String prototype
-declare global {
-    interface String {
-        toMilliseconds(): number;
-        toSeconds(): number;
-        toMinutes(): number;
-        toHours(): number;
-    }
-}
-
-String.prototype.toMilliseconds = function (): number {
-    return parseFloat(this.toString());
-};
-
-String.prototype.toSeconds = function (): number {
-    return parseFloat(this.toString()) * 1000;
-};
-
-String.prototype.toMinutes = function (): number {
-    return parseFloat(this.toString()) * 60 * 1000;
-};
-
-String.prototype.toHours = function (): number {
-    return parseFloat(this.toString()) * 60 * 60 * 1000;
-};
 // chrome.tabs.onUpdated.addListener((tabId, changed, tab: chrome.tabs.Tab) => {
 //   if (tab.url == null) {
 //     return;
