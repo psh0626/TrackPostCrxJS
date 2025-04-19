@@ -41,10 +41,15 @@ export class IMICSettings {
         if (!work_tabs || !Array.isArray(work_tabs)) {
             return;
         }
-        work_tabs.forEach(async (tab, index) => {
-            if (tab.id) {
-                if (index === 0) chrome.tabs.reload(tab.id!);
-                else await chrome.tabs.sendMessage(tab.id, new Msg(COMMANDS.SETTINGS_CHANGED));
+        const [firstIcareTab] = work_tabs.filter((tab) => tab.url?.includes("icare.post"));
+        const [firstGcssTab] = work_tabs.filter((tab) => tab.url?.includes("gcss.ipc.be"));
+
+        if (firstIcareTab) void chrome.tabs.reload(firstIcareTab.id!);
+        if (firstGcssTab) void chrome.tabs.reload(firstGcssTab.id!);
+
+        work_tabs.forEach(async (tab) => {
+            if (tab.id && tab.id !== firstIcareTab?.id && tab.id !== firstGcssTab?.id) {
+                await chrome.tabs.sendMessage(tab.id, new Msg(COMMANDS.SETTINGS_CHANGED));
             }
         });
     }
