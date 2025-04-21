@@ -2,11 +2,19 @@ import { COMMANDS, Msg } from "../lib/Message";
 import "../lib/TimespanExtension";
 void (() => {
     
-
     const originalTitle = document.title;
-    const folderId = getFolderId();
+    
+    let folderId = getFolderId();
+    if (!folderId) {
+        console.log("Folder ID not found, will try again in 10 seconds");
+        setTimeout(() => {
+            folderId = getFolderId();
+            console.log("New Folder ID: ", folderId);
+        }, "10".toSeconds());
+    }
+    
+    const elmCount = getUnreadCountByElement2();
 
-    const elmCount = getUnreadCountByElement();
     updateTitle(elmCount);
 
     setInterval(() => {
@@ -17,6 +25,22 @@ void (() => {
         })();
     }, "3".toMinutes());
 
+    function getUnreadCountByElement2() {
+        
+        const unreadElm: HTMLLIElement | null | undefined = document.querySelector("tr.x-tree-action-id-1")?.querySelector("li.badge-m");
+        if (!unreadElm) {
+            console.log("Unread element not found");
+            return getUnreadCountByElement();
+        }
+
+        const unreadCount = unreadElm.innerText === "" ? 0 : parseInt(unreadElm.innerText);
+        if (isNaN(unreadCount)) {
+            console.log("Unread count is NaN", unreadCount);
+            return getUnreadCountByElement();
+        }
+
+        return unreadCount;
+    }
     function getUnreadCountByElement() {
         
         const unreadElm: HTMLLIElement | null = document.querySelector("li#r3-maill-unseen-cnt");
@@ -46,12 +70,12 @@ void (() => {
         const idElm = document.querySelector("tr.x-tree-action-id-1");
         if (!idElm) {
             console.log("ID element not found");
-            return;
+            return null;
         }
         const id = idElm.getAttribute("ext:tree-node-id");
         if (!id) {
             console.log("ID not found");
-            return;
+            return null;
         }
         return id;
     }
@@ -67,6 +91,16 @@ void (() => {
         return unreadCount;
     }
     async function fecthInbox() {
+        if (!folderId) {
+            console.log("Folder ID not found, trying to get it again");
+            folderId = getFolderId();
+            console.log("New Folder ID: ", folderId);
+            if (!folderId) {
+                console.log("Folder ID not found, fetch failed");
+                return;
+            }
+        }
+
         const request = await fetch("https://kmmbox.korea.kr/mail/list/mailbox.json", {
                         headers: {
                             "accept": "*/*",
@@ -92,7 +126,7 @@ void (() => {
 
     chrome.runtime.onMessage.addListener((message: Msg, sender, sendResponse) => {
         if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
-            const unreadCount = getUnreadCountByElement();
+            const unreadCount = getUnreadCountByElement2();
             updateTitle(unreadCount);
             console.log("Message Received. Title updated to: ", document.title);
         }
