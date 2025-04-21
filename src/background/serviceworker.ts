@@ -25,21 +25,27 @@ function main() {
     setInterval(() => {
         void APICalls(count++);
     }, GLOBAL_INTERVAL);
-    console.log("Global Timer has been started. Interval: ", GLOBAL_INTERVAL);
+    console.log(new Date().toLocaleTimeString() + " Global Timer has been started. Interval: ", GLOBAL_INTERVAL);
+
+    const mailTabFunc = (async () => {
+        const [ext_mail_tab] = await chrome.tabs.query({
+            url: "https://kmmbox.korea.kr/mail/*",
+            active: false,
+        });
+        if (ext_mail_tab) {
+            chrome.tabs.reload(ext_mail_tab.id!);
+            console.log(new Date().toLocaleTimeString() + " [Interval] Mail tab has been reloaded.", ext_mail_tab);
+            return;
+        }
+        console.log(new Date().toLocaleTimeString() + " [Interval] Inactive mail tab has not been found.");
+    });
+    
+    void mailTabFunc();
 
     setInterval(() => {
-        void (async () => {
-            const [ext_mail_tab] = await chrome.tabs.query({
-                url: "https://kmmbox.korea.kr/mail/*",
-                active: false,
-            });
-            if (ext_mail_tab) {
-                chrome.tabs.reload(ext_mail_tab.id!);
-                console.log("[Interval] Mail tab has been reloaded.", ext_mail_tab);
-            }
-        })();
+        void mailTabFunc();
     }, MAIL_TAB_INTERVAL);
-    console.log("Mail tab reloading timer has been started. Interval: ", MAIL_TAB_INTERVAL);
+    console.log(new Date().toLocaleTimeString() + " Mail tab reloading timer has been started. Interval: ", MAIL_TAB_INTERVAL);
 }
 async function APICalls(count: number, final = false) {
     const today = new Date();
@@ -86,6 +92,26 @@ async function APICalls(count: number, final = false) {
         }
     }
 }
+
+chrome.webRequest.onCompleted.addListener((details) => {
+    if (details.url.includes("https://kmmbox.korea.kr/history/maillist/") ||
+        details.url.includes("https://kmmbox.korea.kr/mail24read/") ||
+        details.url.includes("https://kmmbox.korea.kr/mail/list/mailbox.json")) {
+        console.log("API "+ details.method +" request completed: ", details.url);
+        void (async () => {
+            const mailTabs = await chrome.tabs.query({ url: "https://kmmbox.korea.kr/*" });
+            if (!mailTabs) {
+                console.log("No mail tabs found.");
+                return;
+            }
+            mailTabs.forEach((tab) => {
+                chrome.tabs.sendMessage(tab.id!, new Msg(COMMANDS.WEB_REQUEST_COMPLETE));
+                console.log("Message Sent to content script in: ", tab);
+            });
+        })();
+    }
+}, { urls: ["https://kmmbox.korea.kr/*"] });
+
 chrome.webRequest.onCompleted.addListener(
     function (details) {
         console.log("[onBeforeRequest]", details);
