@@ -93,10 +93,23 @@ async function APICalls(count: number, final = false) {
     }
 }
 
+let isTime = true;
 chrome.webRequest.onCompleted.addListener((details) => {
     if (details.url.includes("https://kmmbox.korea.kr/history/maillist/") ||
         details.url.includes("https://kmmbox.korea.kr/mail24read/") ||
-        details.url.includes("https://kmmbox.korea.kr/mail/list/mailbox.json")) {
+        details.url.includes("https://kmmbox.korea.kr/mail/list/mailbox.json") ||
+        details.url.includes("https://kmmbox.korea.kr/mail/manage/seen.json")) {
+        
+        if (!isTime) {
+            console.log("API "+ details.method +" request completed: ", details.url);
+            console.log("Cooltime is not yet reached. Waiting for 5 seconds..");
+            setTimeout(() => {
+                isTime = true;
+                console.log("Cooltime is over. Messages can be sent to content script now.");
+            }, 5000);
+            return;
+        }
+
         console.log("API "+ details.method +" request completed: ", details.url);
         void (async () => {
             const mailTabs = await chrome.tabs.query({ url: "https://kmmbox.korea.kr/*" });
@@ -108,15 +121,15 @@ chrome.webRequest.onCompleted.addListener((details) => {
                 chrome.tabs.sendMessage(tab.id!, new Msg(COMMANDS.WEB_REQUEST_COMPLETE));
                 console.log("Message Sent to content script in: ", tab);
             });
+            isTime = false;
         })();
     }
 }, { urls: ["https://kmmbox.korea.kr/*"] });
 
 chrome.webRequest.onCompleted.addListener(
     function (details) {
-        console.log("[onBeforeRequest]", details);
         if (details.url.includes("https://github.com/shawnpark9494/TrackPostExtZip/commits/main/")) {
-            console.log("[onBeforeRequest] github commits page requested, extention reload begins..", details);
+            console.log("[Git onCompleted] github commits page requested, extention reload begins..", details);
             chrome.runtime.reload();
         }
     },
