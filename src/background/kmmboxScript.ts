@@ -2,6 +2,7 @@ import { COMMANDS, Msg } from "../lib/Message";
 import "../lib/TimespanExtension";
 void (() => {
     
+    let isTime = true;
     const originalTitle = document.title;
     
     let folderId = getFolderId();
@@ -17,7 +18,6 @@ void (() => {
 
     updateTitle(elmCount);
 
-    let isTime = true;
     setInterval(() => {
         void (async () => {
             const unreadCount = await getUnreadCountByFetch();
