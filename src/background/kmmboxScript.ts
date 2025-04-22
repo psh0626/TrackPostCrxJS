@@ -17,10 +17,12 @@ void (() => {
 
     updateTitle(elmCount);
 
+    let isTime = true;
     setInterval(() => {
-        void (async () => {            
+        void (async () => {
             const unreadCount = await getUnreadCountByFetch();
             updateTitle(unreadCount);
+            isTime = false;
             console.log("Title updated to: ", document.title);
         })();
     }, "3".toMinutes());
@@ -58,6 +60,12 @@ void (() => {
         return unreadCount;
     }
     function updateTitle(unreadCount: number) {
+        if (!isTime) {
+            setTimeout(() => {
+                isTime = true;
+            }, "5".toSeconds());
+            return;
+        }
         if (unreadCount === 0) {
             document.title = `${originalTitle}`;
             console.log("Title updated to: ", originalTitle);
@@ -87,6 +95,18 @@ void (() => {
         }
 
         const unreadCount = fetch.resultUnseenMailCnt;
+        
+        if (unreadCount === 0) {
+            if (!document.querySelector('#r3-maill-unseen-cnt-td')?.classList.contains('x-hidden')) {
+                document.querySelector('#r3-maill-unseen-cnt-td')?.classList.add('x-hidden');
+            }
+        } else {
+            if (document.querySelector('#r3-maill-unseen-cnt-td')?.classList.contains('x-hidden')) {
+                document.querySelector('#r3-maill-unseen-cnt-td')?.classList.remove('x-hidden');
+            }
+            document.getElementById('r3-maill-unseen-cnt')!.innerHTML = unreadCount.toString();
+        }
+
         console.log("Unread count: ", unreadCount);
         return unreadCount;
     }
