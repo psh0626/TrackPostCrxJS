@@ -18,41 +18,51 @@ declare global {
     }
 }
 void (() => {
-    
     let isTime = true;
     const originalTitle = document.title;
-    
+
     let folderId = getFolderId();
     if (!folderId) {
-        console.log("Folder ID not found, will try again in 10 seconds");
+        console.log("Folder ID not found, will try again in 5 seconds");
         setTimeout(() => {
             folderId = getFolderId();
             console.log("New Folder ID: ", folderId);
-        }, "10".toSeconds());
+        }, "5".toSeconds());
     }
-    
+
     const elmCount = getUnreadCountByElement2();
 
     updateTitle(elmCount);
 
-    setInterval(() => {
-        void (async () => {
+    setLazyInterval(() => {
+        (async () => {
             const unreadCount = await getUnreadCountByFetch();
             updateTitle(unreadCount);
             isTime = false;
-            console.log("Title updated to: ", document.title);
+            console.log("[LazyInterval] item fetched", document.title);
         })();
     }, "3".toMinutes());
 
+    function setLazyInterval(callback: () => void, delay: number, immediate: boolean = false) {
+        if (immediate) {
+            callback();
+        }
+        setTimeout(() => {
+            callback();
+            setLazyInterval(callback, delay, false);
+        }, delay);
+    }
+
     function getUnreadCountByElement2() {
-        
-        const unreadElm: HTMLLIElement | null | undefined = document.querySelector("tr.x-tree-action-id-1")?.querySelector("li.badge-m");
+        const unreadElm: HTMLLIElement | null | undefined = document
+            .querySelector("tr.x-tree-action-id-1")
+            ?.querySelector("li.badge-m");
         if (!unreadElm) {
             console.log("Unread element not found");
             return getUnreadCountByElement();
         }
 
-        const unreadCount = unreadElm.innerText === "" ? 0 : parseInt(unreadElm.innerText);
+        const unreadCount = parseInt(unreadElm.innerText || "0");
         if (isNaN(unreadCount)) {
             console.log("Unread count is NaN", unreadCount);
             return getUnreadCountByElement();
@@ -61,7 +71,6 @@ void (() => {
         return unreadCount;
     }
     function getUnreadCountByElement() {
-        
         const unreadElm: HTMLLIElement | null = document.querySelector("li#r3-maill-unseen-cnt");
         if (!unreadElm) {
             console.log("Unread element not found");
@@ -80,16 +89,15 @@ void (() => {
         if (!isTime) {
             setTimeout(() => {
                 isTime = true;
-            }, "5".toSeconds());
+            }, "2".toSeconds());
             return;
         }
         if (unreadCount === 0) {
             document.title = `${originalTitle}`;
-            console.log("Title updated to: ", originalTitle);
         } else {
             document.title = `(${unreadCount}) ${originalTitle}`;
-            console.log("Title updated to: ", `(${unreadCount}) ${originalTitle}`);
         }
+        console.log("Title updated to: ", document.title);
     }
     function getFolderId() {
         const idElm = document.querySelector("tr.x-tree-action-id-1");
@@ -120,7 +128,7 @@ void (() => {
         window.Handler?.mailListGroupStore.reload(); // mail list update
     }
     async function getUnreadCountByFetch() {
-        const fetch = await fecthInbox();
+        const fetch = await fetchInbox();
         if (!fetch) {
             console.log("Fetch failed");
             return 0;
@@ -128,12 +136,28 @@ void (() => {
 
         const unreadCount = fetch.resultUnseenMailCnt;
 
+<<<<<<< HEAD
         refreshUI(unreadCount);
+=======
+        if (unreadCount === 0) {
+            if (!document.querySelector("#r3-maill-unseen-cnt-td")?.classList.contains("x-hidden")) {
+                document.querySelector("#r3-maill-unseen-cnt-td")?.classList.add("x-hidden");
+            }
+        } else {
+            if (document.querySelector("#r3-maill-unseen-cnt-td")?.classList.contains("x-hidden")) {
+                document.querySelector("#r3-maill-unseen-cnt-td")?.classList.remove("x-hidden");
+            }
+            const unreadCountElement = document.getElementById("r3-maill-unseen-cnt");
+            if (unreadCountElement) {
+                unreadCountElement.innerHTML = unreadCount.toString();
+            }
+        }
+>>>>>>> 7165db09e3a58928674e1357aa56ab6be550480c
 
         console.log("Unread count: ", unreadCount);
         return unreadCount;
     }
-    async function fecthInbox() {
+    async function fetchInbox() {
         if (!folderId) {
             console.log("Folder ID not found, trying to get it again");
             folderId = getFolderId();
@@ -145,15 +169,15 @@ void (() => {
         }
 
         const request = await fetch("https://kmmbox.korea.kr/mail/list/mailbox.json", {
-                        headers: {
-                            "accept": "*/*",
-                            "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-                            "powered-by": "Crinity",
-                        },
-                        body: `start=0&limit=20&sort=timeMillis&dir=DESC&method=mailbox&allFolder=false&folderUid=${folderId}&folderType=0&filterField=&filterKey=&searchField=&searchWord=&periodStart=0&periodLimit=0&searchContent=&searchAdrTo=&searchAdrFrom=&searchAttachName=&searchSubjectWord=`,
-                        method: "POST",
-                        mode: "cors",
-                        credentials: "include"
+            headers: {
+                accept: "*/*",
+                "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+                "powered-by": "Crinity",
+            },
+            body: `start=0&limit=20&sort=timeMillis&dir=DESC&method=mailbox&allFolder=false&folderUid=${folderId}&folderType=0&filterField=&filterKey=&searchField=&searchWord=&periodStart=0&periodLimit=0&searchContent=&searchAdrTo=&searchAdrFrom=&searchAttachName=&searchSubjectWord=`,
+            method: "POST",
+            mode: "cors",
+            credentials: "include",
         });
         if (!request.ok) {
             console.log("Request failed", request.statusText);
@@ -174,7 +198,7 @@ void (() => {
             console.log("Message Received. Title updated to: ", document.title);
         }
     });
-    interface mailUnit{        
+    interface mailUnit {
         folderUid: number;
         mailUid: number;
         isAnswered: number;
@@ -202,10 +226,9 @@ void (() => {
         koreaMail: string;
         displaySize: string;
     }
-    interface inboxFetchResult { 
+    interface inboxFetchResult {
         contents: mailUnit[];
         resultUnseenMailCnt: number;
         totalCount: number;
-
     }
 })();
