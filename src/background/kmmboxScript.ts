@@ -14,6 +14,9 @@ declare global {
                     updateMsgNum: (num: number) => void;
                 };
             };
+            root:{
+                reload: () => void;
+            }
         };
     }
 }
