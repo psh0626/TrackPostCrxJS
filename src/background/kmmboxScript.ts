@@ -136,23 +136,7 @@ void (() => {
 
         const unreadCount = fetch.resultUnseenMailCnt;
 
-<<<<<<< HEAD
         refreshUI(unreadCount);
-=======
-        if (unreadCount === 0) {
-            if (!document.querySelector("#r3-maill-unseen-cnt-td")?.classList.contains("x-hidden")) {
-                document.querySelector("#r3-maill-unseen-cnt-td")?.classList.add("x-hidden");
-            }
-        } else {
-            if (document.querySelector("#r3-maill-unseen-cnt-td")?.classList.contains("x-hidden")) {
-                document.querySelector("#r3-maill-unseen-cnt-td")?.classList.remove("x-hidden");
-            }
-            const unreadCountElement = document.getElementById("r3-maill-unseen-cnt");
-            if (unreadCountElement) {
-                unreadCountElement.innerHTML = unreadCount.toString();
-            }
-        }
->>>>>>> 7165db09e3a58928674e1357aa56ab6be550480c
 
         console.log("Unread count: ", unreadCount);
         return unreadCount;
