@@ -1,5 +1,22 @@
 import { COMMANDS, Msg } from "../lib/Message";
 import "../lib/TimespanExtension";
+
+declare global {
+    interface Window {
+        Handler?: {
+            mailListGroupStore: {
+                reload: () => void;
+            };
+        };
+        FolderTreePanel?: {
+            getNodeById: (id: string) => {
+                ui: {
+                    updateMsgNum: (num: number) => void;
+                };
+            };
+        };
+    }
+}
 void (() => {
     
     let isTime = true;
@@ -87,6 +104,21 @@ void (() => {
         }
         return id;
     }
+    function refreshUI(count: number) {
+        if (count === 0) {
+            if (!document.querySelector('#r3-maill-unseen-cnt-td')?.classList.contains('x-hidden')) {
+                document.querySelector('#r3-maill-unseen-cnt-td')?.classList.add('x-hidden');
+            }
+        } else {
+            if (document.querySelector('#r3-maill-unseen-cnt-td')?.classList.contains('x-hidden')) {
+                document.querySelector('#r3-maill-unseen-cnt-td')?.classList.remove('x-hidden');
+            }
+            document.getElementById('r3-maill-unseen-cnt')!.innerHTML = count.toString();
+        }
+
+        window.FolderTreePanel?.getNodeById(folderId!).ui.updateMsgNum(count); // folder badge update
+        window.Handler?.mailListGroupStore.reload(); // mail list update
+    }
     async function getUnreadCountByFetch() {
         const fetch = await fecthInbox();
         if (!fetch) {
@@ -95,17 +127,8 @@ void (() => {
         }
 
         const unreadCount = fetch.resultUnseenMailCnt;
-        
-        if (unreadCount === 0) {
-            if (!document.querySelector('#r3-maill-unseen-cnt-td')?.classList.contains('x-hidden')) {
-                document.querySelector('#r3-maill-unseen-cnt-td')?.classList.add('x-hidden');
-            }
-        } else {
-            if (document.querySelector('#r3-maill-unseen-cnt-td')?.classList.contains('x-hidden')) {
-                document.querySelector('#r3-maill-unseen-cnt-td')?.classList.remove('x-hidden');
-            }
-            document.getElementById('r3-maill-unseen-cnt')!.innerHTML = unreadCount.toString();
-        }
+
+        refreshUI(unreadCount);
 
         console.log("Unread count: ", unreadCount);
         return unreadCount;
