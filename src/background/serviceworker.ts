@@ -106,7 +106,7 @@ chrome.webRequest.onCompleted.addListener((details) => {
             setTimeout(() => {
                 isTime = true;
                 console.log("Cooltime is over. Messages can be sent to content script now.");
-            }, 5000);
+            }, 1000);
             return;
         }
 

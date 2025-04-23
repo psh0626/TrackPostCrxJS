@@ -67,7 +67,7 @@ void (() => {
             console.log("Unread count is NaN", unreadCount);
             return getUnreadCountByElement();
         }
-
+        refreshUI(unreadCount);
         return unreadCount;
     }
     function getUnreadCountByElement() {
@@ -83,6 +83,7 @@ void (() => {
             return 0;
         }
 
+        refreshUI(unreadCount);
         return unreadCount;
     }
     function updateTitle(unreadCount: number) {
@@ -138,7 +139,7 @@ void (() => {
 
         refreshUI(unreadCount);
 
-        console.log("Unread count: ", unreadCount);
+        console.log("Fetched unread count: ", unreadCount);
         return unreadCount;
     }
     async function fetchInbox() {
