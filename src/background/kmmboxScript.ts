@@ -168,11 +168,18 @@ void (() => {
         return result as inboxFetchResult;
     }
 
+    async function wait(ms: number) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
     chrome.runtime.onMessage.addListener((message: Msg, sender, sendResponse) => {
         if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
-            const unreadCount = getUnreadCountByElement2();
-            updateTitle(unreadCount);
-            console.log("Message Received. Title updated to: ", document.title);
+            (async () => {
+                await wait(800);
+                const unreadCount = getUnreadCountByElement2();
+                updateTitle(unreadCount);
+                console.log("Message Received. Title updated to: ", document.title);
+            })();
         }
     });
     interface mailUnit {
