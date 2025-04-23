@@ -18,6 +18,7 @@ declare global {
     }
 }
 void (() => {
+    let isFetching = false;
     const originalTitle = document.title;
 
     let folderId = getFolderId();
@@ -65,7 +66,7 @@ void (() => {
             console.log("Unread count is NaN", unreadCount);
             return getUnreadCountByElement();
         }
-        refreshUI(unreadCount);
+        
         return unreadCount;
     }
     function getUnreadCountByElement() {
@@ -80,7 +81,6 @@ void (() => {
             console.log("Unread count is NaN", unreadCount);
             return 0;
         }
-        refreshUI(unreadCount);
         return unreadCount;
     }
     function updateTitle(unreadCount: number) {
@@ -121,20 +121,27 @@ void (() => {
         window.Handler?.mailListGroupStore.reload(); // mail list update
     }
     async function getUnreadCountByFetch() {
-        const fetch = await fetchInbox();
-        if (!fetch) {
-            console.log("Fetch failed");
-            return 0;
+        isFetching = true;
+        try{
+            const fetch = await fetchInbox();
+            
+            if (!fetch) {
+                console.log("Fetch failed");
+                isFetching = false;
+                return 0;
+            }
+
+            const unreadCount = fetch.resultUnseenMailCnt;
+
+            console.log("Fetched unread count: ", unreadCount);
+            return unreadCount;
+
+        } finally {
+            isFetching = false;
         }
-
-        const unreadCount = fetch.resultUnseenMailCnt;
-
-        refreshUI(unreadCount);
-
-        console.log("Fetched unread count: ", unreadCount);
-        return unreadCount;
     }
     async function fetchInbox() {
+        
         if (!folderId) {
             console.log("Folder ID not found, trying to get it again");
             folderId = getFolderId();
@@ -144,6 +151,7 @@ void (() => {
                 return;
             }
         }
+
 
         const request = await fetch("https://kmmbox.korea.kr/mail/list/mailbox.json", {
             headers: {
@@ -174,6 +182,10 @@ void (() => {
 
     chrome.runtime.onMessage.addListener((message: Msg, sender, sendResponse) => {
         if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
+            if (isFetching) {
+                console.log("Request already in progress, ignoring message");
+                return;
+            }
             (async () => {
                 await wait(800);
                 const unreadCount = getUnreadCountByElement2();
