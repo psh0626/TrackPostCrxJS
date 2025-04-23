@@ -102,11 +102,7 @@ chrome.webRequest.onCompleted.addListener((details) => {
         
         if (!isTime) {
             console.log("API "+ details.method +" request completed: ", details.url);
-            console.log("Cooltime is not yet reached. Waiting for 5 seconds..");
-            setTimeout(() => {
-                isTime = true;
-                console.log("Cooltime is over. Messages can be sent to content script now.");
-            }, 1000);
+            console.log("Cooltime is not yet reached.");
             return;
         }
 
@@ -122,6 +118,10 @@ chrome.webRequest.onCompleted.addListener((details) => {
                 console.log("Message Sent to content script in: ", tab);
             });
             isTime = false;
+            setTimeout(() => {
+                isTime = true;
+                console.log("Cooltime is over. Messages can be sent to content script now.");
+            }, 1000);
         })();
     }
 }, { urls: ["https://kmmbox.korea.kr/*"] });

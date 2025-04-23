@@ -18,7 +18,6 @@ declare global {
     }
 }
 void (() => {
-    let isTime = true;
     const originalTitle = document.title;
 
     let folderId = getFolderId();
@@ -38,7 +37,6 @@ void (() => {
         (async () => {
             const unreadCount = await getUnreadCountByFetch();
             updateTitle(unreadCount);
-            isTime = false;
             console.log("[LazyInterval] item fetched", document.title);
         })();
     }, "3".toMinutes());
@@ -87,12 +85,6 @@ void (() => {
         return unreadCount;
     }
     function updateTitle(unreadCount: number) {
-        if (!isTime) {
-            setTimeout(() => {
-                isTime = true;
-            }, "2".toSeconds());
-            return;
-        }
         if (unreadCount === 0) {
             document.title = `${originalTitle}`;
         } else {
