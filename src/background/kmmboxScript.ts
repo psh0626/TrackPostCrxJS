@@ -1,25 +1,6 @@
 import { COMMANDS, Msg } from "../lib/Message";
 import "../lib/TimespanExtension";
 
-declare global {
-    interface Window {
-        Handler?: {
-            mailListGroupStore: {
-                reload: () => void;
-            };
-        };
-        FolderTreePanel?: {
-            getNodeById: (id: string) => {
-                ui: {
-                    updateMsgNum: (num: number) => void;
-                };
-            };
-            root:{
-                reload: () => void;
-            }
-        };
-    }
-}
 void (() => {
     let isFetching = false;
     const originalTitle = document.title;
