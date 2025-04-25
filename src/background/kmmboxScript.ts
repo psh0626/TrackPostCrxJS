@@ -33,6 +33,7 @@ void (() => {
         }, "5".toSeconds());
     }
 
+
     const elmCount = getUnreadCountByElement2();
 
     updateTitle(elmCount);
@@ -108,6 +109,17 @@ void (() => {
         }
         return id;
     }
+    function executeWindowScript(folderId: string, count: number) {        
+        const script = document.createElement('script');
+        script.textContent = `
+            (()=> {
+                window.FolderTreePanel.getNodeById(${folderId}).ui.updateMsgNum(${count});
+                window.Handler.mailListGroupStore.reload();
+            })();
+        `;
+        (document.head || document.documentElement).appendChild(script);
+        script.remove();
+    }
     function refreshUI(count: number) {
         if (count === 0) {
             if (!document.querySelector('#r3-maill-unseen-cnt-td')?.classList.contains('x-hidden')) {
@@ -119,9 +131,7 @@ void (() => {
             }
             document.getElementById('r3-maill-unseen-cnt')!.innerHTML = count.toString();
         }
-
-        window.FolderTreePanel?.getNodeById(folderId!).ui.updateMsgNum(count); // folder badge update
-        window.Handler?.mailListGroupStore.reload(); // mail list update
+        executeWindowScript(folderId!, count);
     }
     async function getUnreadCountByFetch() {
         isFetching = true;
