@@ -147,8 +147,9 @@ export const MyList: React.FC<MyListProps> = ({
         // const reversed_items = [...items].reverse();
         const tab_promises = items.map(async (wf) => {
             let tab: chrome.tabs.Tab;
-            if (service === "GCSS") tab = await OpenNewTab((wf as GcssItem).WorkflowLink);
-            else tab = await OpenNewTab(wf.link);
+            if (service === "GCSS") {
+                tab = isNotification ? await OpenNewTab(wf.NotificationLink): await OpenNewTab(wf.WorkflowLink);
+            } else tab = await OpenNewTab(wf.link);
 
             if (tab && tab.id) {
                 console.log("tab id push to tabids: ", tab.id);
