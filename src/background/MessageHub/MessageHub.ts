@@ -163,11 +163,13 @@ export default function ProcessMessage(
                 injectImmediately: true,
                 target: { tabId: sender.tab!.id! },
                 world: "MAIN",
-                func: (folderId: string, unreadCount: number) => {
-                    window.FolderTreePanel.getNodeById(folderId).ui.updateMsgNum(unreadCount);
-                    window.Handler.mailListGroupStore.reload();
+                func: (folderId: string, unreadCount: number, lastCount: number) => {
+                    if (unreadCount !== lastCount) {
+                        window.FolderTreePanel.getNodeById(folderId).ui.updateMsgNum(unreadCount);
+                        if (unreadCount !== 0) window.Handler.mailListGroupStore.reload();
+                    }
                 },
-                args: [Message.Param.fId, Message.Param.count],
+                args: [Message.Param.fId, Message.Param.count, Message.Param.lastCount],
             });
             return false;
     }

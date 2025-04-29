@@ -37,6 +37,14 @@ void (() => {
         }, delay);
     }
 
+    function getCurrentNumber() {
+        const currentTitle = document.title;
+        const match = currentTitle.match(/\((\d+)\)/);
+        if (match) {
+            return parseInt(match[1]);
+        }
+        return 0;
+    }
     function getUnreadCountByElement2() {
         const unreadElm: HTMLLIElement | null | undefined = document
             .querySelector("tr.x-tree-action-id-1")
@@ -91,7 +99,7 @@ void (() => {
         return id;
     }
     function executeWindowScript(folderId: string, count: number) {
-        chrome.runtime.sendMessage(new Msg(COMMANDS.KMMBOX_REFRESH, {fId: folderId, count: count}) );
+        chrome.runtime.sendMessage(new Msg(COMMANDS.KMMBOX_REFRESH, {fId: folderId, count: count, lastCount: getCurrentNumber()}) );
     }
     function refreshUI(count: number) {
         if (count === 0) {
