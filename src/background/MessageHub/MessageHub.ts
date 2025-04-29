@@ -1,8 +1,25 @@
 import { COMMANDS, Msg } from "../../lib/Message";
+import CreateNotification from "../../lib/Notification";
 import { PostAPI } from "../../lib/PostUtil";
 import { GcssItem, WorkflowItem } from "../GetUnreadReplies/DataWrapper";
 import { PopupTracker } from "../serviceworker";
-import CreateNotification from "../../lib/Notification";
+
+declare global {
+    interface Window {
+        FolderTreePanel: {
+            getNodeById: (id: string) => {
+                ui: {
+                    updateMsgNum: (count: number) => void;
+                };
+            };
+        };
+        Handler: {
+            mailListGroupStore: {
+                reload: () => void;
+            };
+        };
+    }
+}
 
 export default function ProcessMessage(
     Message: Msg,
@@ -10,13 +27,7 @@ export default function ProcessMessage(
     SendResponse: (response?: unknown) => void
 ) {
     const today = new Date();
-    console.log(
-        today.toLocaleString(),
-        "\nmessage received from sender: ",
-        sender.tab?.url,
-        "\ncontent: ",
-        Message
-    );
+    console.log(today.toLocaleString(), "\nmessage received from sender: ", sender.tab?.url, "\ncontent: ", Message);
     type FetchError = {
         ICARE: boolean;
         GCSS: boolean;
@@ -52,12 +63,10 @@ export default function ProcessMessage(
 
             void (async () => {
                 let replies;
-                if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES)
-                    replies = Message.Param as WorkflowItem[];
+                if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES) replies = Message.Param as WorkflowItem[];
                 else replies = Message.Param as GcssItem[];
 
-                const err: FetchError = (await chrome.storage.session.get("FETCH_ERROR"))
-                    .FETCH_ERROR;
+                const err: FetchError = (await chrome.storage.session.get("FETCH_ERROR")).FETCH_ERROR;
 
                 if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES) {
                     if (err) err.ICARE = false;
@@ -149,5 +158,16 @@ export default function ProcessMessage(
                 SendResponse(dict.IMICSettings);
             })();
             return true;
+        case COMMANDS.KMMBOX_REFRESH:
+            chrome.scripting.executeScript({
+                injectImmediately: true,
+                target: { tabId: sender.tab!.id! },
+                world: "MAIN",
+                func: () => {
+                    window.FolderTreePanel.getNodeById(Message.Param.fId).ui.updateMsgNum(Message.Param.count);
+                    window.Handler.mailListGroupStore.reload();
+                },
+            });
+            return false;
     }
 }

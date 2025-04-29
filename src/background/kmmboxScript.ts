@@ -90,16 +90,8 @@ void (() => {
         }
         return id;
     }
-    function executeWindowScript(folderId: string, count: number) {        
-        const script = document.createElement('script');
-        script.textContent = `
-            (()=> {
-                window.FolderTreePanel.getNodeById(${folderId}).ui.updateMsgNum(${count});
-                window.Handler.mailListGroupStore.reload();
-            })();
-        `;
-        (document.head || document.documentElement).appendChild(script);
-        script.remove();
+    function executeWindowScript(folderId: string, count: number) {
+        chrome.runtime.sendMessage(new Msg(COMMANDS.KMMBOX_REFRESH, {fId: folderId, count: count}) );
     }
     function refreshUI(count: number) {
         if (count === 0) {
