@@ -163,10 +163,11 @@ export default function ProcessMessage(
                 injectImmediately: true,
                 target: { tabId: sender.tab!.id! },
                 world: "MAIN",
-                func: () => {
-                    window.FolderTreePanel.getNodeById(Message.Param.fId).ui.updateMsgNum(Message.Param.count);
+                func: (folderId: string, unreadCount: number) => {
+                    window.FolderTreePanel.getNodeById(folderId).ui.updateMsgNum(unreadCount);
                     window.Handler.mailListGroupStore.reload();
                 },
+                args: [Message.Param.fId, Message.Param.count],
             });
             return false;
     }
