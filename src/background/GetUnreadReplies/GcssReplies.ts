@@ -1,8 +1,7 @@
-import { create } from "@mui/material/styles/createTransitions";
+import dayjs from "dayjs";
 import { COMMANDS, Msg } from "../../lib/Message";
 import { IMICSettings } from "../../lib/OptionElement";
 import { GcssItem, GcssRawItem, TrimObject } from "./DataWrapper";
-import dayjs from "dayjs";
 
 export enum ServiceTypes {
     EMS = "EMS",
@@ -41,10 +40,7 @@ export class GcssAPI {
         });
     }
     private static async FetchNotifications() {
-        if (
-            !this.settings.GcssUnreadNotificationInbound &&
-            !this.settings.GcssUnreadNotificationOutbound
-        ) {
+        if (!this.settings.GcssUnreadNotificationInbound && !this.settings.GcssUnreadNotificationOutbound) {
             return;
         }
 
@@ -61,8 +57,7 @@ export class GcssAPI {
         const unread = trimmed
             .filter(
                 (item) =>
-                    item.messageType === "NQ" &&
-                    (item.readStatus === "UNREAD" || item.readStatus === "MARKED_UNREAD")
+                    item.messageType === "NQ" && (item.readStatus === "UNREAD" || item.readStatus === "MARKED_UNREAD")
             )
             .map((item) => GcssItem.FromRawItem(item));
         console.log("GCSS NOTIFICATIONS FILTERED: ", unread);
@@ -78,38 +73,27 @@ export class GcssAPI {
 
             if (this.settings.GcssOutboundNotificationCountries.length > 0) {
                 outbound = outbound.filter((item) =>
-                    this.IncludesOneOf(
-                        item.OriginCountry,
-                        this.settings.GcssOutboundNotificationCountries
-                    )
+                    this.IncludesOneOf(item.OriginCountry, this.settings.GcssOutboundNotificationCountries)
                 );
                 console.log("GCSS NOTIFICATIONS OUTBOUND COUNTRIES FILTERED: ", outbound);
             }
             if (this.settings.GcssOutboundNotificationExcludedCountries.length > 0) {
                 outbound = outbound.filter(
                     (item) =>
-                        !this.IncludesOneOf(
-                            item.OriginCountry,
-                            this.settings.GcssOutboundNotificationExcludedCountries
-                        )
+                        !this.IncludesOneOf(item.OriginCountry, this.settings.GcssOutboundNotificationExcludedCountries)
                 );
                 console.log("GCSS NOTIFICATIONS OUTBOUND EXCLUDED COUNTRIES FILTERED: ", outbound);
             }
 
-            if (this.settings.GcssOutboundNotificatioDate) {
+            if (this.settings.GcssOutboundNotificationDate) {
                 outbound = outbound.filter((item) => {
-                    const created = dayjs(item.NotificationCreationDate, "MM/dd").set(
-                        "year",
-                        dayjs().year()
-                    );
-                    return created.isSame(dayjs(this.settings.GcssOutboundNotificatioDate), "week");
+                    const created = dayjs(item.NotificationCreationDate, "MM/dd").set("year", dayjs().year());
+                    return created.isSame(dayjs(this.settings.GcssOutboundNotificationDate), "week");
                 });
                 console.log("GCSS NOTIFICATIONS OUTBOUND DATE FILTERED: ", outbound);
             }
 
-            await chrome.runtime.sendMessage(
-                new Msg(COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND, outbound)
-            );
+            await chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND, outbound));
         }
     }
     private static async FetchRequests() {

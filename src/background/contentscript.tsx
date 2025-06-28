@@ -150,7 +150,7 @@ void (async () => {
                 port.onMessage.addListener((message: Msg) => {
                     console.log("message received: ", message);
                     if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
-                        setTimeout(() => InjectUtil.InjectIcarePersonalRemarks(remark_type), 600);
+                        setTimeout(() => InjectUtil.InjectIcarePersonalRemarks(remark_type), 400);
                         // port.disconnect();
                     }
                 });

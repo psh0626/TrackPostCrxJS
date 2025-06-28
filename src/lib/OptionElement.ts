@@ -27,7 +27,7 @@ export class IMICSettings {
     GcssUnreadRequests = false;
     GcssUnreadNotificationInbound = false;
     GcssUnreadNotificationOutbound = false;
-    GcssOutboundNotificatioDate: string | null = null;
+    GcssOutboundNotificationDate: string | null = null;
     GcssOutboundNotificationCountries: string[] = [];
     GcssOutboundNotificationExcludedCountries: string[] = [];
     GcssAuthor: string[] = [];
@@ -53,16 +53,21 @@ export class IMICSettings {
             }
         });
     }
-    async SaveOptions() {
+    async SaveOptions(immediately: boolean = true) {
+        const saveFunc = async () => {
+            await chrome.storage.local.set({ IMICSettings: this });
+            console.trace("Options Saved as ", this);
+            await this.NotifyTabs();
+            IMICSettings.SavingFinished = null;
+        };
+        if (immediately) {
+            await saveFunc();
+            return;
+        }
         if (IMICSettings.SavingFinished) clearTimeout(IMICSettings.SavingFinished);
         IMICSettings.SavingFinished = setTimeout(() => {
-            void (async () => {
-                await chrome.storage.local.set({ IMICSettings: this });
-                console.log("Options Saved as ", this);
-                await this.NotifyTabs();
-                IMICSettings.SavingFinished = null;
-            })();
-        }, 2000);
+            void saveFunc();
+        }, 1000);
     }
     async LoadOptions() {
         const newThis = await chrome.storage.local.get("IMICSettings");

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
 import { Add, ArrowDownward, ArrowUpward } from "@mui/icons-material";
 import {
+    Button,
     Card,
     CardActionArea,
     CardContent,
@@ -10,14 +10,14 @@ import {
     InputLabel,
     MenuItem,
     Select,
+    SelectChangeEvent,
     Stack,
     Typography,
-    Button,
-    SelectChangeEvent,
 } from "@mui/material";
+import React, { useEffect, useRef, useState } from "react";
 
-import { RemarkDialog } from "./PRDialog";
 import { IMICSettings, PersonalRemark } from "../../../src/lib/OptionElement";
+import { RemarkDialog } from "./PRDialog";
 
 interface PersonalRemarksProps {
     settings: React.MutableRefObject<IMICSettings>;
@@ -34,7 +34,9 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
     const initialized = useRef(false);
 
     useEffect(() => {
-        if (!initialized.current) setPrList(settings.current.PersonalRemarks);
+        if (!initialized.current) {
+            setPrList(settings.current.PersonalRemarks);
+        }
     }, []);
 
     useEffect(() => {
@@ -58,9 +60,7 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
             alert("빈 칸은 저장할 수 없습니다.");
             return;
         }
-        setPrList((prev) =>
-            prev.concat(new PersonalRemark(dlTitle, dlContent, prList.length + 1, slSelected))
-        );
+        setPrList((prev) => prev.concat(new PersonalRemark(dlTitle, dlContent, prList.length + 1, slSelected)));
         onDlClosed();
     }
 
@@ -81,9 +81,7 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
 
     async function onDlEdited() {
         setPrList((prev) => prev.filter((entry) => entry.Id !== dlCurrentId));
-        setPrList((prev) =>
-            prev.concat(new PersonalRemark(dlTitle, dlContent, dlCurrentId, slSelected))
-        );
+        setPrList((prev) => prev.concat(new PersonalRemark(dlTitle, dlContent, dlCurrentId, slSelected)));
         SortPrList();
         await SaveSettings();
         onDlCancelled();
@@ -91,10 +89,7 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
 
     function RenumberPrList() {
         setPrList((prev) =>
-            prev.map(
-                (item, index) =>
-                    new PersonalRemark(item.Title, item.Content, index + 1, item.Section)
-            )
+            prev.map((item, index) => new PersonalRemark(item.Title, item.Content, index + 1, item.Section))
         );
     }
 
@@ -145,8 +140,8 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
     }
 
     async function SaveSettings() {
-        settings.current.PersonalRemarks = prList;
-        await settings.current.SaveOptions();
+        Object.assign(settings.current, prList);
+        await settings.current.SaveOptions(false);
     }
 
     function onSelectChanged(event: SelectChangeEvent) {
@@ -169,16 +164,13 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
                     sx={{ mb: 3 }}
                     onClick={() => {
                         setDlOpened(true);
-                    }}>
+                    }}
+                >
                     <Add />
                 </Fab>
                 <FormControl variant="outlined" fullWidth size="small">
                     <InputLabel>Select Section</InputLabel>
-                    <Select
-                        defaultValue="REQ"
-                        label="Select Selection"
-                        value={slSelected}
-                        onChange={onSelectChanged}>
+                    <Select defaultValue="REQ" label="Select Selection" value={slSelected} onChange={onSelectChanged}>
                         <MenuItem value="REQ">Request Remarks</MenuItem>
                         <MenuItem value="REP">Reply Remarks</MenuItem>
                         <MenuItem value="SUM">Update Remarks</MenuItem>
@@ -196,10 +188,7 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
                                     <Stack direction="row">
                                         <CardActionArea onClick={() => onCardClicked(pr)}>
                                             <CardContent sx={{ minHeight: 120, width: 430 }}>
-                                                <Typography
-                                                    gutterBottom
-                                                    variant="h6"
-                                                    component="div">
+                                                <Typography gutterBottom variant="h6" component="div">
                                                     {pr.Title}
                                                 </Typography>
                                                 <Divider sx={{ mt: 1, mb: 1 }} />
@@ -211,7 +200,8 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
                                                         wordBreak: "break-word",
                                                     }}
                                                     height={100}
-                                                    overflow="auto">
+                                                    overflow="auto"
+                                                >
                                                     {pr.Content}
                                                 </Typography>
                                             </CardContent>
@@ -227,7 +217,8 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
                                                     minWidth: 0,
                                                     padding: "12px",
                                                 }}
-                                                onClick={() => MoveUp(pr.Id)}>
+                                                onClick={() => MoveUp(pr.Id)}
+                                            >
                                                 <ArrowUpward />
                                             </Button>
                                             <Button
@@ -239,7 +230,8 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
                                                     minWidth: 0,
                                                     padding: "12px",
                                                 }}
-                                                onClick={() => MoveDown(pr.Id)}>
+                                                onClick={() => MoveDown(pr.Id)}
+                                            >
                                                 <ArrowDownward />
                                             </Button>
                                         </Stack>

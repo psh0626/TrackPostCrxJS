@@ -82,19 +82,12 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             setSettingsState(newSettings);
             setIcareAuthorRaw(curSet.IcareAuthor.join(", "));
             setGcssAuthorRaw(curSet.GcssAuthor.join(", "));
-            initialized.current = true;
         }
     }, []);
 
-    useEffect(() => {
-        if (initialized.current) {
-            void SaveSettings();
-        } else initialized.current = true;
-    }, [settingsState]);
-
-    async function SaveSettings() {
+    async function SaveSettings(immediately = true) {
         Object.assign(settings.current, settingsState);
-        await settings.current.SaveOptions();
+        await settings.current.SaveOptions(immediately);
     }
 
     function updateSetting<K extends keyof IMICSettings>(key: K, value: IMICSettings[K]) {
@@ -102,6 +95,26 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             const updated = new IMICSettings();
             Object.assign(updated, prev);
             updated[key] = value;
+
+            if (initialized.current) {
+                switch (key) {
+                    case "IcareOutboundNotificationDate":
+                    case "GcssOutboundNotificationDate":
+                        break;
+                    case "IcareAuthor":
+                    case "GcssAuthor":
+                    case "IcareOutboundNotificationCountries":
+                    case "GcssOutboundNotificationCountries":
+                    case "IcareOutboundNotificationExcludedCountries":
+                    case "GcssOutboundNotificationExcludedCountries":
+                        void SaveSettings(false);
+                        break;
+                    default:
+                        void SaveSettings(true);
+                        break;
+                }
+            } else initialized.current = true;
+
             return updated;
         });
     }
@@ -147,7 +160,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
     async function ResetWeekpicker(forIcare = true, closePicker = true) {
         if (closePicker) setWeekpickerEnabled(false);
         if (forIcare) updateSetting("IcareOutboundNotificationDate", null);
-        else updateSetting("GcssOutboundNotificatioDate", null);
+        else updateSetting("GcssOutboundNotificationDate", null);
         await SaveSettings();
     }
     async function SaveWeekpicker() {
@@ -167,14 +180,14 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                         ? settingsState.IcareOutboundNotificationDate
                             ? dayjs(settingsState.IcareOutboundNotificationDate)
                             : null
-                        : settingsState.GcssOutboundNotificatioDate
-                          ? dayjs(settingsState.GcssOutboundNotificatioDate)
+                        : settingsState.GcssOutboundNotificationDate
+                          ? dayjs(settingsState.GcssOutboundNotificationDate)
                           : null
                 }
                 saveTo={
                     weekpickerForIcare
                         ? (d) => updateSetting("IcareOutboundNotificationDate", d ? d.toString() : null)
-                        : (d) => updateSetting("GcssOutboundNotificatioDate", d ? d.toString() : null)
+                        : (d) => updateSetting("GcssOutboundNotificationDate", d ? d.toString() : null)
                 }
                 onSave={SaveWeekpicker}
                 onCancel={() => setWeekpickerEnabled(false)}
