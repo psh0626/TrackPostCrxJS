@@ -1,25 +1,6 @@
 import { COMMANDS, Msg } from "../lib/Message";
 import "../lib/TimespanExtension";
 
-declare global {
-    interface Window {
-        Handler?: {
-            mailListGroupStore: {
-                reload: () => void;
-            };
-        };
-        FolderTreePanel?: {
-            getNodeById: (id: string) => {
-                ui: {
-                    updateMsgNum: (num: number) => void;
-                };
-            };
-            root:{
-                reload: () => void;
-            }
-        };
-    }
-}
 void (() => {
     let isFetching = false;
     const originalTitle = document.title;
@@ -32,6 +13,7 @@ void (() => {
             console.log("New Folder ID: ", folderId);
         }, "5".toSeconds());
     }
+
 
     const elmCount = getUnreadCountByElement2();
 
@@ -55,6 +37,14 @@ void (() => {
         }, delay);
     }
 
+    function getCurrentNumber() {
+        const currentTitle = document.title;
+        const match = currentTitle.match(/\((\d+)\)/);
+        if (match) {
+            return parseInt(match[1]);
+        }
+        return 0;
+    }
     function getUnreadCountByElement2() {
         const unreadElm: HTMLLIElement | null | undefined = document
             .querySelector("tr.x-tree-action-id-1")
@@ -108,6 +98,9 @@ void (() => {
         }
         return id;
     }
+    function executeWindowScript(folderId: string, count: number) {
+        chrome.runtime.sendMessage(new Msg(COMMANDS.KMMBOX_REFRESH, {fId: folderId, count: count, lastCount: getCurrentNumber()}) );
+    }
     function refreshUI(count: number) {
         if (count === 0) {
             if (!document.querySelector('#r3-maill-unseen-cnt-td')?.classList.contains('x-hidden')) {
@@ -119,9 +112,7 @@ void (() => {
             }
             document.getElementById('r3-maill-unseen-cnt')!.innerHTML = count.toString();
         }
-
-        window.FolderTreePanel?.getNodeById(folderId!).ui.updateMsgNum(count); // folder badge update
-        window.Handler?.mailListGroupStore.reload(); // mail list update
+        executeWindowScript(folderId!, count);
     }
     async function getUnreadCountByFetch() {
         isFetching = true;
