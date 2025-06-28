@@ -1,9 +1,9 @@
 import { COMMANDS, Msg, SendRequest } from "../lib/Message";
-import { PostElement } from "../lib/PostUtil";
-import InjectUtil from "./injectDOM/InjectUtil";
-import { IcareAPI2 } from "./GetUnreadReplies/IcareReplies";
-import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
 import { IMICSettings } from "../lib/OptionElement";
+import { PostElement } from "../lib/PostUtil";
+import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
+import { IcareAPI2 } from "./GetUnreadReplies/IcareReplies";
+import InjectUtil from "./injectDOM/InjectUtil";
 
 void (async () => {
     const settings = new IMICSettings();
@@ -38,12 +38,7 @@ void (async () => {
                     await settings.RequestLoad();
                     GcssAPI.settings = settings;
                     IcareAPI2.settings = settings;
-                    console.log(
-                        "Settings Reloaded",
-                        settings,
-                        GcssAPI.settings,
-                        IcareAPI2.settings
-                    );
+                    console.log("Settings Reloaded", settings, GcssAPI.settings, IcareAPI2.settings);
                 })();
                 break;
         }
@@ -67,18 +62,12 @@ void (async () => {
 
             if (settings.GcssUnreadReplies) await GcssAPI.FetchReplies(false);
 
-            if (
-                currentURL.pathname.includes("/product-view") ||
-                currentURL.pathname.includes("/singleItemTracking")
-            ) {
+            if (currentURL.pathname.includes("/product-view") || currentURL.pathname.includes("/singleItemTracking")) {
                 setTimeout(() => {
                     InjectUtil.InjectGcssIdSearchInput();
                 }, 100);
             }
-            if (
-                currentURL.pathname.includes("/create/") ||
-                currentURL.pathname.includes("/reactivate/")
-            ) {
+            if (currentURL.pathname.includes("/create/") || currentURL.pathname.includes("/reactivate/")) {
                 const item_id: string = document.querySelector(".value")?.textContent?.trim() ?? "";
                 if (!item_id) {
                     console.log("Cannot find item_id in document classname 'value'");
@@ -126,16 +115,19 @@ void (async () => {
 
                 const post_element = await FindPostElement(item_id!);
 
-                if (!post_element.ItemTracked) {
-                    console.log(`Item does not exist ${item_id}`);
-                    return;
-                }
                 console.log(post_element);
                 const port = chrome.runtime.connect();
                 port.onMessage.addListener((message: Msg) => {
                     console.log("message received: ", message);
                     if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
-                        setTimeout(() => InjectIcare(post_element), 600);
+                        setTimeout(() => {
+                            InjectUtil.InjectIcarePersonalRemarks();
+                            if (!post_element.ItemTracked) {
+                                console.log(`Item does not exist ${item_id}`);
+                                return;
+                            }
+                            InjectIcare(post_element);
+                        }, 400);
                         // port.disconnect();
                     }
                 });
@@ -151,8 +143,7 @@ void (async () => {
                     return;
                 }
                 InjectUtil.InjectIcarePersonalRemarks("SUM");
-                const dataset = (document.querySelector("div[data-tracking-id]") as HTMLDivElement)
-                    .dataset;
+                const dataset = (document.querySelector("div[data-tracking-id]") as HTMLDivElement).dataset;
                 const item_id = dataset.trackingId ?? "";
                 const remark_type = item_id.slice(-2) === "KR" ? "REQ" : "REP";
                 const port = chrome.runtime.connect();
@@ -207,14 +198,9 @@ void (async () => {
             // 이미 SDR이 지정되지 않은 경우에만
             if (item_value.value !== "") {
                 const calc_item_value = Math.round(
-                    (parseFloat(item_value.value) * getExchangeRate(item_value_currency.value)) /
-                        1749
+                    (parseFloat(item_value.value) * getExchangeRate(item_value_currency.value)) / 1749
                 );
-                InjectUtil.GcssSwitchValueForCurrency(
-                    item_value,
-                    item_value_currency,
-                    calc_item_value.toString()
-                );
+                InjectUtil.GcssSwitchValueForCurrency(item_value, item_value_currency, calc_item_value.toString());
             } else if (is_registered) {
                 item_value.value = "0";
             }
@@ -254,8 +240,7 @@ void (async () => {
         if (indemnity_amount_currency.value !== "3") {
             // 이미 SDR이 지정되지 않은 경우에만
             if (item_value.value !== "" || postage_paid.value !== "") {
-                const calc_indemnity_amount =
-                    parseInt(item_value.value) + parseInt(postage_paid.value);
+                const calc_indemnity_amount = parseInt(item_value.value) + parseInt(postage_paid.value);
                 InjectUtil.GcssSwitchValueForCurrency(
                     indemnity_amount,
                     indemnity_amount_currency,
@@ -298,12 +283,7 @@ void (async () => {
         }
         SetItemValueCurrency(dom.item_value_currency, dom.item_value, is_reg);
         SetPostagePaidCurrency(dom.postage_paid_currency, dom.postage_paid, is_reg);
-        SetIndemnityCurrency(
-            dom.indemnity_amount_currency,
-            dom.indemnity_amount,
-            dom.item_value,
-            dom.postage_paid
-        );
+        SetIndemnityCurrency(dom.indemnity_amount_currency, dom.indemnity_amount, dom.item_value, dom.postage_paid);
 
         if (!dom.pod_required_no.checked && !dom.pod_required_yes.checked) {
             dom.pod_required_yes.checked = true;
@@ -370,12 +350,7 @@ void (async () => {
 
         SetItemValueCurrency(dom.item_value_currency, dom.item_value, is_reg);
         SetPostagePaidCurrency(dom.postage_paid_currency, dom.postage_paid, is_reg);
-        SetIndemnityCurrency(
-            dom.indemnity_amount_currency,
-            dom.indemnity_amount,
-            dom.item_value,
-            dom.postage_paid
-        );
+        SetIndemnityCurrency(dom.indemnity_amount_currency, dom.indemnity_amount, dom.item_value, dom.postage_paid);
 
         // POD required
         dom.pod_required_yes.checked = true;
@@ -384,30 +359,19 @@ void (async () => {
         InjectUtil.GcssSwitchValue(dom.item_contents, post_element.Contents);
 
         // Addressee name
-        InjectUtil.GcssSwitchValue(
-            dom.addr_name,
-            post_element.AddresseeName,
-            dom.addr_name.value.length !== 0
-        );
+        InjectUtil.GcssSwitchValue(dom.addr_name, post_element.AddresseeName, dom.addr_name.value.length !== 0);
 
         InjectUtil.GcssSwitchValue(dom.addr_street, post_element.AddresseeAddress);
         InjectUtil.GcssSwitchValue(dom.addr_phone, post_element.AddresseePhone);
         if (dom.addr_email.value.search(String.raw`;`) !== -1 && dom.addr_email.value.length > 1) {
-            InjectUtil.GcssSwitchValue(
-                dom.addr_email,
-                dom.addr_email.value.toLowerCase().replace(";", "@")
-            );
+            InjectUtil.GcssSwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
         }
         InjectUtil.GcssSwitchValue(dom.addr_postcode, post_element.AddresseeZipcode);
 
         if (dom.addr_city.value === "") dom.addr_city.value = ".";
 
         // Sender Name
-        InjectUtil.GcssSwitchValue(
-            dom.sndr_name,
-            post_element.SenderName,
-            dom.sndr_name.value.length !== 0
-        );
+        InjectUtil.GcssSwitchValue(dom.sndr_name, post_element.SenderName, dom.sndr_name.value.length !== 0);
         InjectUtil.GcssSwitchValue(dom.sndr_street, post_element.SenderAddress);
         InjectUtil.GcssSwitchValue(dom.sndr_phone, post_element.SenderPhone);
 
@@ -468,13 +432,8 @@ void (async () => {
         InjectUtil.IcareSwitchValue(dom.item_desc, post_element.Contents);
 
         if (dom.addr_email.value.search(`;`) !== -1 && dom.addr_email.value.length > 1) {
-            InjectUtil.IcareSwitchValue(
-                dom.addr_email,
-                dom.addr_email.value.toLowerCase().replace(";", "@")
-            );
+            InjectUtil.IcareSwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
         }
-
-        InjectUtil.InjectIcarePersonalRemarks();
         console.log("Dom Injected");
     }
 
