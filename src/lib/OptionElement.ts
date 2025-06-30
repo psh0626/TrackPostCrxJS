@@ -56,7 +56,7 @@ export class IMICSettings {
     async SaveOptions(immediately: boolean = true) {
         const saveFunc = async () => {
             await chrome.storage.local.set({ IMICSettings: this });
-            console.trace("Options Saved as ", this);
+            console.log("Options Saved as ", this);
             await this.NotifyTabs();
             IMICSettings.SavingFinished = null;
         };

@@ -77,7 +77,7 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
     async function onDlRemoved() {
         setPrList((prev) => prev.filter((entry) => entry.Id !== dlCurrentId));
         RenumberPrList();
-        await SaveSettings();
+        // await SaveSettings();
         onDlCancelled();
     }
 
@@ -85,7 +85,7 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
         setPrList((prev) => prev.filter((entry) => entry.Id !== dlCurrentId));
         setPrList((prev) => prev.concat(new PersonalRemark(dlTitle, dlContent, dlCurrentId, slSelected)));
         SortPrList();
-        await SaveSettings();
+        // await SaveSettings();
         onDlCancelled();
     }
 
@@ -142,8 +142,10 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
     }
 
     async function SaveSettings() {
-        Object.assign(settings.current.PersonalRemarks, prList);
+        console.log("current state: ", prList);
+        settings.current.PersonalRemarks = prList;
         await settings.current.SaveOptions(false);
+        console.log("settings saved as", settings.current);
     }
 
     function onSelectChanged(event: SelectChangeEvent) {
