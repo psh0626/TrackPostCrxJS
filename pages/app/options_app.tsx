@@ -1,11 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
-import { AppBar, Toolbar, Typography, Paper, Box, Tab, Tabs } from "@mui/material";
 import { TravelExplore } from "@mui/icons-material";
+import { AppBar, Box, Paper, Tab, Tabs, Toolbar, Typography } from "@mui/material";
+import { useEffect, useRef, useState } from "react";
 import { IMICSettings } from "../../src/lib/OptionElement";
 import { GeneralSettings } from "./options_tabs/GeneralSettings";
-import { PersonalRemarks } from "./options_tabs/PersonalRemarks";
 import { ImportExport } from "./options_tabs/ImportExport";
-import { TabPanel } from "./options_tabs/TabPanel";
+import { PersonalRemarks } from "./options_tabs/PersonalRemarks";
 
 export default function OptionsApp() {
     const settings = useRef(new IMICSettings());
@@ -40,20 +39,23 @@ export default function OptionsApp() {
                         value={tabValue}
                         onChange={(_e, n) => setTabValue(n)}
                         orientation="vertical"
-                        sx={{ borderRight: 1, borderColor: "divider" }}>
+                        sx={{ borderRight: 1, borderColor: "divider" }}
+                    >
                         <Tab label="General" />
                         <Tab label="Personal Remarks" />
                         <Tab label="Import/Export" />
                     </Tabs>
-                    <TabPanel value={tabValue} index={0}>
-                        <GeneralSettings settings={settings} />
-                    </TabPanel>
-                    <TabPanel value={tabValue} index={1}>
-                        <PersonalRemarks settings={settings} />
-                    </TabPanel>
-                    <TabPanel value={tabValue} index={2}>
-                        <ImportExport settings={settings} />
-                    </TabPanel>
+                    <Box sx={{ padding: "10px" }}>
+                        <Box sx={{ display: tabValue === 0 ? "block" : "none" }}>
+                            <GeneralSettings settings={settings} />
+                        </Box>
+                        <Box sx={{ display: tabValue === 1 ? "block" : "none" }}>
+                            <PersonalRemarks settings={settings} />
+                        </Box>
+                        <Box sx={{ display: tabValue === 2 ? "block" : "none" }}>
+                            <ImportExport settings={settings} />
+                        </Box>
+                    </Box>
                 </Box>
             )}
         </Paper>

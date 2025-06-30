@@ -36,6 +36,8 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
     useEffect(() => {
         if (!initialized.current) {
             setPrList(settings.current.PersonalRemarks);
+            console.log("settings loaded as", settings.current);
+            console.log("personal remarks loaded as", settings.current.PersonalRemarks);
         }
     }, []);
 
@@ -140,7 +142,7 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
     }
 
     async function SaveSettings() {
-        Object.assign(settings.current, prList);
+        Object.assign(settings.current.PersonalRemarks, prList);
         await settings.current.SaveOptions(false);
     }
 

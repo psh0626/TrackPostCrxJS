@@ -67,7 +67,7 @@ export class IMICSettings {
         if (IMICSettings.SavingFinished) clearTimeout(IMICSettings.SavingFinished);
         IMICSettings.SavingFinished = setTimeout(() => {
             void saveFunc();
-        }, 1000);
+        }, 2000);
     }
     async LoadOptions() {
         const newThis = await chrome.storage.local.get("IMICSettings");

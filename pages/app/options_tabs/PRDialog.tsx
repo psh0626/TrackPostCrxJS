@@ -1,14 +1,5 @@
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from "@mui/material";
 import React from "react";
-import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Button,
-    Stack,
-    TextField,
-    Typography,
-} from "@mui/material";
 
 interface RemarkDialogProps {
     open: boolean;
@@ -38,9 +29,9 @@ export const RemarkDialog: React.FC<RemarkDialogProps> = ({
     onCancel,
 }) => {
     return (
-        <Dialog open={open} onClose={onClose}>
+        <Dialog open={open} onClose={onClose} disableEnforceFocus disableAutoFocus>
             <DialogTitle>
-                <Typography variant="h5" fontWeight="600">
+                <Typography variant="h5" fontWeight="600" component="span">
                     Personal Remark
                 </Typography>
             </DialogTitle>
@@ -72,11 +63,7 @@ export const RemarkDialog: React.FC<RemarkDialogProps> = ({
             <DialogActions>
                 {editing ? (
                     <div>
-                        <Button
-                            onClick={onRemove}
-                            color="error"
-                            variant="contained"
-                            sx={{ mr: 45 }}>
+                        <Button onClick={onRemove} color="error" variant="contained" sx={{ mr: 45 }}>
                             삭제
                         </Button>
                         <Button onClick={onEdit} color="primary" variant="contained">

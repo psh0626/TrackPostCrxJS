@@ -85,8 +85,9 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
         }
     }, []);
 
-    async function SaveSettings(immediately = true) {
-        Object.assign(settings.current, settingsState);
+    async function SaveSettings(immediately = true, mySettings: IMICSettings | null = null) {
+        if (mySettings) Object.assign(settings.current, mySettings);
+        else Object.assign(settings.current, settingsState);
         await settings.current.SaveOptions(immediately);
     }
 
@@ -107,10 +108,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                     case "GcssOutboundNotificationCountries":
                     case "IcareOutboundNotificationExcludedCountries":
                     case "GcssOutboundNotificationExcludedCountries":
-                        void SaveSettings(false);
+                        void SaveSettings(false, updated);
                         break;
                     default:
-                        void SaveSettings(true);
+                        void SaveSettings(true, updated);
                         break;
                 }
             } else initialized.current = true;
