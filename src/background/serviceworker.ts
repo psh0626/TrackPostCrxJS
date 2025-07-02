@@ -2,7 +2,6 @@ import { COMMANDS, Msg } from "../lib/Message";
 import CreateNotification from "../lib/Notification";
 import PopupTrack from "../lib/PopupTrack";
 import "../lib/TimespanExtension";
-import insertAuthorColumn from "./gcssSumScript";
 import ProcessMessage from "./MessageHub/MessageHub";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
@@ -187,16 +186,12 @@ chrome.webRequest.onCompleted.addListener(
 );
 
 const GCSS_SUM_AJAX_URLS = [
-    "https://gcss.ipc.be/CSS/gcss/ajax/EMS/alerts/show/SUM_REPLY",
-    "https://gcss.ipc.be/CSS/gcss/ajax/UPU/alerts/show/SUM_REPLY",
-    "https://gcss.ipc.be/CSS/gcss/ajax/REG/alerts/show/SUM_REPLY",
-    "https://gcss.ipc.be/CSS/gcss/ajax/EXPRES/alerts/show/SUM_REPLY",
+    "https://gcss.ipc.be/CSS/gcss/ajax/*/alerts/show/SUM_REPLY",
+    "https://gcss.ipc.be/CSS/gcss/ajax/*/alerts/show/SUM_REQ",
 ];
 const GCSS_SUM_PAGE_URLS = [
-    "https://gcss.ipc.be/CSS/gcss/EMS/alerts/show/SUM_REPLY",
-    "https://gcss.ipc.be/CSS/gcss/UPU/alerts/show/SUM_REPLY",
-    "https://gcss.ipc.be/CSS/gcss/REG/alerts/show/SUM_REPLY",
-    "https://gcss.ipc.be/CSS/gcss/EXPRES/alerts/show/SUM_REPLY",
+    "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REPLY",
+    "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REQ",
 ];
 
 chrome.webRequest.onCompleted.addListener(
@@ -209,7 +204,9 @@ chrome.webRequest.onCompleted.addListener(
             void (async () => {
                 const foundTabs = await chrome.tabs.query({ url: GCSS_SUM_PAGE_URLS });
                 console.log("WebRequest onCompleted found tabs: ", foundTabs);
-                const msgPromises = foundTabs.map((tab) => tab.id? chrome.tabs.sendMessage(tab.id, "GCSS_SUM_AJAX_COMPLETE"): Promise.resolve());
+                const msgPromises = foundTabs.map((tab) =>
+                    tab.id ? chrome.tabs.sendMessage(tab.id, "GCSS_SUM_AJAX_COMPLETE") : Promise.resolve()
+                );
                 await Promise.all(msgPromises);
             })();
         }

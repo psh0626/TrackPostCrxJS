@@ -46,18 +46,14 @@
             "js": ["src/background/contentscript.tsx"],
             "run_at": "document_idle",
             "exclude_matches": [
-                "https://gcss.ipc.be/CSS/gcss/EMS/alerts/show/SUM_REPLY",
-                "https://gcss.ipc.be/CSS/gcss/UPU/alerts/show/SUM_REPLY",
-                "https://gcss.ipc.be/CSS/gcss/REG/alerts/show/SUM_REPLY",
-                "https://gcss.ipc.be/CSS/gcss/EXPRES/alerts/show/SUM_REPLY"
+                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REPLY",
+                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REQ"
             ]
         },
         {
             "matches": [
-                "https://gcss.ipc.be/CSS/gcss/EMS/alerts/show/SUM_REPLY",
-                "https://gcss.ipc.be/CSS/gcss/UPU/alerts/show/SUM_REPLY",
-                "https://gcss.ipc.be/CSS/gcss/REG/alerts/show/SUM_REPLY",
-                "https://gcss.ipc.be/CSS/gcss/EXPRES/alerts/show/SUM_REPLY"
+                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REPLY",
+                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REQ"
             ],
             "js": ["src/background/gcssSumScript.ts"]
         },
