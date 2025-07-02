@@ -2,6 +2,7 @@ import { COMMANDS, Msg } from "../lib/Message";
 import CreateNotification from "../lib/Notification";
 import PopupTrack from "../lib/PopupTrack";
 import "../lib/TimespanExtension";
+import insertAuthorColumn from "./GetUnreadReplies/GcssSum";
 import ProcessMessage from "./MessageHub/MessageHub";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
@@ -176,6 +177,33 @@ chrome.webRequest.onCompleted.addListener(
         }
     },
     { urls: ["*://icare.post/*"] }
+);
+
+const GCSS_SUM_URLS = [
+    "https://gcss.ipc.be/CSS/gcss/EMS/alerts/show/SUM_REPLY",
+    "https://gcss.ipc.be/CSS/gcss/UPU/alerts/show/SUM_REPLY",
+    "https://gcss.ipc.be/CSS/gcss/REG/alerts/show/SUM_REPLY",
+    "https://gcss.ipc.be/CSS/gcss/EXPRES/alerts/show/SUM_REPLY",
+];
+
+chrome.webRequest.onCompleted.addListener(
+    (details) => {
+        if (!details.url || !details.method) {
+            return;
+        }
+        if (details.method === "POST") {
+            void (async () => {
+                const foundTabs = await chrome.tabs.query({ url: GCSS_SUM_URLS });
+                foundTabs.forEach((tab) => {
+                    chrome.scripting.executeScript({
+                        target: { tabId: tab.id! },
+                        func: () => setTimeout(insertAuthorColumn, 100)
+                    });
+                });
+            })();
+        }
+    },
+    { urls: GCSS_SUM_URLS }
 );
 
 chrome.runtime.onConnect.addListener((port) => {
