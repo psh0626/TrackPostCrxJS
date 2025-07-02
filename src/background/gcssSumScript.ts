@@ -114,6 +114,15 @@ export default async function insertAuthorColumn() {
 
     const tbodyRows = [...document.querySelector("tbody")!.children];
 
+    // Create all new <td> elements first
+    tbodyRows.forEach((td) => {
+        const itemId = (td.children[0] as HTMLElement).innerText;
+        const newTd = document.createElement("td");
+        newTd.textContent = "loading...";
+        td.insertBefore(newTd, td.children[1]);
+        authorCellMap[itemId] = newTd;
+    });
+
     cloneAndInsertBefore({
         selector: "th[data-property='workflowType']",
         attr: ["data-property", "lastAuthor"],
@@ -126,21 +135,6 @@ export default async function insertAuthorColumn() {
         selector: "tr.filter > *:last-child",
         parentSelector: "tr.filter",
         childIndex: 1,
-    });
-
-    // Create all new <td> elements first
-    const newTds: HTMLTableCellElement[] = [];
-    tbodyRows.forEach((td) => {
-        const itemId = (td.children[0] as HTMLElement).innerText;
-        const newTd = document.createElement("td");
-        newTd.textContent = "loading...";
-        newTds.push(newTd);
-        authorCellMap[itemId] = newTd;
-    });
-
-    // Insert all new <td> elements at once
-    tbodyRows.forEach((td, idx) => {
-        td.insertBefore(newTds[idx], td.children[1]);
     });
 
     const displayItemIds = tbodyRows.map((td) => (td.children[0] as HTMLElement).innerText);
