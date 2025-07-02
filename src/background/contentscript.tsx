@@ -68,10 +68,9 @@ void (async () => {
                     InjectUtil.InjectGcssIdSearchInput();
                 }, 100);
             } else if (currentURL.pathname.includes("/SUM_REPLY")) {
-                
-                await new Promise(res => setTimeout(res, 500));
+                console.log("SUM_REPLY page loaded, injecting author column");
+                await new Promise((res) => setTimeout(res, 100));
                 await insertAuthorColumn();
-
             } else if (currentURL.pathname.includes("/create/") || currentURL.pathname.includes("/reactivate/")) {
                 const item_id: string = document.querySelector(".value")?.textContent?.trim() ?? "";
                 if (!item_id) {

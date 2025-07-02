@@ -28,7 +28,7 @@ function main() {
     }, GLOBAL_INTERVAL);
     console.log(new Date().toLocaleTimeString() + " Global Timer has been started. Interval: ", GLOBAL_INTERVAL);
 
-    const mailTabFunc = (async () => {
+    const mailTabFunc = async () => {
         const [ext_mail_tab] = await chrome.tabs.query({
             url: "https://kmmbox.korea.kr/mail/*",
             active: false,
@@ -39,14 +39,17 @@ function main() {
             return;
         }
         console.log(new Date().toLocaleTimeString() + " [Interval] Inactive mail tab has not been found.");
-    });
-    
+    };
+
     void mailTabFunc();
 
     setInterval(() => {
         void mailTabFunc();
     }, MAIL_TAB_INTERVAL);
-    console.log(new Date().toLocaleTimeString() + " Mail tab reloading timer has been started. Interval: ", MAIL_TAB_INTERVAL);
+    console.log(
+        new Date().toLocaleTimeString() + " Mail tab reloading timer has been started. Interval: ",
+        MAIL_TAB_INTERVAL
+    );
 }
 async function APICalls(count: number, final = false) {
     const today = new Date();
@@ -95,37 +98,41 @@ async function APICalls(count: number, final = false) {
 }
 
 let isTime = true;
-chrome.webRequest.onCompleted.addListener((details) => {
-    if (details.url.includes("https://kmmbox.korea.kr/history/maillist/") ||
-        details.url.includes("https://kmmbox.korea.kr/mail24read/") ||
-        details.url.includes("https://kmmbox.korea.kr/mail/list/mailbox.json") ||
-        details.url.includes("https://kmmbox.korea.kr/mail/manage/seen.json")) {
-        
-        if (!isTime) {
-            console.log("API "+ details.method +" request completed: ", details.url);
-            console.log("Cooltime is not yet reached.");
-            return;
-        }
-
-        console.log("API "+ details.method +" request completed: ", details.url);
-        void (async () => {
-            const mailTabs = await chrome.tabs.query({ url: "https://kmmbox.korea.kr/*" });
-            if (!mailTabs) {
-                console.log("No mail tabs found.");
+chrome.webRequest.onCompleted.addListener(
+    (details) => {
+        if (
+            details.url.includes("https://kmmbox.korea.kr/history/maillist/") ||
+            details.url.includes("https://kmmbox.korea.kr/mail24read/") ||
+            details.url.includes("https://kmmbox.korea.kr/mail/list/mailbox.json") ||
+            details.url.includes("https://kmmbox.korea.kr/mail/manage/seen.json")
+        ) {
+            if (!isTime) {
+                console.log("API " + details.method + " request completed: ", details.url);
+                console.log("Cooltime is not yet reached.");
                 return;
             }
-            mailTabs.forEach((tab) => {
-                chrome.tabs.sendMessage(tab.id!, new Msg(COMMANDS.WEB_REQUEST_COMPLETE));
-                console.log("Message Sent to content script in: ", tab);
-            });
-            isTime = false;
-            setTimeout(() => {
-                isTime = true;
-                console.log("Cooltime is over. Messages can be sent to content script now.");
-            }, 1000);
-        })();
-    }
-}, { urls: ["https://kmmbox.korea.kr/*"] });
+
+            console.log("API " + details.method + " request completed: ", details.url);
+            void (async () => {
+                const mailTabs = await chrome.tabs.query({ url: "https://kmmbox.korea.kr/*" });
+                if (!mailTabs) {
+                    console.log("No mail tabs found.");
+                    return;
+                }
+                mailTabs.forEach((tab) => {
+                    chrome.tabs.sendMessage(tab.id!, new Msg(COMMANDS.WEB_REQUEST_COMPLETE));
+                    console.log("Message Sent to content script in: ", tab);
+                });
+                isTime = false;
+                setTimeout(() => {
+                    isTime = true;
+                    console.log("Cooltime is over. Messages can be sent to content script now.");
+                }, 1000);
+            })();
+        }
+    },
+    { urls: ["https://kmmbox.korea.kr/*"] }
+);
 
 chrome.webRequest.onCompleted.addListener(
     function (details) {
@@ -179,7 +186,13 @@ chrome.webRequest.onCompleted.addListener(
     { urls: ["*://icare.post/*"] }
 );
 
-const GCSS_SUM_URLS = [
+const GCSS_SUM_AJAX_URLS = [
+    "https://gcss.ipc.be/CSS/gcss/ajax/EMS/alerts/show/SUM_REPLY",
+    "https://gcss.ipc.be/CSS/gcss/ajax/UPU/alerts/show/SUM_REPLY",
+    "https://gcss.ipc.be/CSS/gcss/ajax/REG/alerts/show/SUM_REPLY",
+    "https://gcss.ipc.be/CSS/gcss/ajax/EXPRES/alerts/show/SUM_REPLY",
+];
+const GCSS_SUM_PAGE_URLS = [
     "https://gcss.ipc.be/CSS/gcss/EMS/alerts/show/SUM_REPLY",
     "https://gcss.ipc.be/CSS/gcss/UPU/alerts/show/SUM_REPLY",
     "https://gcss.ipc.be/CSS/gcss/REG/alerts/show/SUM_REPLY",
@@ -188,22 +201,27 @@ const GCSS_SUM_URLS = [
 
 chrome.webRequest.onCompleted.addListener(
     (details) => {
+        console.log("WebRequest onCompleted: ", details, "for URL: ", GCSS_SUM_AJAX_URLS);
         if (!details.url || !details.method) {
             return;
         }
         if (details.method === "POST") {
             void (async () => {
-                const foundTabs = await chrome.tabs.query({ url: GCSS_SUM_URLS });
+                const foundTabs = await chrome.tabs.query({ url: GCSS_SUM_PAGE_URLS });
+                console.log("WebRequest onCompleted found tabs: ", foundTabs);
                 foundTabs.forEach((tab) => {
                     chrome.scripting.executeScript({
                         target: { tabId: tab.id! },
-                        func: () => setTimeout(insertAuthorColumn, 100)
+                        func: () => {
+                            console.log("WebRequest Completed. insertAuthorColumn will be called.");
+                            setTimeout(insertAuthorColumn, 100);
+                        },
                     });
                 });
             })();
         }
     },
-    { urls: GCSS_SUM_URLS }
+    { urls: GCSS_SUM_AJAX_URLS }
 );
 
 chrome.runtime.onConnect.addListener((port) => {

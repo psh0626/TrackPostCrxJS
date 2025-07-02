@@ -79,7 +79,7 @@ export default async function insertAuthorColumn() {
     cloneAndInsertBefore({
         selector: "th[data-property='workflowType']",
         attr: ["data-property", "lastAuthor"],
-        text: "last req. author",
+        text: "last req.author",
         parentSelector: "tr.header",
         beforeSelector: "th[data-property='workflowType']"
     });
