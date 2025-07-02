@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "IMIC TrackPost",
     "description": "박성훈이 만든 멋쟁이 Chrome/Edge 확장프로그램 - iCare, GCSS 사무 자동화",
-    "version": "2.77",
+    "version": "2.78",
     "icons": {
         "16": "src/ext-icon.png",
         "32": "src/ext-icon.png",
@@ -44,7 +44,22 @@
         {
             "matches": ["https://icare.post/*", "https://gcss.ipc.be/*"],
             "js": ["src/background/contentscript.tsx"],
-            "run_at": "document_end"
+            "run_at": "document_idle",
+            "exclude_matches": [
+                "https://gcss.ipc.be/CSS/gcss/EMS/alerts/show/SUM_REPLY",
+                "https://gcss.ipc.be/CSS/gcss/UPU/alerts/show/SUM_REPLY",
+                "https://gcss.ipc.be/CSS/gcss/REG/alerts/show/SUM_REPLY",
+                "https://gcss.ipc.be/CSS/gcss/EXPRES/alerts/show/SUM_REPLY"
+            ]
+        },
+        {
+            "matches": [
+                "https://gcss.ipc.be/CSS/gcss/EMS/alerts/show/SUM_REPLY",
+                "https://gcss.ipc.be/CSS/gcss/UPU/alerts/show/SUM_REPLY",
+                "https://gcss.ipc.be/CSS/gcss/REG/alerts/show/SUM_REPLY",
+                "https://gcss.ipc.be/CSS/gcss/EXPRES/alerts/show/SUM_REPLY"
+            ],
+            "js": ["src/background/gcssSumScript.ts"]
         },
         {
             "matches": ["https://kmmbox.korea.kr/*"],

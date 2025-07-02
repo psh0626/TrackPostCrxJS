@@ -2,7 +2,7 @@ import { COMMANDS, Msg } from "../lib/Message";
 import CreateNotification from "../lib/Notification";
 import PopupTrack from "../lib/PopupTrack";
 import "../lib/TimespanExtension";
-import insertAuthorColumn from "./GetUnreadReplies/GcssSum";
+import insertAuthorColumn from "./gcssSumScript";
 import ProcessMessage from "./MessageHub/MessageHub";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
@@ -209,15 +209,8 @@ chrome.webRequest.onCompleted.addListener(
             void (async () => {
                 const foundTabs = await chrome.tabs.query({ url: GCSS_SUM_PAGE_URLS });
                 console.log("WebRequest onCompleted found tabs: ", foundTabs);
-                foundTabs.forEach((tab) => {
-                    chrome.scripting.executeScript({
-                        target: { tabId: tab.id! },
-                        func: () => {
-                            console.log("WebRequest Completed. insertAuthorColumn will be called.");
-                            setTimeout(insertAuthorColumn, 100);
-                        },
-                    });
-                });
+                const msgPromises = foundTabs.map((tab) => tab.id? chrome.tabs.sendMessage(tab.id, "GCSS_SUM_AJAX_COMPLETE"): Promise.resolve());
+                await Promise.all(msgPromises);
             })();
         }
     },

@@ -2,7 +2,6 @@ import { COMMANDS, Msg, SendRequest } from "../lib/Message";
 import { IMICSettings } from "../lib/OptionElement";
 import { PostElement } from "../lib/PostUtil";
 import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
-import insertAuthorColumn from "./GetUnreadReplies/GcssSum";
 import { IcareAPI2 } from "./GetUnreadReplies/IcareReplies";
 import InjectUtil from "./injectDOM/InjectUtil";
 
@@ -67,10 +66,6 @@ void (async () => {
                 setTimeout(() => {
                     InjectUtil.InjectGcssIdSearchInput();
                 }, 100);
-            } else if (currentURL.pathname.includes("/SUM_REPLY")) {
-                console.log("SUM_REPLY page loaded, injecting author column");
-                await new Promise((res) => setTimeout(res, 100));
-                await insertAuthorColumn();
             } else if (currentURL.pathname.includes("/create/") || currentURL.pathname.includes("/reactivate/")) {
                 const item_id: string = document.querySelector(".value")?.textContent?.trim() ?? "";
                 if (!item_id) {
