@@ -1,5 +1,5 @@
 // Global map to store authors as they are retrieved
-const authorMap: Record<string, string | undefined> = {};
+const authorCellMap: Record<string, HTMLElement | undefined> = {};
 let isInserting = false;
 
 console.log("Initial call to insertAuthorColumn after script load.");
@@ -15,7 +15,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false; // No response needed for other messages
 });
 
-async function getQuery(itemId: string) {
+async function getQuery(itemId: string): Promise<string> {
     const response = await fetch("https://gcss.ipc.be/CSS/gcss/query", {
         headers: {
             accept: "application/json, text/plain, */*",
@@ -37,14 +37,17 @@ async function getQuery(itemId: string) {
 async function getQueryWithRetry(itemId: string, retries = 1): Promise<string | undefined> {
     try {
         const author = await getQuery(itemId);
-        authorMap[itemId] = author;
+        if (authorCellMap[itemId] && authorCellMap[itemId] instanceof HTMLElement) {
+            authorCellMap[itemId].textContent = author;
+        }
         return author;
     } catch (e) {
         if (retries > 0) {
-            await new Promise((res) => setTimeout(res, 1000));
+            await new Promise((res) => setTimeout(res, 50));
             return getQueryWithRetry(itemId, retries - 1);
         } else {
-            authorMap[itemId] = undefined;
+            if (authorCellMap[itemId] && authorCellMap[itemId] instanceof HTMLElement)
+                authorCellMap[itemId].textContent = "error";
             return undefined;
         }
     }
@@ -108,12 +111,8 @@ export default async function insertAuthorColumn() {
         }
         await new Promise((resolve) => setTimeout(resolve, waitTime));
     }
+
     const tbodyRows = [...document.querySelector("tbody")!.children];
-    const displayItemIds = tbodyRows.map((td) => (td.children[0] as HTMLElement).innerText);
-    // For each item, try to get the author, retrying once if failed, and update the global map as we go
-    beforeTime = performance.now();
-    await Promise.all(displayItemIds.map((el) => getQueryWithRetry(el, 1)));
-    console.log(`Author retrieval completed in ${Math.round(performance.now() - beforeTime)} ms.`);
 
     cloneAndInsertBefore({
         selector: "th[data-property='workflowType']",
@@ -129,12 +128,26 @@ export default async function insertAuthorColumn() {
         childIndex: 1,
     });
 
+    // Create all new <td> elements first
+    const newTds: HTMLTableCellElement[] = [];
     tbodyRows.forEach((td) => {
         const itemId = (td.children[0] as HTMLElement).innerText;
         const newTd = document.createElement("td");
-        newTd.textContent = authorMap[itemId] ?? "";
-        td.insertBefore(newTd, td.children[1]);
+        newTd.textContent = "loading...";
+        newTds.push(newTd);
+        authorCellMap[itemId] = newTd;
     });
+
+    // Insert all new <td> elements at once
+    tbodyRows.forEach((td, idx) => {
+        td.insertBefore(newTds[idx], td.children[1]);
+    });
+
+    const displayItemIds = tbodyRows.map((td) => (td.children[0] as HTMLElement).innerText);
     isInserting = false;
     console.log("Author column inserted successfully.");
+    // For each item, try to get the author, retrying once if failed, and update the global map as we go
+    beforeTime = performance.now();
+    await Promise.all(displayItemIds.map((el) => getQueryWithRetry(el, 1)));
+    console.log(`Author retrieval completed in ${Math.round(performance.now() - beforeTime)} ms.`);
 }
