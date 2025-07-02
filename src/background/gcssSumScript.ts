@@ -38,12 +38,18 @@ async function getQuery(itemId: string): Promise<string> {
         credentials: "include",
     });
     const result = await response.json();
-    const [author] = result
-        .filter((el: { workflowType: string }) => el.workflowType.includes("Q"))
-        .map((el: { author: string }) => el.author);
-    fetchedItemsAuthors[itemId] = author;
-    console.log("getQuery result for itemId:", itemId, "->", author);
-    return author;
+    const [item] = result
+        .filter(
+            (el: { workflowType: string; originCountry: string }) =>
+                el.originCountry === "KR" && el.workflowType.includes("Q")
+        )
+        .map((el: { workflowType: string; author: string }) => ({
+            author: el.author,
+            workflowType: el.workflowType,
+        }));
+    fetchedItemsAuthors[itemId] = item.author;
+    console.log("getQuery result for itemId:", itemId, "->", item.author, item.workflowType);
+    return item.author;
 }
 
 async function getQueryWithRetry(itemId: string, retries = 1): Promise<string | undefined> {
