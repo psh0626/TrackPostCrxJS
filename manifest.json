@@ -47,13 +47,15 @@
             "run_at": "document_idle",
             "exclude_matches": [
                 "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REPLY",
-                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REQ"
+                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REQ",
+                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/QUM_REQ"
             ]
         },
         {
             "matches": [
                 "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REPLY",
-                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REQ"
+                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REQ",
+                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/QUM_REQ"
             ],
             "js": ["src/background/gcssSumScript.ts"]
         },

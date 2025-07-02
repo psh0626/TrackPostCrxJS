@@ -188,10 +188,12 @@ chrome.webRequest.onCompleted.addListener(
 const GCSS_SUM_AJAX_URLS = [
     "https://gcss.ipc.be/CSS/gcss/ajax/*/alerts/show/SUM_REPLY",
     "https://gcss.ipc.be/CSS/gcss/ajax/*/alerts/show/SUM_REQ",
+    "https://gcss.ipc.be/CSS/gcss/ajax/*/alerts/show/QUM_REQ",
 ];
 const GCSS_SUM_PAGE_URLS = [
     "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REPLY",
     "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REQ",
+    "https://gcss.ipc.be/CSS/gcss/*/alerts/show/QUM_REQ",
 ];
 
 chrome.webRequest.onCompleted.addListener(
