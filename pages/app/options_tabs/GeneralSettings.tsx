@@ -82,12 +82,20 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             setSettingsState(newSettings);
             setIcareAuthorRaw(curSet.IcareAuthor.join(", "));
             setGcssAuthorRaw(curSet.GcssAuthor.join(", "));
+            setTimeout(() => {
+                initialized.current = true;
+            }, 200);
         }
     }, []);
 
-    async function SaveSettings(immediately = true, mySettings: IMICSettings | null = null) {
-        if (mySettings) Object.assign(settings.current, mySettings);
-        else Object.assign(settings.current, settingsState);
+    async function SaveSettings(immediately = true, mySettings: IMICSettings | null = null, from = "") {
+        if (mySettings) {
+            console.log("saving from specific settings for", from, mySettings);
+            Object.assign(settings.current, mySettings);
+        } else {
+            console.trace("saving from settingsState", settingsState);
+            Object.assign(settings.current, settingsState);
+        }
         await settings.current.SaveOptions(immediately);
     }
 
@@ -96,7 +104,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             const updated = new IMICSettings();
             Object.assign(updated, prev);
             updated[key] = value;
-
+            console.log("Updated setting:", key, "to", value, "is initialized:", initialized.current);
             if (initialized.current) {
                 switch (key) {
                     case "IcareOutboundNotificationDate":
@@ -295,10 +303,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                                         <Checkbox
                                                             checked={settingsState.IcareUnreadNotificationOutbound}
                                                             onChange={(e, c) => {
-                                                                updateSetting("IcareUnreadNotificationOutbound", c);
                                                                 if (!c) {
                                                                     ResetWeekpicker();
                                                                 }
+                                                                updateSetting("IcareUnreadNotificationOutbound", c);
                                                             }}
                                                             color="error"
                                                         />
@@ -401,10 +409,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                                         <Checkbox
                                                             checked={settingsState.GcssUnreadNotificationOutbound}
                                                             onChange={(e, c) => {
-                                                                updateSetting("GcssUnreadNotificationOutbound", c);
                                                                 if (!c) {
                                                                     ResetWeekpicker(false);
                                                                 }
+                                                                updateSetting("GcssUnreadNotificationOutbound", c);
                                                             }}
                                                             color="error"
                                                         />
