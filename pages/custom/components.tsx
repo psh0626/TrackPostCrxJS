@@ -162,7 +162,7 @@ export const MyList: React.FC<MyListProps> = ({
         console.log("tab ids: ", tab_ids);
 
         if (tab_ids.length > 0) {
-            const newGroup = await chrome.tabs.group({ tabIds: tab_ids });
+            const newGroup = await chrome.tabs.group({ tabIds: tab_ids as [number, ...number[]] });
             await chrome.tabGroups.update(newGroup, {
                 title: list_title.replace(`: ${items.length}건`, ""),
                 color: "orange",
