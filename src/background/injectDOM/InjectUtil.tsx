@@ -1,15 +1,10 @@
-import React, { ReactNode } from "react";
+import { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import FloatingHelper from "./DomInject";
 import PersonalRemarksSelect from "./PersonalRemarks";
-import { ElevatorSharp } from "@mui/icons-material";
 
 class InjectUtil {
-    private static InsertReact(
-        react_component: ReactNode,
-        target: HTMLElement,
-        where: InsertPosition = "afterend"
-    ) {
+    private static InsertReact(react_component: ReactNode, target: HTMLElement, where: InsertPosition = "afterend") {
         if (!target) {
             console.error("No target element found for: " + target);
             return;
@@ -26,33 +21,48 @@ class InjectUtil {
         target.insertAdjacentElement(where, new_div);
         return new_div;
     }
-    private static GcssInjectFor(
-        target_element: HTMLInputElement,
-        val: string,
-        manual: boolean = false
-    ) {
+    private static GcssInjectFor(target_element: HTMLInputElement, val: string, manual: boolean = false) {
         this.InsertReact(
             <FloatingHelper target={target_element} new_value={val} manual_change={manual} />,
             target_element
         );
     }
 
-    private static IcareInjectFor(
-        target_elm: HTMLInputElement,
-        val: string,
-        manual: boolean = false
-    ) {
+    private static IcareInjectFor(target_elm: HTMLInputElement, val: string, manual: boolean = false) {
         this.InsertReact(
-            <FloatingHelper
-                target={target_elm}
-                new_value={val}
-                manual_change={manual}
-                for_icare={true}
-            />,
+            <FloatingHelper target={target_elm} new_value={val} manual_change={manual} for_icare={true} />,
             target_elm
         );
     }
 
+    private static separateKoreanSyllable(syllable: string): string {
+        // console.log("St: " + syllable);
+        const charCode = syllable.charCodeAt(0);
+        if (charCode < 0xac00 || charCode > 0xd7a3) {
+            // console.log("Denied: " + syllable);
+            return syllable; // Return as is if it's not a Korean syllable
+        }
+
+        const jamoSet = [
+            "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ",
+            "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ",
+            " ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ",
+        ];
+
+        let offset = charCode - 0xac00;
+        const jong = offset % 28;
+        offset = (offset - jong) / 28;
+        const jung = offset % 21;
+        const cho = (offset - jung) / 21;
+
+        let result = jamoSet[0][cho] + jamoSet[1][jung];
+        if (jong > 0) {
+            result += jamoSet[2][jong];
+        }
+
+        // console.log("Result: " + result);
+        return result;
+    }
     private static kr2en(text: string): string {
         const jamoMap = new Map<string, string>([
             ["ㄱ", "r"],
@@ -97,40 +107,11 @@ class InjectUtil {
             ["ㅣ", "l"],
         ]);
 
-        function separateKoreanSyllable(syllable: string): string {
-            // console.log("St: " + syllable);
-            const charCode = syllable.charCodeAt(0);
-            if (charCode < 0xac00 || charCode > 0xd7a3) {
-                // console.log("Denied: " + syllable);
-                return syllable; // Return as is if it's not a Korean syllable
-            }
-
-            const jamoSet = [
-                "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ",
-                "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ",
-                " ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ",
-            ];
-
-            let offset = charCode - 0xac00;
-            const jong = offset % 28;
-            offset = (offset - jong) / 28;
-            const jung = offset % 21;
-            const cho = (offset - jung) / 21;
-
-            let result = jamoSet[0][cho] + jamoSet[1][jung];
-            if (jong > 0) {
-                result += jamoSet[2][jong];
-            }
-
-            console.log("Result: " + result);
-            return result[result.length - 1];
-        }
-
         try {
             return text
                 .split("")
                 .map((char) => {
-                    const separated = separateKoreanSyllable(char);
+                    const separated = this.separateKoreanSyllable(char);
                     const result = separated
                         .split("")
                         .map((jamo) => jamoMap.get(jamo) || jamo)
@@ -166,28 +147,26 @@ class InjectUtil {
         target_input.classList.add("uppercase");
 
         target_input.addEventListener("input", (e) => {
-            const old_position = target_input.selectionStart;
+            const old_position = target_input.selectionStart ?? 0;
             const input = e.target as HTMLInputElement;
-            const value = this.kr2en(input.value).toUpperCase();
+            const value = input.value;
             // console.log("value: " + value);
 
             if (apply_pattern) {
                 target_input.setAttribute("maxlength", "13");
                 target_input.setAttribute("pattern", String.raw`[A-Z]{2}\d{9}[A-Z]{2}`);
-                let new_value = "";
-                for (let i = 0; i < value.length && i < 13; i++) {
-                    const char = value[i];
-                    if (i < 2 || i > 10) {
-                        if (char >= "A" && char <= "Z") {
-                            new_value += char;
-                        }
+                if (value.length < 13) {
+                    input.value = value;
+                }
+                const new_value = this.kr2en(value).toUpperCase();
+                if (new_value.length >= 13) {
+                    console.log("new_value: " + new_value);
+                    if (new_value.length > 13) {
+                        input.value = new_value.slice(0, 13);
                     } else {
-                        if (char >= "0" && char <= "9") {
-                            new_value += char;
-                        }
+                        input.value = new_value;
                     }
                 }
-                input.value = new_value;
             } else {
                 input.value = value;
             }
@@ -201,32 +180,54 @@ class InjectUtil {
             target_input.value = target_input.value.toUpperCase();
         };
     }
-    static InjectGcssIdSearchInput() {
-        const input = document.querySelector("input#txtItemId") as HTMLInputElement;
-        const form = document.querySelector("form:has(input#txtItemId)") as HTMLFormElement;
-        this.ChangeAttributes(input, form);
+    static async wait(ms: number): Promise<void> {
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
-    static InjectGcssQueryInput() {
-        const old_input = document.querySelector("input[name='itemId']") as HTMLInputElement;
-        const form = document.querySelector("form:has(input[name='itemId'])") as HTMLFormElement;
-        this.ChangeAttributes(old_input, form);
+    static async TryQuerySelectFor(
+        selector: string,
+        maxTries: number = 50,
+        waitTime: number = 100
+    ): Promise<Element | null> {
+        for (let i = 0; i < maxTries; i++) {
+            const element = document.querySelector(selector);
+            if (element) {
+                return element;
+            }
+            await this.wait(waitTime);
+        }
+        console.warn(`Element with selector "${selector}" not found after ${maxTries} tries.`);
+        return null;
     }
-    static InjectIcareIdSearchInput() {
-        const old_input = document.querySelector("input[type='text']") as HTMLInputElement;
-        const form = document.querySelector("form:has(input[type='text'])") as HTMLFormElement;
-        this.ChangeAttributes(old_input, form, false);
+    static async InjectGcssIdSearchInput() {
+        const input = (await this.TryQuerySelectFor("input#txtItemId")) as HTMLInputElement;
+        if (input) {
+            const form = document.querySelector("form:has(input#txtItemId)") as HTMLFormElement;
+            this.ChangeAttributes(input, form);
+        }
+    }
+    static async InjectGcssQueryInput() {
+        const old_input = (await this.TryQuerySelectFor("input[name='itemId']")) as HTMLInputElement;
+        if (old_input) {
+            const form = document.querySelector("form:has(input[name='itemId'])") as HTMLFormElement;
+            this.ChangeAttributes(old_input, form);
+        }
+    }
+    static async InjectIcareIdSearchInput() {
+        const old_input = (await this.TryQuerySelectFor("input[type='text']")) as HTMLInputElement;
+        if (old_input) {
+            const form = document.querySelector("form:has(input[type='text'])") as HTMLFormElement;
+            this.ChangeAttributes(old_input, form, false);
+        }
     }
 
-    static InjectIcarePersonalRemarks(type: string = "REQ") {
+    static async InjectIcarePersonalRemarks(type: string = "REQ") {
         let selector: string;
         switch (type) {
             case "REQ":
-                selector =
-                    "div.request-fields > div > div > div.row.text-templates-row > div > div.input-container";
+                selector = "div.request-fields > div > div > div.row.text-templates-row > div > div.input-container";
                 break;
             case "REP":
-                selector =
-                    "div.reply-fields > div > div > div.row.text-templates-row > div > div.input-container";
+                selector = "div.reply-fields > div > div > div.row.text-templates-row > div > div.input-container";
                 break;
             case "SUM":
                 selector = "div.update-message > form > div > div.row > div > div.input-container";
@@ -234,20 +235,13 @@ class InjectUtil {
             default:
                 selector = "div.row.text-templates-row > div > div.input-container";
         }
-        const target = document.querySelector(selector) as HTMLElement;
+        const target = (await this.TryQuerySelectFor(selector)) as HTMLElement;
         if (!target) {
             console.log("cannot find: 'div.input-container'\nunable to inject personal remarks");
             return;
         }
-        const new_div = this.InsertReact(
-            <PersonalRemarksSelect type={type} />,
-            target,
-            "afterbegin"
-        );
-        new_div?.setAttribute(
-            "style",
-            "z-index: 1; top: 3px; position: absolute; width: 100%; background: white;"
-        );
+        const new_div = this.InsertReact(<PersonalRemarksSelect type={type} />, target, "afterbegin");
+        new_div?.setAttribute("style", "z-index: 1; top: 3px; position: absolute; width: 100%; background: white;");
     }
 
     static GcssSwitchValueForCurrency(
@@ -280,11 +274,7 @@ class InjectUtil {
             original_element.value = change_to;
         }
     }
-    static GcssSwitchValue(
-        original_element: HTMLInputElement,
-        change_to: string,
-        manual: boolean = false
-    ) {
+    static GcssSwitchValue(original_element: HTMLInputElement, change_to: string, manual: boolean = false) {
         if (!change_to) manual = true;
         if (manual) {
             this.GcssInjectFor(original_element, change_to, manual);
@@ -293,11 +283,7 @@ class InjectUtil {
             original_element.value = change_to;
         }
     }
-    static IcareSwitchValue(
-        original_element: HTMLInputElement,
-        change_to: string,
-        manual: boolean = false
-    ) {
+    static IcareSwitchValue(original_element: HTMLInputElement, change_to: string, manual: boolean = false) {
         if (!change_to) manual = true;
         if (manual) {
             this.IcareInjectFor(original_element, change_to, manual);

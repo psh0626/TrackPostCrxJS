@@ -16,7 +16,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false; // No response needed for other messages
 });
 
-async function wait(ms: number): Promise<void> {
+export async function wait(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 

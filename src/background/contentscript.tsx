@@ -54,18 +54,17 @@ void (async () => {
         if (currentURL.origin === GCSS_URL) {
             window.addEventListener("hashchange", (e) => {
                 if (e.newURL.includes("/query")) {
-                    setTimeout(() => {
-                        InjectUtil.InjectGcssQueryInput();
-                    }, 100);
+                    InjectUtil.InjectGcssQueryInput();
                 }
             });
+            if (currentURL.toString().includes("/query")) {
+                InjectUtil.InjectGcssQueryInput();
+            }
 
             if (settings.GcssUnreadReplies) await GcssAPI.FetchReplies(false);
 
             if (currentURL.pathname.includes("/product-view") || currentURL.pathname.includes("/singleItemTracking")) {
-                setTimeout(() => {
-                    InjectUtil.InjectGcssIdSearchInput();
-                }, 100);
+                InjectUtil.InjectGcssIdSearchInput();
             } else if (currentURL.pathname.includes("/create/") || currentURL.pathname.includes("/reactivate/")) {
                 const item_id: string = document.querySelector(".value")?.textContent?.trim() ?? "";
                 if (!item_id) {
@@ -90,17 +89,13 @@ void (async () => {
                 } else {
                     injectGcssL2(post_element);
                 }
-            } else if (currentURL.toString().includes("/query")) {
-                InjectUtil.InjectGcssQueryInput();
             }
         } else if (currentURL.origin === ICARE_URL) {
             if (settings.IcareUnreadReplies) await IcareAPI2.FetchUnreadReplies(csrfToken!);
             const param_module = currentURL.searchParams.get("module");
             const param_action = currentURL.searchParams.get("action");
             if (param_module === "dashboard") {
-                setTimeout(() => {
-                    InjectUtil.InjectIcareIdSearchInput();
-                }, 100);
+                InjectUtil.InjectIcareIdSearchInput();
             } else if (param_action === "new") {
                 if (currentURL.searchParams.get("module") === "notification") {
                     InjectUtil.InjectIcarePersonalRemarks("NOQ");
@@ -119,14 +114,12 @@ void (async () => {
                 port.onMessage.addListener((message: Msg) => {
                     console.log("message received: ", message);
                     if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
-                        setTimeout(() => {
-                            InjectUtil.InjectIcarePersonalRemarks();
-                            if (!post_element.ItemTracked) {
-                                console.log(`Item does not exist ${item_id}`);
-                                return;
-                            }
-                            InjectIcare(post_element);
-                        }, 400);
+                        InjectUtil.InjectIcarePersonalRemarks();
+                        if (!post_element.ItemTracked) {
+                            console.log(`Item does not exist ${item_id}`);
+                            return;
+                        }
+                        InjectIcare(post_element);
                         // port.disconnect();
                     }
                 });
@@ -149,7 +142,7 @@ void (async () => {
                 port.onMessage.addListener((message: Msg) => {
                     console.log("message received: ", message);
                     if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
-                        setTimeout(() => InjectUtil.InjectIcarePersonalRemarks(remark_type), 400);
+                        InjectUtil.InjectIcarePersonalRemarks(remark_type);
                         // port.disconnect();
                     }
                 });
@@ -250,7 +243,9 @@ void (async () => {
         }
     }
 
-    function injectGcssL2(post_element: PostElement) {
+    async function injectGcssL2(post_element: PostElement) {
+        await InjectUtil.TryQuerySelectFor("#txt_itemType");
+
         const getSelect = (id: string): HTMLSelectElement => {
             return getElement<HTMLSelectElement>(`#${id}`);
         };
@@ -289,7 +284,9 @@ void (async () => {
         }
     }
 
-    function injectGcss(post_element: PostElement) {
+    async function injectGcss(post_element: PostElement) {
+        await InjectUtil.TryQuerySelectFor("#txt_physicalDescription");
+
         const getSelect = (id: string): HTMLSelectElement => {
             return getElement<HTMLSelectElement>(`#${id}`);
         };
@@ -380,7 +377,9 @@ void (async () => {
         console.log("dom injected");
     }
 
-    function InjectIcare(post_element: PostElement) {
+    async function InjectIcare(post_element: PostElement) {
+        await InjectUtil.TryQuerySelectFor("select[name='field89']");
+
         const event = new Event("change", { bubbles: true });
 
         const GetSelect = (name: string) => {
