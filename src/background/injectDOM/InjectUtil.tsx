@@ -128,54 +128,56 @@ class InjectUtil {
     static ChangeAttributes(
         target_input: HTMLInputElement,
         target_form: HTMLFormElement,
-        apply_pattern = true,
+        one_item_only = true,
         trial = 0
     ) {
         console.log("[ChangeAttributes] start");
         if (!target_input) {
             if (trial < 2) {
                 setTimeout(() => {
-                    this.ChangeAttributes(target_input, target_form, apply_pattern, ++trial);
+                    this.ChangeAttributes(target_input, target_form, one_item_only, ++trial);
                 }, 1000);
                 console.log("[ChangeAttributes] input not found");
             }
             return;
         }
 
-        // target_input.setAttribute("title", "EE123456789KR");
         target_input.setAttribute("placeholder", "등기번호를 입력하세요.");
         target_input.classList.add("uppercase");
+
+        const getProcessedValue = (value: string, maxLen: number) => {
+            const newValue = this.kr2en(value).toUpperCase();
+            if (newValue.length > maxLen) return newValue.slice(0, maxLen);
+            if (newValue.length === maxLen) return newValue;
+            return value;
+        };
 
         target_input.addEventListener("input", (e) => {
             const old_position = target_input.selectionStart ?? 0;
             const input = e.target as HTMLInputElement;
-            const value = input.value;
-            // console.log("value: " + value);
+            let value = input.value.toUpperCase();
 
-            if (apply_pattern) {
+            if (one_item_only) {
                 target_input.setAttribute("maxlength", "13");
                 target_input.setAttribute("pattern", String.raw`[A-Z]{2}\d{9}[A-Z]{2}`);
-                if (value.length < 13) {
-                    input.value = value;
-                }
-                const new_value = this.kr2en(value).toUpperCase();
-                if (new_value.length >= 13) {
-                    console.log("new_value: " + new_value);
-                    if (new_value.length > 13) {
-                        input.value = new_value.slice(0, 13);
-                    } else {
-                        input.value = new_value;
-                    }
-                }
+                input.value = getProcessedValue(value, 13);
             } else {
-                input.value = value;
-            }
+                target_input.removeAttribute("maxlength");
+                target_input.setAttribute("pattern", String.raw`([A-Z]{2}\d{9}[A-Z]{2}\s?)+`);
 
-            if (input.selectionStart !== old_position) {
-                // console.log("position set from " + input.selectionStart + " to " + old_position);
-                input.setSelectionRange(old_position, old_position);
+                const endsWithSpace = /\s$/.test(value);
+                let items = value.split(/\s+/).filter(Boolean);
+                let processed = items.map((item) => getProcessedValue(item, 13));
+                let newValue = processed.join(" ");
+                if (endsWithSpace) newValue += " ";
+
+                if (input.value !== newValue) {
+                    input.value = newValue;
+                    input.setSelectionRange(old_position, old_position);
+                }
             }
         });
+
         target_form.onsubmit = () => {
             target_input.value = target_input.value.toUpperCase();
         };
