@@ -40,7 +40,10 @@ export class GcssAPI {
         });
     }
     private static async FetchNotifications() {
-        if (!this.settings.GcssUnreadNotificationInbound && !this.settings.GcssUnreadNotificationOutbound) {
+        if (
+            (!this.settings.GcssUnreadRequests || !this.settings.GcssUnreadNotificationInbound) &&
+            !this.settings.GcssUnreadNotificationOutbound
+        ) {
             return;
         }
 

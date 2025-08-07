@@ -40,7 +40,7 @@ async function GatherStorageItems(items: StorageItem[]): Promise<(WorkflowItem |
     return results;
 }
 
-function MapToNotificationItem(item: WorkflowItem | GcssItem): chrome.notifications.NotificationItem {
+function MapToNotificationItem(item: WorkflowItem | GcssItem): chrome.notifications.ItemOptions {
     const isOutbound = ("tracking_id" in item ? item.tracking_id : item.ItemId).slice(-2) === "KR";
 
     if ("MessageType" in item) {
@@ -133,7 +133,7 @@ export default async function CreateNotification(force_update = false) {
     // Create notification
     const err_msg = fetch_error ? (fetch_error.GCSS ? "(GCSS 에러)\n" : "(i-Care 에러)\n") : "";
 
-    const options: chrome.notifications.NotificationCreateOptions = {
+    const options: chrome.notifications.NotificationOptions<true> = {
         type: "list",
         priority: 2,
         requireInteraction: true,

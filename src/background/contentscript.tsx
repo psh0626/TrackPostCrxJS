@@ -89,6 +89,18 @@ void (async () => {
                 } else {
                     injectGcssL2(post_element);
                 }
+            } else if (currentURL.pathname.includes("/reply/")) {
+                document.oncopy = (e) => {
+                    const selection = window.getSelection();
+                    if (selection) {
+                        const selectedText = selection.toString();
+                        if (selectedText) {
+                            e.clipboardData?.setData("text/plain", selectedText);
+                            console.log("Copied text:", selectedText);
+                            e.preventDefault();
+                        }
+                    }
+                };
             }
         } else if (currentURL.origin === ICARE_URL) {
             if (settings.IcareUnreadReplies) await IcareAPI2.FetchUnreadReplies(csrfToken!);
