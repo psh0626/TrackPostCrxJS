@@ -40,10 +40,8 @@ export class GcssAPI {
         });
     }
     private static async FetchNotifications() {
-        if (
-            (!this.settings.GcssUnreadRequests || !this.settings.GcssUnreadNotificationInbound) &&
-            !this.settings.GcssUnreadNotificationOutbound
-        ) {
+        const isInboundNotiOn = this.settings.GcssUnreadRequests && this.settings.GcssUnreadNotificationInbound;
+        if (!isInboundNotiOn && !this.settings.GcssUnreadNotificationOutbound) {
             return;
         }
 
@@ -65,7 +63,7 @@ export class GcssAPI {
             .map((item) => GcssItem.FromRawItem(item));
         console.log("GCSS NOTIFICATIONS FILTERED: ", unread);
 
-        if (this.settings.GcssUnreadNotificationInbound) {
+        if (isInboundNotiOn) {
             const inbound = unread.filter((item) => item.ItemId.slice(-2) !== "KR");
             console.log("GCSS NOTIFICATIONS INOUND: ", inbound);
             await chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_NOTIF_INBOUND, inbound));

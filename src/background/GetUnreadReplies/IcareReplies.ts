@@ -122,10 +122,8 @@ export class IcareAPI2 {
     }
 
     private static async FetchNotifications(csrfToken: string) {
-        if (
-            (!this.settings.IcareUnreadRequests || !this.settings.IcareUnreadNotificationInbound) &&
-            !this.settings.IcareUnreadNotificationOutbound
-        ) {
+        const isInboundNotiOn = this.settings.IcareUnreadRequests && this.settings.IcareUnreadNotificationInbound;
+        if (!isInboundNotiOn && !this.settings.IcareUnreadNotificationOutbound) {
             return;
         }
         const bodyStr = this.GetBodyStringForUnreadNotifications(csrfToken);
@@ -145,7 +143,7 @@ export class IcareAPI2 {
         if (response.ok && !see_other) {
             console.log(`[FetchNotifications] Attempt successful`, result);
             const notif_items = result!.content.data.map((data) => new WorkflowItem(data));
-            if (this.settings.IcareUnreadNotificationInbound) {
+            if (isInboundNotiOn) {
                 const inbound = notif_items.filter((item) => item.tracking_id.slice(-2) !== "KR");
                 console.log(`[FetchNotifications] Notification inbound items filtered`, inbound);
                 await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_NOTIF_INBOUND, inbound));
