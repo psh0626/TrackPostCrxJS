@@ -80,8 +80,8 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             const newSettings = new IMICSettings();
             Object.assign(newSettings, curSet);
             setSettingsState(newSettings);
-            setIcareAuthorRaw(curSet.IcareAuthor.join(", ") ?? "");
-            setGcssAuthorRaw(curSet.GcssAuthor.join(", ") ?? "");
+            if (curSet.IcareAuthor instanceof Array) setIcareAuthorRaw(curSet.IcareAuthor.join(", ") ?? "");
+            if (curSet.GcssAuthor instanceof Array) setGcssAuthorRaw(curSet.GcssAuthor.join(", ") ?? "");
             setTimeout(() => {
                 initialized.current = true;
             }, 200);
