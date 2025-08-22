@@ -52,13 +52,14 @@ export class IMICSettings {
                 await chrome.tabs.sendMessage(tab.id, new Msg(COMMANDS.SETTINGS_CHANGED));
             }
         });
+        IMICSettings.SavingFinished = null;
     }
     async SaveOptions(immediately: boolean = true) {
         const saveFunc = async () => {
             await chrome.storage.local.set({ IMICSettings: this });
             console.log("Options Saved as ", this);
-            await this.NotifyTabs();
-            IMICSettings.SavingFinished = null;
+            if (IMICSettings.SavingFinished) clearTimeout(IMICSettings.SavingFinished);
+            IMICSettings.SavingFinished = setTimeout(this.NotifyTabs, 4000);
         };
         if (immediately) {
             await saveFunc();
