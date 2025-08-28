@@ -257,7 +257,7 @@ function PopUpApp() {
     };
 
     const render_gcss_inbound_notifications = () => {
-        if (!chk_gcss_notif_in) {
+        if (!chk_gcss_req || !chk_gcss_notif_in) {
             return null;
         }
         if (gcss_notif_in_items.length < 1) {
@@ -283,7 +283,7 @@ function PopUpApp() {
     };
 
     const render_gcss_outbound_notifications = () => {
-        if (!chk_gcss_notif_out) {
+        if (!chk_gcss_rep || !chk_gcss_notif_out) {
             return null;
         }
         if (gcss_notif_out_items.length < 1) {
@@ -309,7 +309,7 @@ function PopUpApp() {
     };
 
     const render_icare_inbound_notifications = () => {
-        if (!chk_notif_in) {
+        if (!chk_req || !chk_notif_in) {
             return null;
         }
         if (icare_notif_in_items.length < 1) {
@@ -335,7 +335,7 @@ function PopUpApp() {
     };
 
     const render_icare_outbound_notifications = () => {
-        if (!chk_notif_out) {
+        if (!chk_rep || !chk_notif_out) {
             return null;
         }
         if (icare_notif_out_items.length < 1) {
