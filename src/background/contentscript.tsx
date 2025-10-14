@@ -61,7 +61,7 @@ void (async () => {
                 InjectUtil.InjectGcssQueryInput();
             }
 
-            if (settings.GcssUnreadReplies) await GcssAPI.FetchReplies(false);
+            if (settings.GcssUnreadReplies) GcssAPI.FetchReplies(false);
 
             if (currentURL.pathname.includes("/product-view") || currentURL.pathname.includes("/singleItemTracking")) {
                 InjectUtil.InjectGcssIdSearchInput();
@@ -167,17 +167,17 @@ void (async () => {
     }
 
     function getExchangeRate(currency_value: string) {
-        let rate = 1400; // USD
+        let rate = 1500; // USD
 
         switch (currency_value) {
             case "2": // EUR
-                rate = 1600;
+                rate = 1700;
                 break;
             case "89": // KRW
                 rate = 1;
                 break;
             case "111": // GBP
-                rate = 1800;
+                rate = 2000;
                 break;
             case "87": // JPY
                 rate = 1000;
@@ -276,9 +276,10 @@ void (async () => {
             indemnity_amount_currency: getSelect("txt_indemnityAmountCurrency"),
             pod_required_yes: getInput("txt_podRequired_1"),
             pod_required_no: getInput("txt_podRequired_2"),
+            item_id: document.querySelector(".messageRouting .value")?.textContent?.trim() ?? "",
         };
 
-        const is_reg = post_element.ItemID.startsWith("L") || post_element.ItemID.startsWith("R");
+        const is_reg = dom.item_id.startsWith("L") || dom.item_id.startsWith("R");
         if (is_reg) {
             if (dom.item_type.value === "") dom.item_type.value = "Packet";
         }
@@ -296,7 +297,7 @@ void (async () => {
         }
     }
 
-    async function injectGcss(post_element: PostElement) {
+    async function injectGcss(post_element: PostElement | null) {
         await InjectUtil.TryQuerySelectFor("#txt_physicalDescription");
 
         const getSelect = (id: string): HTMLSelectElement => {
@@ -333,13 +334,40 @@ void (async () => {
             sndr_city: getInput("txt_senderCity"),
             sndr_phone: getInput("txt_senderTelephone"),
             sndr_postcode: getInput("txt_senderPostcode"),
+            item_id: document.querySelector(".messageRouting .value")?.textContent?.trim() ?? "",
         };
 
+        if (dom.item_weight.value === "") {
+            dom.item_weight.value = "0";
+        }
+
+        // Content type
+        dom.content_type.value = "Other/various";
+
         // 등기 Packet 입력
-        const is_reg = post_element.ItemID.startsWith("L") || post_element.ItemID.startsWith("R");
+        const is_reg = dom.item_id.startsWith("L") || dom.item_id.startsWith("R");
         if (is_reg) {
             dom.physical_desc.value = "Packet";
             dom.item_type.value = "Packet";
+        }
+        SetItemValueCurrency(dom.item_value_currency, dom.item_value, is_reg);
+        SetPostagePaidCurrency(dom.postage_paid_currency, dom.postage_paid, is_reg);
+        SetIndemnityCurrency(dom.indemnity_amount_currency, dom.indemnity_amount, dom.item_value, dom.postage_paid);
+
+        // POD required
+        dom.pod_required_yes.checked = true;
+
+        if (dom.addr_email.value.search(String.raw`;`) !== -1 && dom.addr_email.value.length > 1) {
+            InjectUtil.GcssSwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
+        }
+
+        if (dom.sndr_city.value === "") dom.sndr_city.value = ".";
+        if (dom.sndr_postcode.value === "") dom.sndr_postcode.value = ".";
+        if (dom.addr_city.value === "") dom.addr_city.value = ".";
+
+        if (!post_element) {
+            console.log("Post element is null, skipping injection");
+            return;
         }
 
         if (dom.dest_postcode.value === "") dom.dest_postcode.value = post_element.AddresseeZipcode;
@@ -349,42 +377,19 @@ void (async () => {
             dom.posting_date.value = `${post_element.ApplicationDate.substring(6)}/${post_element.ApplicationDate.substring(4, 6)}/${post_element.ApplicationDate.substring(0, 4)}`;
         }
 
-        if (dom.item_weight.value === "") {
-            dom.item_weight.value = "0";
-        }
-
-        // Content type
-        dom.content_type.value = "Other/various";
-
-        SetItemValueCurrency(dom.item_value_currency, dom.item_value, is_reg);
-        SetPostagePaidCurrency(dom.postage_paid_currency, dom.postage_paid, is_reg);
-        SetIndemnityCurrency(dom.indemnity_amount_currency, dom.indemnity_amount, dom.item_value, dom.postage_paid);
-
-        // POD required
-        dom.pod_required_yes.checked = true;
-
         // Contents
         InjectUtil.GcssSwitchValue(dom.item_contents, post_element.Contents);
 
-        // Addressee name
+        // Addressee
         InjectUtil.GcssSwitchValue(dom.addr_name, post_element.AddresseeName, dom.addr_name.value.length !== 0);
-
         InjectUtil.GcssSwitchValue(dom.addr_street, post_element.AddresseeAddress);
         InjectUtil.GcssSwitchValue(dom.addr_phone, post_element.AddresseePhone);
-        if (dom.addr_email.value.search(String.raw`;`) !== -1 && dom.addr_email.value.length > 1) {
-            InjectUtil.GcssSwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
-        }
         InjectUtil.GcssSwitchValue(dom.addr_postcode, post_element.AddresseeZipcode);
 
-        if (dom.addr_city.value === "") dom.addr_city.value = ".";
-
-        // Sender Name
+        // Sender
         InjectUtil.GcssSwitchValue(dom.sndr_name, post_element.SenderName, dom.sndr_name.value.length !== 0);
         InjectUtil.GcssSwitchValue(dom.sndr_street, post_element.SenderAddress);
         InjectUtil.GcssSwitchValue(dom.sndr_phone, post_element.SenderPhone);
-
-        if (dom.sndr_city.value === "") dom.sndr_city.value = ".";
-        if (dom.sndr_postcode.value === "") dom.sndr_postcode.value = ".";
 
         console.log("dom injected");
     }
