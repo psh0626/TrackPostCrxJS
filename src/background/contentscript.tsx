@@ -118,23 +118,22 @@ void (async () => {
                     console.log("item id is invalid to fetch PostElement (must end with KR)");
                     return;
                 }
-
-                const post_element = await FindPostElement(item_id!);
-
-                console.log(post_element);
                 const port = chrome.runtime.connect();
-                port.onMessage.addListener((message: Msg) => {
+
+                port.onMessage.addListener(async (message: Msg) => {
                     console.log("message received: ", message);
                     if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
                         InjectUtil.InjectIcarePersonalRemarks();
+                        const post_element = await FindPostElement(item_id!);
+                        console.log(post_element);
                         if (!post_element.ItemTracked) {
                             console.log(`Item does not exist ${item_id}`);
-                            return;
                         }
                         InjectIcare(post_element);
                         // port.disconnect();
                     }
                 });
+
                 // port.onDisconnect.addListener((p) => {
                 //   p.disconnect();
                 //   port.disconnect();
@@ -433,22 +432,25 @@ void (async () => {
         SetSelect(dom.item_categ, "13");
         SetSelect(dom.item_type, "39");
 
-        InjectUtil.IcareSwitchValue(dom.sndr_name, post_element.SenderName);
-        InjectUtil.IcareSwitchValue(dom.sndr_street, post_element.SenderAddress);
-        InjectUtil.IcareSwitchValue(dom.sndr_phone, post_element.SenderPhone);
-
         dom.sndr_city.value = ".";
         dom.addr_city.value = ".";
-
-        InjectUtil.IcareSwitchValue(dom.addr_name, post_element.AddresseeName);
-        InjectUtil.IcareSwitchValue(dom.addr_phone, post_element.AddresseePhone);
-        InjectUtil.IcareSwitchValue(dom.addr_street, post_element.AddresseeAddress);
-        InjectUtil.IcareSwitchValue(dom.addr_zipcode, post_element.AddresseeZipcode);
-        InjectUtil.IcareSwitchValue(dom.item_desc, post_element.Contents);
 
         if (dom.addr_email.value.search(`;`) !== -1 && dom.addr_email.value.length > 1) {
             InjectUtil.IcareSwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
         }
+
+        if (post_element.ItemTracked) {
+            InjectUtil.IcareSwitchValue(dom.sndr_name, post_element.SenderName);
+            InjectUtil.IcareSwitchValue(dom.sndr_street, post_element.SenderAddress);
+            InjectUtil.IcareSwitchValue(dom.sndr_phone, post_element.SenderPhone);
+
+            InjectUtil.IcareSwitchValue(dom.addr_name, post_element.AddresseeName);
+            InjectUtil.IcareSwitchValue(dom.addr_phone, post_element.AddresseePhone);
+            InjectUtil.IcareSwitchValue(dom.addr_street, post_element.AddresseeAddress);
+            InjectUtil.IcareSwitchValue(dom.addr_zipcode, post_element.AddresseeZipcode);
+            InjectUtil.IcareSwitchValue(dom.item_desc, post_element.Contents);
+        }
+
         console.log("Dom Injected");
     }
 

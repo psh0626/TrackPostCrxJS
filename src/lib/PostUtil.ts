@@ -29,10 +29,7 @@ export class PostElement {
 }
 
 export class PostAPI {
-    private static async XmlToPostElement(
-        xml: string,
-        trackingNumber: string
-    ): Promise<PostElement> {
+    private static async XmlToPostElement(xml: string, trackingNumber: string): Promise<PostElement> {
         try {
             const result = await parseStringPromise(xml, {
                 explicitArray: false,
@@ -80,11 +77,15 @@ export class PostAPI {
                     "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
                 },
                 body: `POST_CODE=${trackingNumber}`,
+                signal: AbortSignal.timeout(3000),
             });
+            // const response: any = await new Promise((res) =>
+            //     setTimeout((_) => res({ ok: false, text: () => "" }), 3000)
+            // );
 
             if (!response.ok) {
-                console.error(response.statusText);
-                // throw new Error(response.statusText);
+                // console.error(response.statusText);
+                throw new Error(response.statusText);
             }
 
             return response.text();
@@ -95,8 +96,6 @@ export class PostAPI {
     }
 
     static async FetchPostElement(trackingNumber: string): Promise<PostElement> {
-        return await this.FetchPostXML(trackingNumber).then((xml) =>
-            this.XmlToPostElement(xml, trackingNumber)
-        );
+        return await this.FetchPostXML(trackingNumber).then((xml) => this.XmlToPostElement(xml, trackingNumber));
     }
 }
