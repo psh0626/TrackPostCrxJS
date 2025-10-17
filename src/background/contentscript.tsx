@@ -119,20 +119,25 @@ void (async () => {
                     return;
                 }
                 const port = chrome.runtime.connect();
+                let post_element = new PostElement();
 
                 port.onMessage.addListener(async (message: Msg) => {
                     console.log("message received: ", message);
                     if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
                         InjectUtil.InjectIcarePersonalRemarks();
-                        const post_element = await FindPostElement(item_id!);
                         console.log(post_element);
                         if (!post_element.ItemTracked) {
-                            console.log(`Item does not exist ${item_id}`);
+                            for (let i = 0; i < 15; i++) {
+                                await new Promise((res) => setTimeout(res, 200));
+                                if (post_element.ItemTracked) break;
+                            }
+                            if (!post_element.ItemTracked) console.log(`Item does not exist ${item_id}`);
                         }
                         InjectIcare(post_element);
                         // port.disconnect();
                     }
                 });
+                post_element = await FindPostElement(item_id!);
 
                 // port.onDisconnect.addListener((p) => {
                 //   p.disconnect();
