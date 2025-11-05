@@ -204,6 +204,7 @@ class InjectUtil {
         const input = (await this.TryQuerySelectFor("input#txtItemId")) as HTMLInputElement;
         if (input) {
             const form = document.querySelector("form:has(input#txtItemId)") as HTMLFormElement;
+            form.action = "/CSS/gcss/multiview/singleItemTracking";
             this.ChangeAttributes(input, form);
         }
     }
