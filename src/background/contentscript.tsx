@@ -65,6 +65,13 @@ void (async () => {
 
             if (currentURL.pathname.includes("/product-view") || currentURL.pathname.includes("/singleItemTracking")) {
                 InjectUtil.InjectGcssIdSearchInput();
+                if (
+                    currentURL.pathname.includes("/multiview/") &&
+                    currentURL.searchParams.get("item")?.startsWith("RR") &&
+                    document.querySelector("span#validationErrors")?.textContent?.includes("verify")
+                ) {
+                    window.location.href = currentURL.href.replace("/multiview/", "/REG/");
+                }
             } else if (currentURL.pathname.includes("/create/") || currentURL.pathname.includes("/reactivate/")) {
                 const item_id: string = document.querySelector(".value")?.textContent?.trim() ?? "";
                 if (!item_id) {

@@ -40,7 +40,7 @@ async function GatherStorageItems(items: StorageItem[]): Promise<(WorkflowItem |
     return results;
 }
 
-function MapToNotificationItem(item: WorkflowItem | GcssItem): chrome.notifications.ItemOptions {
+function MapToNotificationItem(item: WorkflowItem | GcssItem): chrome.notifications.NotificationItem {
     const isOutbound = ("tracking_id" in item ? item.tracking_id : item.ItemId).slice(-2) === "KR";
 
     if ("MessageType" in item) {
@@ -133,7 +133,7 @@ export default async function CreateNotification(force_update = false) {
     // Create notification
     const err_msg = fetch_error ? (fetch_error.GCSS ? "(GCSS 에러)\n" : "(i-Care 에러)\n") : "";
 
-    const options: chrome.notifications.NotificationOptions<true> = {
+    const options: chrome.notifications.NotificationCreateOptions = {
         type: "list",
         priority: 2,
         requireInteraction: true,
@@ -145,8 +145,10 @@ export default async function CreateNotification(force_update = false) {
         buttons: [{ title: "확인" }],
     };
 
-    chrome.notifications.clear(COMMANDS.ICARE_UNREAD_REPLIES, () => {
-        chrome.notifications.create(COMMANDS.ICARE_UNREAD_REPLIES, options);
+    chrome.notifications.clear(String(COMMANDS.ICARE_UNREAD_REPLIES), () => {
+        // ensure we call the overload that accepts (notificationId: string, options: NotificationCreateOptions)
+        // and satisfy TypeScript by asserting the options shape
+        void chrome.notifications.create(String(COMMANDS.ICARE_UNREAD_REPLIES), options);
     });
     return true;
 }
