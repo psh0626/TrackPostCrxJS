@@ -185,11 +185,11 @@ class InjectUtil {
     static async wait(ms: number): Promise<void> {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
-    static async TryQuerySelectFor(
+    static async TryQuerySelectFor<T>(
         selector: string,
         maxTries: number = 50,
         waitTime: number = 100
-    ): Promise<Element | null> {
+    ): Promise<Element | T | null> {
         for (let i = 0; i < maxTries; i++) {
             const element = document.querySelector(selector);
             if (element) {

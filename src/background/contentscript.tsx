@@ -68,7 +68,9 @@ void (async () => {
                 if (
                     currentURL.pathname.includes("/multiview/") &&
                     currentURL.searchParams.get("item")?.startsWith("RR") &&
-                    document.querySelector("span#validationErrors")?.textContent?.includes("verify")
+                    (
+                        await InjectUtil.TryQuerySelectFor<HTMLSpanElement>("span#validationErrors")
+                    )?.textContent?.includes("verify")
                 ) {
                     window.location.href = currentURL.href.replace("/multiview/", "/REG/");
                 }
