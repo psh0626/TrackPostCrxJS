@@ -67,7 +67,7 @@ void (async () => {
                 InjectUtil.InjectGcssIdSearchInput();
                 if (
                     currentURL.pathname.includes("/multiview/") &&
-                    currentURL.searchParams.get("item")?.startsWith("RR")
+                    currentURL.searchParams.get("item")?.startsWith("R")
                 ) {
                     window.location.href = currentURL.href.replace("/multiview/", "/REG/");
                 }
