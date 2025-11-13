@@ -96,6 +96,7 @@ void (async () => {
                     injectGcssL2(post_element);
                 }
             } else if (currentURL.pathname.includes("/reply/")) {
+                document.head.querySelector("link[rel='stylesheet']")?.removeAttribute("media");
                 document.oncopy = (e) => {
                     const selection = window.getSelection();
                     if (selection) {
