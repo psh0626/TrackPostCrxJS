@@ -65,11 +65,34 @@ void (async () => {
 
             if (currentURL.pathname.includes("/product-view") || currentURL.pathname.includes("/singleItemTracking")) {
                 InjectUtil.InjectGcssIdSearchInput();
-                if (
-                    currentURL.pathname.includes("/multiview/") &&
-                    currentURL.searchParams.get("item")?.startsWith("R")
-                ) {
-                    window.location.href = currentURL.href.replace("/multiview/", "/REG/");
+                if (currentURL.pathname.includes("/multiview/")) {
+                    const checkErr = () => document.querySelector("#validationErrors")?.textContent?.trim() ?? "";
+                    for (let i = 0; i < 30; i++) {
+                        if (checkErr().includes("verify")) {
+                            const itemId = currentURL.searchParams.get("item");
+                            const getService = () => {
+                                switch (itemId?.slice(0, 1)) {
+                                    case "E":
+                                        return "EMS";
+                                    case "L":
+                                        return "EXPRES";
+                                    case "R":
+                                        return "REG";
+                                    case "C":
+                                        return "UPU";
+                                    case "V":
+                                        return "INS";
+                                    default:
+                                        alert("Unknown service for item id " + itemId + ", redirecting to EMS view");
+                                        return "EMS";
+                                }
+                            };
+                            console.log("Detected verify error, redirecting to correct view");
+                            window.location.href = currentURL.href.replace("/multiview/", `/${getService()}/`);
+                            break;
+                        }
+                        await InjectUtil.wait(100);
+                    }
                 }
             } else if (currentURL.pathname.includes("/create/") || currentURL.pathname.includes("/reactivate/")) {
                 const item_id: string = document.querySelector(".value")?.textContent?.trim() ?? "";
