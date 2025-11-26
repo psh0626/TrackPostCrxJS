@@ -70,25 +70,11 @@ void (async () => {
                     for (let i = 0; i < 30; i++) {
                         if (checkErr().includes("verify")) {
                             const itemId = currentURL.searchParams.get("item");
-                            const getService = () => {
-                                switch (itemId?.slice(0, 1)) {
-                                    case "E":
-                                        return "EMS";
-                                    case "L":
-                                        return "EXPRES";
-                                    case "R":
-                                        return "REG";
-                                    case "C":
-                                        return "UPU";
-                                    case "V":
-                                        return "INS";
-                                    default:
-                                        alert("Unknown service for item id " + itemId + ", redirecting to EMS view");
-                                        return "EMS";
-                                }
-                            };
                             console.log("Detected verify error, redirecting to correct view");
-                            window.location.href = currentURL.href.replace("/multiview/", `/${getService()}/`);
+                            window.location.href = currentURL.href.replace(
+                                "/multiview/",
+                                `/${getMailService(itemId)}/`
+                            );
                             break;
                         }
                         await InjectUtil.wait(100);
@@ -100,6 +86,20 @@ void (async () => {
                     console.log("Cannot find item_id in document classname 'value'");
                     return;
                 }
+                if (currentURL.pathname.includes("/create/")) {
+                    const urlService = currentURL.pathname.split("gcss/")[1].split("/level1")[0];
+                    const correctService = getMailService(item_id);
+                    if (urlService !== correctService) {
+                        const saidYes = confirm(`
+                            등기번호: ${item_id}
+                            현재 페이지의 서비스: ${urlService === "UPU" ? "Parcel" : urlService}
+                            추천 서비스: ${correctService === "UPU" ? "Parcel" : correctService}
+                            \n등기번호와 서비스가 일치하지 않습니다. 해당 등기번호에 맞는 서비스 페이지로 이동하시겠습니까?`);
+                        if (saidYes)
+                            window.location.href = currentURL.href.replace(`/${urlService}/`, `/${correctService}/`);
+                    }
+                }
+
                 if (item_id.slice(-2) !== "KR") {
                     console.log("item id is invalid to fetch PostElement (must end with KR)");
                     return;
@@ -491,5 +491,23 @@ void (async () => {
 
     async function FindPostElement(item_id: string): Promise<PostElement> {
         return await SendRequest<PostElement>(new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id));
+    }
+
+    function getMailService(itemId: string | null) {
+        switch (itemId?.slice(0, 1)) {
+            case "E":
+                return "EMS";
+            case "L":
+                return "EXPRES";
+            case "R":
+                return "REG";
+            case "C":
+                return "UPU";
+            case "V":
+                return "INS";
+            default:
+                alert("Unknown service for item id " + itemId + ", redirecting to EMS view");
+                return "EMS";
+        }
     }
 })();
