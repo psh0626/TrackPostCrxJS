@@ -86,14 +86,14 @@ void (async () => {
                     console.log("Cannot find item_id in document classname 'value'");
                     return;
                 }
-                if (currentURL.pathname.includes("/create/")) {
-                    const urlService = currentURL.pathname.split("gcss/")[1].split("/level1")[0];
+                if (currentURL.pathname.includes("/create/") && currentURL.pathname.includes("/level1/")) {
+                    const urlService = currentURL.pathname.split("gcss/")[1].split("/level")[0];
                     const correctService = getMailService(item_id);
                     if (urlService !== correctService) {
                         const saidYes = confirm(`
                             등기번호: ${item_id}
-                            현재 페이지의 서비스: ${urlService === "UPU" ? "Parcel" : urlService}
-                            추천 서비스: ${correctService === "UPU" ? "Parcel" : correctService}
+                            현재 페이지의 서비스: ${urlService === "UPU" ? "Parcels" : urlService}
+                            추천 서비스: ${correctService === "UPU" ? "Parcels" : correctService}
                             \n등기번호와 서비스가 일치하지 않습니다. 해당 등기번호에 맞는 서비스 페이지로 이동하시겠습니까?`);
                         if (saidYes)
                             window.location.href = currentURL.href.replace(`/${urlService}/`, `/${correctService}/`);
