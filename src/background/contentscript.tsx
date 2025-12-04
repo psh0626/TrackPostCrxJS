@@ -391,8 +391,10 @@ void (async () => {
         // POD required
         dom.pod_required_yes.checked = true;
 
-        if (dom.addr_email.value.search(String.raw`;`) !== -1 && dom.addr_email.value.length > 1) {
-            InjectUtil.GcssSwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
+        if (dom.addr_email.value.length > 1) {
+            const raw_email = dom.addr_email.value;
+            const fixed_email = replaceLast(raw_email.toLowerCase(), ";", "@");
+            InjectUtil.GcssSwitchValue(dom.addr_email, fixed_email);
         }
 
         if (dom.sndr_city.value === "") dom.sndr_city.value = ".";
@@ -492,7 +494,19 @@ void (async () => {
     async function FindPostElement(item_id: string): Promise<PostElement> {
         return await SendRequest<PostElement>(new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id));
     }
+    function replaceLast(originalString: string, searchString: string, replacementString: string): string {
+        const lastIndex = originalString.lastIndexOf(searchString);
 
+        if (lastIndex === -1) {
+            return originalString; // Substring not found, return original string
+        }
+
+        return (
+            originalString.slice(0, lastIndex) +
+            replacementString +
+            originalString.slice(lastIndex + searchString.length)
+        );
+    }
     function getMailService(itemId: string | null) {
         switch (itemId?.slice(0, 1)) {
             case "E":
