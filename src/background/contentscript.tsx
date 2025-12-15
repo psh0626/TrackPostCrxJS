@@ -95,8 +95,14 @@ void (async () => {
                             현재 페이지의 서비스: ${urlService === "UPU" ? "Parcels" : urlService}
                             추천 서비스: ${correctService === "UPU" ? "Parcels" : correctService}
                             \n등기번호와 서비스가 일치하지 않습니다. 해당 등기번호에 맞는 서비스 페이지로 이동하시겠습니까?`);
-                        if (saidYes)
-                            window.location.href = currentURL.href.replace(`/${urlService}/`, `/${correctService}/`);
+                        if (saidYes) {
+                            document.querySelector<HTMLInputElement>("#btnCancel")?.click();
+                            setTimeout(() => {
+                                window.close();
+                            }, 2000);
+                            const newURL = currentURL.href.replace(`/${urlService}/`, `/${correctService}/`);
+                            window.open(newURL, "mywindow")?.focus();
+                        }
                     }
                 }
 
