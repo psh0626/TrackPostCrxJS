@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "IMIC TrackPost",
     "description": "박성훈이 만든 멋쟁이 Chrome/Edge 확장프로그램 - iCare, GCSS 사무 자동화",
-    "version": "2.95",
+    "version": "2.96",
     "icons": {
         "16": "src/ext-icon.png",
         "32": "src/ext-icon.png",
@@ -62,6 +62,11 @@
         {
             "matches": ["https://kmmbox.korea.kr/*"],
             "js": ["src/background/kmmboxScript.ts"]
+        },
+        {
+            "matches": ["https://mail.posa.or.kr/*"],
+            "js": ["src/background/posamailScript.js"],
+            "world": "MAIN"
         }
     ]
 }
