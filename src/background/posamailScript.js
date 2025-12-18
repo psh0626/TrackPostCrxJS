@@ -1,5 +1,10 @@
 const updateTitle = (ms = 1000) => {
     setTimeout(() => {
+        const currentURL = new URL(location.href);
+        if (!currentURL.pathname.includes("main.crd")) {
+            return;
+        }
+
         const unreadCount = document.querySelector("#li_INBOX")?.querySelector("strong")?.textContent;
 
         const unreadText = unreadCount === "" ? "" : `(${unreadCount}) `;
@@ -16,17 +21,19 @@ setInterval(() => {
 
 setInterval(
     () => {
-        ["forward", "write"].some((el) => {
-            const currentURL = new URL(location.href);
+        const currentURL = new URL(location.href);
+        if (!currentURL.pathname.includes("main.crd")) {
+            return;
+        }
 
-            if (!currentURL.hash.includes(el)) {
-                batchProcess?.modifyReloadMail();
-                updateTitle();
-                console.log("Unread mail updated");
-            }
-        });
+        const shouldRefresh = ["forward", "write"].some((el) => !currentURL.hash.includes(el));
+        if (shouldRefresh) {
+            batchProcess?.modifyReloadMail();
+            updateTitle();
+            console.log("Unread mail updated");
+        }
     },
-    1000 * 60 * 5
+    1000 * 60 * 3
 );
 
 console.log("POSA mail script loaded.");
