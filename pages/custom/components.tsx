@@ -129,7 +129,7 @@ export const MyList: React.FC<MyListProps> = ({
     serviceType = ServiceNames.EMS,
     isNotification = false,
 }) => {
-    let list_title = type === "replies" ? `${service} - ${serviceType} 발송 회신` : `${service} - EMS 도착 문의`;
+    let list_title = type === "replies" ? `${service} - ${serviceType} 발송 회신` : `${service} - ${serviceType} 도착 문의`;
     if (isNotification) list_title = list_title.replace("회신", "통지").replace("문의", "통지");
     list_title += `: ${items.length}건`;
     if (author !== "") list_title += ` (${author})`;

@@ -8,12 +8,14 @@ export enum ServiceTypes {
     Parcel = "UPU",
     Registered = "REG",
     KPacket = "EXPRES",
+    Insured = "INS",
 }
 export enum ServiceNames {
     EMS = "EMS",
     UPU = "소포",
     REG = "REG",
     EXPRES = "LPK",
+    INS = "보험",
 }
 export class GcssAPI {
     static settings: IMICSettings;
@@ -98,7 +100,7 @@ export class GcssAPI {
         }
     }
     private static async FetchRequests() {
-        const response = await this.PostFetch("TODO", ServiceTypes.EMS);
+        const response = await this.PostFetch("TODO", this.settings.GcssRequestServiceTypes);
         if (!response.ok) {
             console.error(response.status);
             return;

@@ -3,6 +3,7 @@ import CreateNotification, { GetStorageItems } from "../lib/Notification";
 import PopupTrack from "../lib/PopupTrack";
 import "../lib/TimespanExtension";
 import { GcssItem, WorkflowItem } from "./GetUnreadReplies/DataWrapper";
+import { ServiceTypes } from "./GetUnreadReplies/GcssReplies";
 import ProcessMessage from "./MessageHub/MessageHub";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
@@ -63,14 +64,17 @@ async function APICalls(count: number, final = false) {
         ];
         let hasImportantUnread = false;
         for (const e of services) {
-            const itemList = await GetStorageItems<GcssItem | WorkflowItem>(e);
+            let itemList = await GetStorageItems<GcssItem | WorkflowItem>(e);
+            if (e === COMMANDS.GCSS_UNREAD_REQUESTS && itemList.length > 0) {
+                itemList = itemList.filter((i) => (i as GcssItem).ServiceType === ServiceTypes.EMS);
+            }
             if (itemList.length > 0) {
                 hasImportantUnread = true;
                 break;
             }
         }
 
-        if (hasImportantUnread) {
+        if (hasImportantUnread || count % 120 === 0) {
             console.log("There are important unread items. Forcing notification update.");
             await CreateNotification(true);
         }

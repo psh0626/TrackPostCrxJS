@@ -25,6 +25,7 @@ export class IMICSettings {
     PersonalRemarks: PersonalRemark[] = [];
     GcssUnreadReplies = false;
     GcssUnreadRequests = false;
+    GcssRequestServiceTypes: ServiceTypes[] = [ServiceTypes.EMS];
     GcssUnreadNotificationInbound = false;
     GcssUnreadNotificationOutbound = false;
     GcssOutboundNotificationDate: string | null = null;

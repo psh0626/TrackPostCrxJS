@@ -1,15 +1,14 @@
-import React, { useEffect, useRef } from "react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import Stack from "@mui/material/Stack";
 import Divider from "@mui/material/Divider";
+import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { MyList, StyledTextField } from "../custom/components";
-import PopupTrack from "../../src/lib/PopupTrack";
 import { GcssItem, WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
-import { IMICSettings } from "../../src/lib/OptionElement";
 import { ServiceNames, ServiceTypes } from "../../src/background/GetUnreadReplies/GcssReplies";
 import { COMMANDS } from "../../src/lib/Message";
+import { IMICSettings } from "../../src/lib/OptionElement";
+import PopupTrack from "../../src/lib/PopupTrack";
+import { MyList, StyledTextField } from "../custom/components";
 
 function PopUpApp() {
     // TODO: GCSS Author Name Separation.
@@ -29,6 +28,7 @@ function PopUpApp() {
     const [gcss_notif_out_items, set_gcss_notif_out_items] = useState<GcssItem[]>([]);
     const [gcss_author, set_gcss_author] = useState<string[]>([]);
     const [gcss_services, set_gcss_services] = useState<ServiceTypes[]>([ServiceTypes.EMS]);
+    const [gcss_req_services, set_gcss_req_services] = useState<ServiceTypes[]>([ServiceTypes.EMS]);
 
     const [chk_rep, set_chk_rep] = useState(false);
     const [chk_req, set_chk_req] = useState(false);
@@ -94,6 +94,18 @@ function PopUpApp() {
                     return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
                 })
             );
+            set_gcss_req_services(
+                settings.current.GcssRequestServiceTypes.sort((a, b) => {
+                    const serviceOrder = [
+                        ServiceTypes.EMS,
+                        ServiceTypes.Parcel,
+                        ServiceTypes.KPacket,
+                        ServiceTypes.Registered,
+                        ServiceTypes.Insured,
+                    ];
+                    return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
+                })
+            );
 
             if (settings.current.IcareUnreadReplies) {
                 const dict = (await chrome.storage.session.get("ICARE_UNREAD_REPLIES"))
@@ -126,16 +138,16 @@ function PopUpApp() {
             }
 
             if (settings.current.IcareUnreadNotificationInbound) {
-                const dict = (
-                    await chrome.storage.session.get(COMMANDS.ICARE_UNREAD_NOTIF_INBOUND)
-                )[COMMANDS.ICARE_UNREAD_NOTIF_INBOUND] as WorkflowItem[];
+                const dict = (await chrome.storage.session.get(COMMANDS.ICARE_UNREAD_NOTIF_INBOUND))[
+                    COMMANDS.ICARE_UNREAD_NOTIF_INBOUND
+                ] as WorkflowItem[];
                 if (typeof dict !== "undefined" && dict.length > 0) set_icare_notif_in_items(dict);
             }
 
             if (settings.current.IcareUnreadNotificationOutbound) {
-                const dict = (
-                    await chrome.storage.session.get(COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND)
-                )[COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND] as WorkflowItem[];
+                const dict = (await chrome.storage.session.get(COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND))[
+                    COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND
+                ] as WorkflowItem[];
                 if (typeof dict !== "undefined" && dict.length > 0) set_icare_notif_out_items(dict);
             }
 
@@ -147,9 +159,9 @@ function PopUpApp() {
             }
 
             if (settings.current.GcssUnreadNotificationOutbound) {
-                const dict = (
-                    await chrome.storage.session.get(COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND)
-                )[COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND] as GcssItem[];
+                const dict = (await chrome.storage.session.get(COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND))[
+                    COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND
+                ] as GcssItem[];
                 if (typeof dict !== "undefined" && dict.length > 0) set_gcss_notif_out_items(dict);
             }
 
@@ -159,16 +171,36 @@ function PopUpApp() {
             // });
         })();
     }, []);
+
+    const render_gcss_requests = () => {
+        if (!chk_gcss_req) return null;
+        if (gcss_req_items.length < 1)
+            return (
+                <Stack alignItems="center">
+                    <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
+                        GCSS 도착 회신: 모두 읽음 ✔️
+                    </Typography>
+                </Stack>
+            );
+
+        return gcss_req_services.map((serv) => (
+            <MyList
+                key={serv}
+                items={gcss_req_items.filter((el) => el.ServiceType === serv)}
+                type="requests"
+                service="GCSS"
+                serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
+            />
+        ));
+    };
+
     const render_gcss_replies = () => {
         if (!chk_gcss_rep) return null;
 
         if (gcss_items.length < 1)
             return (
                 <Stack alignItems="center">
-                    <Typography
-                        variant="subtitle2"
-                        color="initial"
-                        sx={{ userSelect: "none", fontWeight: "300" }}>
+                    <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
                         GCSS 발송 회신: 모두 읽음 ✔️
                     </Typography>
                 </Stack>
@@ -187,13 +219,11 @@ function PopUpApp() {
                 return gcss_author.map((user) => (
                     <MyList
                         key={user}
-                        items={gcss_items.filter((el) =>
-                            el.RequestAuthor.toLowerCase().includes(user.toLowerCase())
-                        )}
+                        items={gcss_items.filter((el) => el.RequestAuthor.toLowerCase().includes(user.toLowerCase()))}
                         type="replies"
                         service="GCSS"
                         author={user}
-                        serviceType={ServiceNames[gcss_services[0]]}
+                        serviceType={ServiceNames[gcss_services[0] as keyof typeof ServiceNames]}
                     />
                 ));
             }
@@ -206,7 +236,7 @@ function PopUpApp() {
                         type="replies"
                         service="GCSS"
                         author=""
-                        serviceType={ServiceNames[serv]}
+                        serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
                     />
                 ));
             } else {
@@ -222,7 +252,7 @@ function PopUpApp() {
                             type="replies"
                             service="GCSS"
                             author={user}
-                            serviceType={ServiceNames[serv]}
+                            serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
                         />
                     ))
                 );
@@ -237,23 +267,13 @@ function PopUpApp() {
         if (gcss_notif_in_items.length < 1) {
             return (
                 <Stack alignItems="center">
-                    <Typography
-                        variant="subtitle2"
-                        color="initial"
-                        sx={{ userSelect: "none", fontWeight: "300" }}>
+                    <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
                         GCSS 도착 통지: 모두 읽음 ✔️
                     </Typography>
                 </Stack>
             );
         }
-        return (
-            <MyList
-                items={gcss_notif_in_items}
-                type="requests"
-                service="GCSS"
-                isNotification={true}
-            />
-        );
+        return <MyList items={gcss_notif_in_items} type="requests" service="GCSS" isNotification={true} />;
     };
 
     const render_gcss_inbound_notifications = () => {
@@ -263,23 +283,13 @@ function PopUpApp() {
         if (gcss_notif_in_items.length < 1) {
             return (
                 <Stack alignItems="center">
-                    <Typography
-                        variant="subtitle2"
-                        color="initial"
-                        sx={{ userSelect: "none", fontWeight: "300" }}>
+                    <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
                         GCSS 도착 통지: 모두 읽음 ✔️
                     </Typography>
                 </Stack>
             );
         }
-        return (
-            <MyList
-                items={gcss_notif_in_items}
-                type="requests"
-                service="GCSS"
-                isNotification={true}
-            />
-        );
+        return <MyList items={gcss_notif_in_items} type="requests" service="GCSS" isNotification={true} />;
     };
 
     const render_gcss_outbound_notifications = () => {
@@ -289,23 +299,13 @@ function PopUpApp() {
         if (gcss_notif_out_items.length < 1) {
             return (
                 <Stack alignItems="center">
-                    <Typography
-                        variant="subtitle2"
-                        color="initial"
-                        sx={{ userSelect: "none", fontWeight: "300" }}>
+                    <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
                         GCSS 발송 통지: 모두 읽음 ✔️
                     </Typography>
                 </Stack>
             );
         }
-        return (
-            <MyList
-                items={gcss_notif_out_items}
-                type="replies"
-                service="GCSS"
-                isNotification={true}
-            />
-        );
+        return <MyList items={gcss_notif_out_items} type="replies" service="GCSS" isNotification={true} />;
     };
 
     const render_icare_inbound_notifications = () => {
@@ -315,23 +315,13 @@ function PopUpApp() {
         if (icare_notif_in_items.length < 1) {
             return (
                 <Stack alignItems="center">
-                    <Typography
-                        variant="subtitle2"
-                        color="initial"
-                        sx={{ userSelect: "none", fontWeight: "300" }}>
+                    <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
                         iCare 도착 통지: 모두 읽음 ✔️
                     </Typography>
                 </Stack>
             );
         }
-        return (
-            <MyList
-                items={icare_notif_in_items}
-                type="requests"
-                service="iCare"
-                isNotification={true}
-            />
-        );
+        return <MyList items={icare_notif_in_items} type="requests" service="iCare" isNotification={true} />;
     };
 
     const render_icare_outbound_notifications = () => {
@@ -341,23 +331,13 @@ function PopUpApp() {
         if (icare_notif_out_items.length < 1) {
             return (
                 <Stack alignItems="center">
-                    <Typography
-                        variant="subtitle2"
-                        color="initial"
-                        sx={{ userSelect: "none", fontWeight: "300" }}>
+                    <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
                         iCare 발송 통지: 모두 읽음 ✔️
                     </Typography>
                 </Stack>
             );
         }
-        return (
-            <MyList
-                items={icare_notif_out_items}
-                type="replies"
-                service="iCare"
-                isNotification={true}
-            />
-        );
+        return <MyList items={icare_notif_out_items} type="replies" service="iCare" isNotification={true} />;
     };
 
     return (
@@ -392,20 +372,8 @@ function PopUpApp() {
             />
 
             <Divider style={{ margin: "15px 0" }} />
-            {chk_gcss_req ? (
-                gcss_req_items.length > 0 ? (
-                    <MyList items={gcss_req_items} type="requests" service="GCSS" />
-                ) : (
-                    <Stack alignItems="center">
-                        <Typography
-                            variant="subtitle2"
-                            color="initial"
-                            sx={{ userSelect: "none", fontWeight: "300" }}>
-                            GCSS 도착 문의: 모두 읽음 ✔️
-                        </Typography>
-                    </Stack>
-                )
-            ) : null}
+            {render_gcss_requests()}
+
             {render_gcss_inbound_notifications()}
 
             {render_gcss_replies()}
@@ -418,10 +386,7 @@ function PopUpApp() {
                     <MyList items={icare_req_items} type="requests" />
                 ) : (
                     <Stack alignItems="center">
-                        <Typography
-                            variant="subtitle2"
-                            color="initial"
-                            sx={{ userSelect: "none", fontWeight: "300" }}>
+                        <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
                             ICare 도착 문의: 모두 읽음 ✔️
                         </Typography>
                     </Stack>
@@ -436,9 +401,7 @@ function PopUpApp() {
                         icare_author.map((user) => (
                             <MyList
                                 key={user}
-                                items={icare_items.filter((e) =>
-                                    e.author.toLowerCase().includes(user.toLowerCase())
-                                )}
+                                items={icare_items.filter((e) => e.author.toLowerCase().includes(user.toLowerCase()))}
                                 type="replies"
                                 service="iCare"
                                 author={user}
@@ -449,10 +412,7 @@ function PopUpApp() {
                     )
                 ) : (
                     <Stack alignItems="center">
-                        <Typography
-                            variant="subtitle2"
-                            color="initial"
-                            sx={{ userSelect: "none", fontWeight: "300" }}>
+                        <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
                             iCare 발송 회신: 모두 읽음 ✔️
                         </Typography>
                     </Stack>

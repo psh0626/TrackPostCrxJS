@@ -157,6 +157,21 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
         }
     }
 
+    function ToggleCheckRequestService(type: ServiceTypes, checked: boolean) {
+        const current = settingsState.GcssRequestServiceTypes || [];
+        const relatedTypes = [ServiceTypes.Registered, ServiceTypes.KPacket, ServiceTypes.Insured];
+        const typesToToggle = relatedTypes.includes(type) ? relatedTypes : [type];
+
+        let newTypes: ServiceTypes[];
+        if (checked) {
+            newTypes = Array.from(new Set([...current, ...typesToToggle]));
+        } else {
+            newTypes = current.filter((el) => !typesToToggle.includes(el));
+            if (newTypes.length === 0) updateSetting("GcssUnreadRequests", false);
+        }
+
+        updateSetting("GcssRequestServiceTypes", newTypes);
+    }
     function ShowWeekpicker(service: "iCare" | "GCSS") {
         if (
             (service === "iCare" && settingsState.IcareUnreadNotificationOutbound) ||
@@ -362,11 +377,16 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                             <NotificationSettings
                                 label="GCSS 도착 문의 알림"
                                 checked={settingsState.GcssUnreadRequests}
-                                onChange={(c) => updateSetting("GcssUnreadRequests", c)}
+                                onChange={(c) => {
+                                    updateSetting("GcssUnreadRequests", c);
+
+                                    if ((settingsState.GcssRequestServiceTypes || []).length < 1)
+                                        updateSetting("GcssRequestServiceTypes", [ServiceTypes.EMS]);
+                                }}
                                 subSettings={
                                     <FormControlLabel
                                         sx={{ transform: "scale(0.9)", ml: "10px" }}
-                                        label="도착 통지 알림"
+                                        label="EMS 도착 통지 알림"
                                         control={
                                             <Stack direction="row" alignItems="center">
                                                 <SubdirectoryArrowRight sx={{ paddingBottom: 1 }} />
@@ -397,7 +417,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                         <Stack direction="row">
                                             <FormControlLabel
                                                 sx={{ transform: "scale(0.9)" }}
-                                                label="발송 통지 알림"
+                                                label="EMS 발송 통지 알림"
                                                 control={
                                                     <Stack direction="row" alignItems="center">
                                                         <SubdirectoryArrowRight
@@ -439,9 +459,60 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                 }
                             />
                         </Grid>
+                        {settingsState.GcssUnreadRequests && (
+                            <Grid size={{ xs: 12 }}>
+                                <Divider sx={{ marginTop: 1 }}>도착문의</Divider>
+                                <Stack direction="row" alignItems="end" justifyContent="space-evenly">
+                                    <FormControlLabel
+                                        label="EMS"
+                                        control={
+                                            <Checkbox
+                                                checked={(settingsState.GcssRequestServiceTypes || []).includes(
+                                                    ServiceTypes.EMS
+                                                )}
+                                                onChange={(e, c) => ToggleCheckRequestService(ServiceTypes.EMS, c)}
+                                                color="error"
+                                            />
+                                        }
+                                    />
+
+                                    <FormControlLabel
+                                        label="REG"
+                                        control={
+                                            <Checkbox
+                                                checked={(settingsState.GcssRequestServiceTypes || []).some(
+                                                    (rs) =>
+                                                        rs === ServiceTypes.Registered ||
+                                                        rs === ServiceTypes.KPacket ||
+                                                        rs === ServiceTypes.Insured
+                                                )}
+                                                onChange={(e, c) => {
+                                                    ToggleCheckRequestService(ServiceTypes.Registered, c);
+                                                }}
+                                                color="error"
+                                            />
+                                        }
+                                    />
+
+                                    <FormControlLabel
+                                        label="Parcels"
+                                        control={
+                                            <Checkbox
+                                                checked={(settingsState.GcssRequestServiceTypes || []).includes(
+                                                    ServiceTypes.Parcel
+                                                )}
+                                                onChange={(e, c) => ToggleCheckRequestService(ServiceTypes.Parcel, c)}
+                                                color="error"
+                                            />
+                                        }
+                                    />
+                                </Stack>
+                                <Divider sx={{ marginTop: 1 }}></Divider>
+                            </Grid>
+                        )}
                         {settingsState.GcssUnreadReplies && (
                             <Grid size={{ xs: 12 }}>
-                                <Divider sx={{ marginTop: 1 }} />
+                                <Divider sx={{ marginTop: 1 }}>발송회신</Divider>
                                 <Stack direction="row" alignItems="end" justifyContent="space-evenly">
                                     <FormControlLabel
                                         label="EMS"

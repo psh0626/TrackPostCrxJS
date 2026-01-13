@@ -52,6 +52,7 @@ void (async () => {
 
         const currentURL = new URL(document.URL);
         if (currentURL.origin === GCSS_URL) {
+            document.head.querySelector("link[rel='stylesheet']")?.removeAttribute("media");
             window.addEventListener("hashchange", (e) => {
                 if (e.newURL.includes("/query")) {
                     InjectUtil.InjectGcssQueryInput();
@@ -125,7 +126,6 @@ void (async () => {
                     injectGcssL2(post_element);
                 }
             } else if (currentURL.pathname.includes("/reply/")) {
-                document.head.querySelector("link[rel='stylesheet']")?.removeAttribute("media");
                 document.oncopy = (e) => {
                     const selection = window.getSelection();
                     if (selection) {
