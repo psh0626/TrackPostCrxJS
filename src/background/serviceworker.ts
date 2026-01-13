@@ -20,7 +20,7 @@ main();
 
 function main() {
     let count = 0;
-    const GLOBAL_INTERVAL = "2".toSeconds();
+    const GLOBAL_INTERVAL = "30".toSeconds();
     const MAIL_TAB_INTERVAL = "20".toMinutes();
 
     setInterval(() => {
