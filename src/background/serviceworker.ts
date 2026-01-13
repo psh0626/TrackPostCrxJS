@@ -20,7 +20,7 @@ main();
 
 function main() {
     let count = 0;
-    const GLOBAL_INTERVAL = "30".toSeconds();
+    const GLOBAL_INTERVAL = "2".toSeconds();
     const MAIL_TAB_INTERVAL = "20".toMinutes();
 
     setInterval(() => {
@@ -91,7 +91,7 @@ async function APICalls(count: number, final = false) {
             item.url!.includes("gcss.ipc.be")
         )[0] as chrome.tabs.Tab;
 
-        if (!icare_tab || !gcss_tab) {
+        if (!icare_tab && !gcss_tab) {
             if (final) {
                 await chrome.action.setBadgeText({ text: "?" });
             } else {
