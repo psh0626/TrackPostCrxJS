@@ -104,7 +104,7 @@ export default function ProcessMessage(
                 const session_store: { [key: string]: GcssItem[] } = {};
                 session_store[Message.Command] = Message.Param as GcssItem[];
                 await chrome.storage.session.set(session_store);
-                await CreateNotification();
+                await CreateNotification(false);
             })();
             return;
 
@@ -114,7 +114,7 @@ export default function ProcessMessage(
                 const session_store: { [key: string]: WorkflowItem[] } = {};
                 session_store[Message.Command] = Message.Param as WorkflowItem[];
                 await chrome.storage.session.set(session_store);
-                await CreateNotification();
+                await CreateNotification(false);
             })();
             return;
 

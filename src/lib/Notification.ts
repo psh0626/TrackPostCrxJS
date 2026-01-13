@@ -124,7 +124,7 @@ export default async function CreateNotification(force_update = false) {
         await chrome.action.setBadgeText({ text: `${current_num}` });
     }
 
-    if (fetch_error && !force_update) return;
+    // if (fetch_error) return;
 
     // Map items to notification format
     const combined = [...gcssStoredItems, ...workflowItems].map(MapToNotificationItem);
@@ -144,6 +144,11 @@ export default async function CreateNotification(force_update = false) {
         items: combined,
         buttons: [{ title: "확인" }],
     };
+
+    if (!force_update) {
+        chrome.notifications.create(String(COMMANDS.ICARE_UNREAD_REPLIES), options);
+        return true;
+    }
 
     chrome.notifications.clear(String(COMMANDS.ICARE_UNREAD_REPLIES), () => {
         // ensure we call the overload that accepts (notificationId: string, options: NotificationCreateOptions)
