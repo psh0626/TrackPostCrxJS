@@ -1,7 +1,8 @@
 import { COMMANDS, Msg } from "../lib/Message";
-import CreateNotification from "../lib/Notification";
+import CreateNotification, { GetStorageItems } from "../lib/Notification";
 import PopupTrack from "../lib/PopupTrack";
 import "../lib/TimespanExtension";
+import { GcssItem, WorkflowItem } from "./GetUnreadReplies/DataWrapper";
 import ProcessMessage from "./MessageHub/MessageHub";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
@@ -54,8 +55,25 @@ async function APICalls(count: number, final = false) {
     const today = new Date();
     console.log(`${today.toLocaleTimeString("ko-KR")}: Ticking Global Timer: `, count, " times");
     if (count % 6 === 0) {
-        console.log("CreateNotification invoking..");
-        await CreateNotification(true);
+        const services = [
+            COMMANDS.GCSS_UNREAD_REPLIES,
+            COMMANDS.GCSS_UNREAD_REQUESTS,
+            COMMANDS.ICARE_UNREAD_REPLIES,
+            COMMANDS.ICARE_UNREAD_REQUESTS,
+        ];
+        let hasImportantUnread = false;
+        for (const e of services) {
+            const itemList = await GetStorageItems<GcssItem | WorkflowItem>(e);
+            if (itemList.length > 0) {
+                hasImportantUnread = true;
+                break;
+            }
+        }
+
+        if (hasImportantUnread) {
+            console.log("There are important unread items. Forcing notification update.");
+            await CreateNotification(true);
+        }
     }
     const work_tabs = await chrome.tabs.query({
         url: ["https://icare.post/*", "https://gcss.ipc.be/*"],
