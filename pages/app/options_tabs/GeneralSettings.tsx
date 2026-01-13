@@ -262,7 +262,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             <Paper sx={{ position: "absolute", top: "30vh", left: "750px" }}>
                 <MyWeekPicker />
             </Paper>
-            <Stack spacing={4} sx={{ width: 500 }}>
+            <Stack spacing={4} sx={{ width: 550 }}>
                 <Paper sx={{ p: 3 }}>
                     <Grid container width="100%" rowSpacing={1}>
                         <Grid size={{ xs: 12 }}>
@@ -512,7 +512,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                         )}
                         {settingsState.GcssUnreadReplies && (
                             <Grid size={{ xs: 12 }}>
-                                <Divider sx={{ marginTop: 1 }}>발송회신</Divider>
+                                <Divider sx={{ marginTop: 2 }}>발송회신</Divider>
                                 <Stack direction="row" alignItems="end" justifyContent="space-evenly">
                                     <FormControlLabel
                                         label="EMS"
@@ -566,7 +566,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                         }
                                     />
                                 </Stack>
-                                <Divider sx={{ marginTop: 0, marginBottom: 2 }} />
+                                <Divider sx={{ marginTop: 1, marginBottom: 2 }} />
                                 <AuthorInput
                                     label="검색할 작성자:"
                                     value={gcssAuthorRaw}
