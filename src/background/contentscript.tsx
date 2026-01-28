@@ -478,7 +478,7 @@ void (async () => {
         dom.sndr_city.value = ".";
         dom.addr_city.value = ".";
 
-        if (dom.addr_email.value.search(`;`) !== -1 && dom.addr_email.value.length > 1) {
+        if (dom.addr_email.value.length > 1) {
             InjectUtil.IcareSwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
         }
 
