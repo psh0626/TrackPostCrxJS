@@ -1,5 +1,3 @@
-import { Sick } from "@mui/icons-material";
-
 export function TrimObject(obj: any): any {
     if (typeof obj !== "object" || obj === null) {
         // If it's not an object or it's null, return it as is
@@ -24,6 +22,7 @@ export function TrimObject(obj: any): any {
     return obj;
 }
 export class GcssItem {
+    RequestingCallcenter = "";
     OriginCountry = "";
     DestinationCountry = "";
     ItemId = "";
@@ -56,6 +55,7 @@ export class GcssItem {
             return new GcssItem({
                 OriginCountry: rawItem.originCountry!,
                 DestinationCountry: rawItem.destCountry,
+                RequestingCallcenter: rawItem.origCallCentre,
                 ItemId: rawItem.itemId,
                 ReadStatus: rawItem.readStatus,
                 RequestAuthor: rawItem.originAuthor!,
@@ -70,6 +70,7 @@ export class GcssItem {
             return new GcssItem({
                 OriginCountry: rawItem.origCountry,
                 DestinationCountry: rawItem.destCountry,
+                RequestingCallcenter: rawItem.origCallCentre,
                 ItemId: rawItem.itemId,
                 WorkflowLevel: rawItem.taskDescription,
                 ServiceType: rawItem.product,
@@ -86,7 +87,7 @@ export class GcssItem {
             });
     }
     private GenerateLink() {
-        const is_reply = this.OriginCountry === "KR" ? "reply" : "request";
+        const is_reply = (this.RequestingCallcenter || this.OriginCountry).includes("KR") ? "reply" : "request";
         this.WorkflowLink =
             `https://gcss.ipc.be/CSS/gcss/${this.ServiceType}` +
             `/${is_reply}/show/message/${this.InternalMessageId}` +
@@ -112,9 +113,7 @@ export class GcssItem {
     private static ConvertDate(dateSerial: number) {
         const date = new Date(dateSerial);
         const result =
-            (date.getMonth() + 1).toString().padStart(2, "0") +
-            "/" +
-            date.getDate().toString().padStart(2, "0");
+            (date.getMonth() + 1).toString().padStart(2, "0") + "/" + date.getDate().toString().padStart(2, "0");
         return result;
     }
 }
