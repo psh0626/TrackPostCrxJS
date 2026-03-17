@@ -1,25 +1,25 @@
-import { COMMANDS, Msg, SendRequest } from "../lib/Message";
-import { IMICSettings } from "../lib/OptionElement";
+import { IMICSettings } from "../lib/IMICSettings";
+import { COMMANDS, MSG, sendRequest } from "../lib/message";
 import { PostElement } from "../lib/PostUtil";
-import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
-import InjectUtil from "./injectDOM/InjectUtil";
-import OldGcssInjectUtil from "./injectDOM/OldGcssInjectUtil";
+import InjectUtil from "./inject-dom/injectUtil";
+import OldGcssInjectUtil from "./inject-dom/oldGcssInjectUtil";
+import { GcssAPI } from "./pending-replies/gcssReplies";
 
 (async () => {
     const settings = new IMICSettings();
-    await settings.RequestLoad();
+    await settings.requestLoad();
     GcssAPI.settings = settings;
 
     console.log("Content script loaded at: " + document.readyState);
 
-    chrome.runtime.onMessage.addListener((message: Msg) => {
+    chrome.runtime.onMessage.addListener((message: MSG) => {
         switch (message.Command) {
             case COMMANDS.GCSS_UNREAD_REPLIES:
                 void GcssAPI.FetchReplies(false);
                 break;
             case COMMANDS.SETTINGS_CHANGED:
                 void (async () => {
-                    await settings.RequestLoad();
+                    await settings.requestLoad();
                     GcssAPI.settings = settings;
                     console.log("Settings Reloaded", settings, GcssAPI.settings);
                 })();
@@ -122,7 +122,7 @@ import OldGcssInjectUtil from "./injectDOM/OldGcssInjectUtil";
     }
 
     async function findPostElement(item_id: string): Promise<PostElement> {
-        return await SendRequest<PostElement>(new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id));
+        return await sendRequest<PostElement>(new MSG(COMMANDS.FETCH_POST_ELEMENT, item_id));
     }
     function getExchangeRate(currency_value: string) {
         let rate = 1500; // USD

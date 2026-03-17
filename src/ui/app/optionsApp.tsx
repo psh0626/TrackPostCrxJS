@@ -1,10 +1,10 @@
 import { TravelExplore } from "@mui/icons-material";
 import { AppBar, Box, Paper, Tab, Tabs, Toolbar, Typography } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
-import { IMICSettings } from "../../src/lib/OptionElement";
-import { GeneralSettings } from "./options_tabs/GeneralSettings";
-import { ImportExport } from "./options_tabs/ImportExport";
-import { PersonalRemarks } from "./options_tabs/PersonalRemarks";
+import { IMICSettings } from "../../lib/IMICSettings";
+import { GeneralSettings } from "./tabs/generalSettings";
+import { ImportExport } from "./tabs/importExport";
+import { PersonalRemarks } from "./tabs/personalRemarks";
 
 export default function OptionsApp() {
     const settings = useRef(new IMICSettings());
@@ -14,7 +14,7 @@ export default function OptionsApp() {
     useEffect(() => {
         if (!initialized) {
             void (async () => {
-                await settings.current.LoadOptions();
+                await settings.current.loadOptions();
                 console.log("options_app.tsb: settings loaded", settings.current);
                 setInitialized(true);
             })();

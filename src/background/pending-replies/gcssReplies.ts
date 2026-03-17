@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
-import { COMMANDS, Msg } from "../../lib/Message";
-import { IMICSettings } from "../../lib/OptionElement";
-import { GcssItem, GcssRawItem, TrimObject } from "./DataWrapper";
+import { IMICSettings } from "../../lib/IMICSettings";
+import { COMMANDS, MSG } from "../../lib/message";
+import { GcssItem, GcssRawItem, trimObject } from "./dataWrapper";
 
 export enum ServiceTypes {
     EMS = "EMS",
@@ -27,7 +27,7 @@ export class GcssAPI {
     }
     private static async PostFetch(
         folder: "RPLYRCVD" | "TODO" | "NOTIFRCVD" = "RPLYRCVD",
-        serviceType: ServiceTypes[] | string = ServiceTypes.EMS
+        serviceType: ServiceTypes[] | string = ServiceTypes.EMS,
     ) {
         if (Array.isArray(serviceType)) serviceType = serviceType.join('", "');
         return await fetch("https://gcss.ipc.be/CSS/gcss/list-tasks", {
@@ -54,49 +54,52 @@ export class GcssAPI {
             return;
         }
 
-        const trimmed = TrimObject(await response.json()) as GcssRawItem[];
+        const trimmed = trimObject(await response.json()) as GcssRawItem[];
         console.log("GCSS NOTIFICATIONS FETCHED: ", trimmed);
 
         const unread = trimmed
             .filter(
                 (item) =>
-                    item.messageType === "NQ" && (item.readStatus === "UNREAD" || item.readStatus === "MARKED_UNREAD")
+                    item.messageType === "NQ" && (item.readStatus === "UNREAD" || item.readStatus === "MARKED_UNREAD"),
             )
             .map((item) => GcssItem.FromRawItem(item));
         console.log("GCSS NOTIFICATIONS FILTERED: ", unread);
 
         if (isInboundNotiOn) {
-            const inbound = unread.filter((item) => item.ItemId.slice(-2) !== "KR");
+            const inbound = unread.filter((item) => item.itemId.slice(-2) !== "KR");
             console.log("GCSS NOTIFICATIONS INOUND: ", inbound);
-            await chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_NOTIF_INBOUND, inbound));
+            await chrome.runtime.sendMessage(new MSG(COMMANDS.GCSS_UNREAD_NOTIF_INBOUND, inbound));
         }
         if (this.settings.GcssUnreadNotificationOutbound) {
-            let outbound = unread.filter((item) => item.ItemId.slice(-2) === "KR");
+            let outbound = unread.filter((item) => item.itemId.slice(-2) === "KR");
             console.log("GCSS NOTIFICATIONS OUTBOUND: ", outbound);
 
             if (this.settings.GcssOutboundNotificationCountries.length > 0) {
                 outbound = outbound.filter((item) =>
-                    this.IncludesOneOf(item.OriginCountry, this.settings.GcssOutboundNotificationCountries)
+                    this.IncludesOneOf(item.originCountry, this.settings.GcssOutboundNotificationCountries),
                 );
                 console.log("GCSS NOTIFICATIONS OUTBOUND COUNTRIES FILTERED: ", outbound);
             }
             if (this.settings.GcssOutboundNotificationExcludedCountries.length > 0) {
                 outbound = outbound.filter(
                     (item) =>
-                        !this.IncludesOneOf(item.OriginCountry, this.settings.GcssOutboundNotificationExcludedCountries)
+                        !this.IncludesOneOf(
+                            item.originCountry,
+                            this.settings.GcssOutboundNotificationExcludedCountries,
+                        ),
                 );
                 console.log("GCSS NOTIFICATIONS OUTBOUND EXCLUDED COUNTRIES FILTERED: ", outbound);
             }
 
             if (this.settings.GcssOutboundNotificationDate) {
                 outbound = outbound.filter((item) => {
-                    const created = dayjs(item.NotificationCreationDate, "MM/dd").set("year", dayjs().year());
+                    const created = dayjs(item.notificationCreationDate, "MM/dd").set("year", dayjs().year());
                     return created.isSame(dayjs(this.settings.GcssOutboundNotificationDate), "week");
                 });
                 console.log("GCSS NOTIFICATIONS OUTBOUND DATE FILTERED: ", outbound);
             }
 
-            await chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND, outbound));
+            await chrome.runtime.sendMessage(new MSG(COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND, outbound));
         }
     }
     private static async FetchRequests() {
@@ -105,7 +108,7 @@ export class GcssAPI {
             console.error(response.status);
             return;
         }
-        const trimmed = TrimObject(await response.json()) as GcssRawItem[];
+        const trimmed = trimObject(await response.json()) as GcssRawItem[];
         console.log("GCSS REQUESTS FETCHED: ", trimmed);
 
         const unread = trimmed
@@ -113,7 +116,7 @@ export class GcssAPI {
             .map((item) => GcssItem.FromRawItem(item));
         console.log("GCSS REQUESTS FILTERED: ", unread);
 
-        await chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REQUESTS, unread));
+        await chrome.runtime.sendMessage(new MSG(COMMANDS.GCSS_UNREAD_REQUESTS, unread));
     }
     private static IncludesOneOf(target: string, search_strings: string[]) {
         return search_strings.some((item) => target.toLowerCase().includes(item.toLowerCase()));
@@ -133,17 +136,17 @@ export class GcssAPI {
         if (!response.ok) {
             console.error(response.status);
             if (this.settings.GcssUnreadReplies)
-                await chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, "?GCSS"));
+                await chrome.runtime.sendMessage(new MSG(COMMANDS.GCSS_UNREAD_REPLIES, "?GCSS"));
             //this.ScheduleAnotherFetch();
             return;
         }
-        const fetched_obj = TrimObject(await response.json()) as GcssRawItem[];
+        const fetched_obj = trimObject(await response.json()) as GcssRawItem[];
         console.log("GCSS REPLIES FETCHED: ", fetched_obj);
 
         const my_msgs = fetched_obj.filter(
             (item) =>
                 this.IncludesOneOf(item.requestAuthor, this.settings.GcssAuthor) &&
-                this.IncludesOneOf(item.product, this.settings.GcssServiceTypes)
+                this.IncludesOneOf(item.product, this.settings.GcssServiceTypes),
         );
         console.log("My Messages: ", my_msgs);
 
@@ -152,7 +155,7 @@ export class GcssAPI {
             .map((item) => GcssItem.FromRawItem(item));
         console.log("GCSS REPLIES FILTERED: ", unread_msgs);
 
-        await chrome.runtime.sendMessage(new Msg(COMMANDS.GCSS_UNREAD_REPLIES, unread_msgs));
+        await chrome.runtime.sendMessage(new MSG(COMMANDS.GCSS_UNREAD_REPLIES, unread_msgs));
 
         if (this.settings.GcssUnreadRequests) await this.FetchRequests();
         await this.FetchNotifications();

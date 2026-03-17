@@ -7,7 +7,7 @@ import ReactDOM from "react-dom/client";
 import "@fontsource/noto-sans-kr";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { deepOrange, orange } from "@mui/material/colors";
-import OptionsApp from "../app/options_app";
+import OptionsApp from "../app/optionsApp";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import "dayjs/locale/ko";

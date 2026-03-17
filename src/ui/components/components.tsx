@@ -17,17 +17,13 @@ import {
 import { styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import React, { useEffect, useState } from "react";
-import { GcssItem, WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
-import { ServiceNames } from "../../src/background/GetUnreadReplies/GcssReplies";
+import { GcssItem, WorkflowItem } from "../../background/pending-replies/dataWrapper";
+import { ServiceNames } from "../../background/pending-replies/gcssReplies";
 
-export const CountryInput = (prop: {
-    text: string;
-    state: string[];
-    onChange: (countries: string[]) => void;
-}) => {
+export const CountryInput = (prop: { text: string; state: string[]; onChange: (countries: string[]) => void }) => {
     const [rawValue, setRawValue] = useState("");
 
-    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {        
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         const changedValue = e.target.value.toUpperCase();
         // console.log("PROP uppercase: ", changedValue);
         setRawValue(changedValue);
@@ -39,7 +35,7 @@ export const CountryInput = (prop: {
             // console.log("PROP split: ", countries);
             prop.onChange(countries);
         }
-    }
+    };
 
     useEffect(() => {
         setRawValue(prop.state.join(", "));
@@ -129,7 +125,8 @@ export const MyList: React.FC<MyListProps> = ({
     serviceType = ServiceNames.EMS,
     isNotification = false,
 }) => {
-    let list_title = type === "replies" ? `${service} - ${serviceType} 발송 회신` : `${service} - ${serviceType} 도착 문의`;
+    let list_title =
+        type === "replies" ? `${service} - ${serviceType} 발송 회신` : `${service} - ${serviceType} 도착 문의`;
     if (isNotification) list_title = list_title.replace("회신", "통지").replace("문의", "통지");
     list_title += `: ${items.length}건`;
     if (author !== "") list_title += ` (${author})`;
@@ -148,7 +145,7 @@ export const MyList: React.FC<MyListProps> = ({
         const tab_promises = items.map(async (wf) => {
             let tab: chrome.tabs.Tab;
             if (service === "GCSS") {
-                tab = isNotification ? await OpenNewTab(wf.NotificationLink): await OpenNewTab(wf.WorkflowLink);
+                tab = isNotification ? await OpenNewTab(wf.NotificationLink) : await OpenNewTab(wf.WorkflowLink);
             } else tab = await OpenNewTab(wf.link);
 
             if (tab && tab.id) {
@@ -175,9 +172,9 @@ export const MyList: React.FC<MyListProps> = ({
         let ids: string[];
         const reversed_items = [...items].reverse();
         if (service === "GCSS") {
-            ids = reversed_items.map((item) => (item as GcssItem).ItemId);
+            ids = reversed_items.map((item) => (item as GcssItem).itemId);
         } else {
-            ids = reversed_items.map((item) => (item as WorkflowItem).tracking_id);
+            ids = reversed_items.map((item) => (item as WorkflowItem).trackingId);
         }
         const str_ids = ids.join("\n");
         void navigator.clipboard.writeText(str_ids);
@@ -188,15 +185,15 @@ export const MyList: React.FC<MyListProps> = ({
         const reversed_items = [...items].reverse();
         if (service === "GCSS") {
             if (type === "replies" && !isNotification) {
-                countries = reversed_items.map((item) => (item as GcssItem).DestinationCountry);
+                countries = reversed_items.map((item) => (item as GcssItem).destinationCountry);
             } else {
-                countries = reversed_items.map((item) => (item as GcssItem).OriginCountry);
+                countries = reversed_items.map((item) => (item as GcssItem).originCountry);
             }
         } else {
             if (type === "replies" && !isNotification) {
-                countries = reversed_items.map((item) => (item as WorkflowItem).replying_op.substring(0, 2));
+                countries = reversed_items.map((item) => (item as WorkflowItem).replyingOperator.substring(0, 2));
             } else {
-                countries = reversed_items.map((item) => (item as WorkflowItem).requesting_op.substring(0, 2));
+                countries = reversed_items.map((item) => (item as WorkflowItem).requestingOperator.substring(0, 2));
             }
         }
         const str_ids = countries.join("\n");
@@ -247,16 +244,16 @@ export const MyList: React.FC<MyListProps> = ({
                             const i = item as WorkflowItem;
                             if (isNotification) {
                                 const date = i.created.slice(5, 10).replace("-", "/");
-                                primary_string = `[${date}] ${i.requesting_op.substring(0, 2)} - ${i.request_type}`;
+                                primary_string = `[${date}] ${i.requestingOperator.substring(0, 2)} - ${i.requestType}`;
                             } else {
-                                primary_string = `${i.tracking_id.slice(-2) === "KR" ? i.replying_op.substring(0, 2) : i.requesting_op.substring(0, 2)} - L${i.current_level} ${i.request_type}`;
+                                primary_string = `${i.trackingId.slice(-2) === "KR" ? i.replyingOperator.substring(0, 2) : i.requestingOperator.substring(0, 2)} - L${i.currentLevel} ${i.requestType}`;
                             }
                         } else {
                             const i = item as GcssItem;
                             if (isNotification) {
-                                primary_string = `[${i.NotificationCreationDate}] ${i.OriginCountry} - ${i.NotificationReason}`;
+                                primary_string = `[${i.notificationCreationDate}] ${i.originCountry} - ${i.notificationReason}`;
                             } else {
-                                primary_string = `${i.ItemId.slice(-2) === "KR" ? `${i.DestinationCountry}` : `${i.OriginCountry}`} - ${i.WorkflowLevel} ${i.RequestType}`;
+                                primary_string = `${i.itemId.slice(-2) === "KR" ? `${i.destinationCountry}` : `${i.originCountry}`} - ${i.workflowLevel} ${i.requestType}`;
                             }
                         }
 

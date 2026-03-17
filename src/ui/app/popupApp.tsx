@@ -3,12 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { GcssItem, WorkflowItem } from "../../src/background/GetUnreadReplies/DataWrapper";
-import { ServiceNames, ServiceTypes } from "../../src/background/GetUnreadReplies/GcssReplies";
-import { COMMANDS } from "../../src/lib/Message";
-import { IMICSettings } from "../../src/lib/OptionElement";
-import PopupTrack from "../../src/lib/PopupTrack";
-import { MyList, StyledTextField } from "../custom/components";
+import { GcssItem, WorkflowItem } from "../../background/pending-replies/dataWrapper";
+import { ServiceNames, ServiceTypes } from "../../background/pending-replies/gcssReplies";
+import { IMICSettings } from "../../lib/IMICSettings";
+import { COMMANDS } from "../../lib/message";
+import PopupTrack from "../../lib/PopupTrack";
+import { MyList, StyledTextField } from "../components/components";
 
 function PopUpApp() {
     // TODO: GCSS Author Name Separation.
@@ -72,7 +72,7 @@ function PopUpApp() {
         }
 
         void (async () => {
-            await settings.current.LoadOptions();
+            await settings.current.loadOptions();
             set_chk_rep(settings.current.IcareUnreadReplies);
             set_chk_req(settings.current.IcareUnreadRequests);
             set_chk_notif_in(settings.current.IcareUnreadNotificationInbound);
@@ -92,7 +92,7 @@ function PopUpApp() {
                         ServiceTypes.KPacket,
                     ];
                     return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
-                })
+                }),
             );
             set_gcss_req_services(
                 settings.current.GcssRequestServiceTypes.sort((a, b) => {
@@ -104,7 +104,7 @@ function PopUpApp() {
                         ServiceTypes.Insured,
                     ];
                     return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
-                })
+                }),
             );
 
             if (settings.current.IcareUnreadReplies) {
@@ -186,7 +186,7 @@ function PopUpApp() {
         return gcss_req_services.map((serv) => (
             <MyList
                 key={serv}
-                items={gcss_req_items.filter((el) => el.ServiceType === serv)}
+                items={gcss_req_items.filter((el) => el.serviceType === serv)}
                 type="requests"
                 service="GCSS"
                 serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
@@ -210,7 +210,7 @@ function PopUpApp() {
             if (gcss_author.length <= 1) {
                 return (
                     <MyList
-                        items={gcss_items.filter((el) => el.ServiceType === gcss_services[0])}
+                        items={gcss_items.filter((el) => el.serviceType === gcss_services[0])}
                         type="replies"
                         service="GCSS"
                     />
@@ -219,7 +219,7 @@ function PopUpApp() {
                 return gcss_author.map((user) => (
                     <MyList
                         key={user}
-                        items={gcss_items.filter((el) => el.RequestAuthor.toLowerCase().includes(user.toLowerCase()))}
+                        items={gcss_items.filter((el) => el.requestAuthor.toLowerCase().includes(user.toLowerCase()))}
                         type="replies"
                         service="GCSS"
                         author={user}
@@ -232,7 +232,7 @@ function PopUpApp() {
                 return gcss_services.map((serv) => (
                     <MyList
                         key={serv}
-                        items={gcss_items.filter((el) => el.ServiceType === serv)}
+                        items={gcss_items.filter((el) => el.serviceType === serv)}
                         type="replies"
                         service="GCSS"
                         author=""
@@ -246,15 +246,15 @@ function PopUpApp() {
                             key={`${serv}-${user}`}
                             items={gcss_items.filter(
                                 (el) =>
-                                    el.ServiceType === serv &&
-                                    el.RequestAuthor.toLowerCase().includes(user.toLowerCase())
+                                    el.serviceType === serv &&
+                                    el.requestAuthor.toLowerCase().includes(user.toLowerCase()),
                             )}
                             type="replies"
                             service="GCSS"
                             author={user}
                             serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
                         />
-                    ))
+                    )),
                 );
             }
         }

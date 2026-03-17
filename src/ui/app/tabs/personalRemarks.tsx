@@ -16,8 +16,8 @@ import {
 } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 
-import { IMICSettings, PersonalRemark } from "../../../src/lib/OptionElement";
-import { RemarkDialog } from "./PRDialog";
+import { IMICSettings, PersonalRemark } from "../../../lib/IMICSettings";
+import { RemarkDialog } from "./personalRemarksDialog";
 
 interface PersonalRemarksProps {
     settings: React.MutableRefObject<IMICSettings>;
@@ -91,7 +91,7 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
 
     function RenumberPrList() {
         setPrList((prev) =>
-            prev.map((item, index) => new PersonalRemark(item.Title, item.Content, index + 1, item.Section))
+            prev.map((item, index) => new PersonalRemark(item.Title, item.Content, index + 1, item.Section)),
         );
     }
 
@@ -144,7 +144,7 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
     async function SaveSettings() {
         console.log("current state: ", prList);
         settings.current.PersonalRemarks = prList;
-        await settings.current.SaveOptions(false);
+        await settings.current.saveOptions(false);
         console.log("settings saved as", settings.current);
     }
 

@@ -1,8 +1,8 @@
-import { GcssItem, WorkflowItem } from "../background/GetUnreadReplies/DataWrapper";
-import { COMMANDS } from "./Message";
-import { IMICSettings } from "./OptionElement";
+import { GcssItem, WorkflowItem } from "../background/pending-replies/dataWrapper";
+import { IMICSettings } from "./IMICSettings";
+import { COMMANDS } from "./message";
 
-async function CheckFetchError() {
+async function checkFetchError() {
     type FetchError = {
         ICARE: boolean;
         GCSS: boolean;
@@ -21,17 +21,17 @@ interface StorageItem {
     setting: boolean;
 }
 
-export async function GetStorageItems<T>(key: string): Promise<T[]> {
+export async function getStorageItems<T>(key: string): Promise<T[]> {
     const dict = await chrome.storage.session.get(key);
     return (dict[key] as T[]) || [];
 }
 
-async function GatherStorageItems(items: StorageItem[]): Promise<(WorkflowItem | GcssItem)[]> {
+async function gatherStorageItems(items: StorageItem[]): Promise<(WorkflowItem | GcssItem)[]> {
     const results: (WorkflowItem | GcssItem)[] = [];
 
     for (const item of items) {
         if (!item.setting) continue;
-        const storedItems = await GetStorageItems<WorkflowItem | GcssItem>(item.key);
+        const storedItems = await getStorageItems<WorkflowItem | GcssItem>(item.key);
         if (Array.isArray(storedItems)) {
             results.push(...storedItems);
         }
@@ -40,40 +40,40 @@ async function GatherStorageItems(items: StorageItem[]): Promise<(WorkflowItem |
     return results;
 }
 
-function MapToNotificationItem(item: WorkflowItem | GcssItem): chrome.notifications.NotificationItem {
-    const isOutbound = ("tracking_id" in item ? item.tracking_id : item.ItemId).slice(-2) === "KR";
+function mapToNotificationItem(item: WorkflowItem | GcssItem): chrome.notifications.NotificationItem {
+    const isOutbound = ("trackingId" in item ? item.trackingId : item.itemId).slice(-2) === "KR";
 
-    if ("MessageType" in item) {
+    if ("messageType" in item) {
         // GcssItem
-        if (item.MessageType === "NQ") {
+        if (item.messageType === "NQ") {
             return {
                 title: `GCSS NQ ${isOutbound ? "발송" : "도착"}`,
-                message: `${item.ItemId} ${isOutbound ? "(" + item.OriginCountry + ")" : ""}`,
+                message: `${item.itemId} ${isOutbound ? "(" + item.originCountry + ")" : ""}`,
             };
         }
         return {
-            title: `GCSS ${item.WorkflowLevel} ${isOutbound ? "발송" : "도착"}`,
-            message: `${item.ItemId} ${isOutbound ? "(" + item.DestinationCountry + ")" : ""}`,
+            title: `GCSS ${item.workflowLevel} ${isOutbound ? "발송" : "도착"}`,
+            message: `${item.itemId} ${isOutbound ? "(" + item.destinationCountry + ")" : ""}`,
         };
     }
 
     // WorkflowItem
-    if (item.is_notification) {
+    if (item.isNotification) {
         return {
             title: `iCare NQ ${isOutbound ? "발송" : "도착"}`,
-            message: `${item.tracking_id} ${isOutbound ? "(" + item.requesting_op.substring(0, 2) + ")" : ""}`,
+            message: `${item.trackingId} ${isOutbound ? "(" + item.requestingOperator.substring(0, 2) + ")" : ""}`,
         };
     }
     return {
-        title: `iCare L${item.current_level} ${isOutbound ? "발송" : "도착"}`,
-        message: `${item.tracking_id} ${isOutbound ? "(" + item.replying_op.substring(0, 2) + ")" : ""}`,
+        title: `iCare L${item.currentLevel} ${isOutbound ? "발송" : "도착"}`,
+        message: `${item.trackingId} ${isOutbound ? "(" + item.replyingOperator.substring(0, 2) + ")" : ""}`,
     };
 }
 
-export default async function CreateNotification(force_update = false) {
+export default async function createNotification(force_update = false) {
     const settings = new IMICSettings();
-    await settings.LoadOptions();
-    const fetch_error = await CheckFetchError();
+    await settings.loadOptions();
+    const fetch_error = await checkFetchError();
 
     // Define storage items to fetch
     const icareItems: StorageItem[] = [
@@ -107,8 +107,8 @@ export default async function CreateNotification(force_update = false) {
     ];
 
     // Fetch and combine items
-    const workflowItems = await GatherStorageItems(icareItems);
-    const gcssStoredItems = await GatherStorageItems(gcssItems);
+    const workflowItems = await gatherStorageItems(icareItems);
+    const gcssStoredItems = await gatherStorageItems(gcssItems);
 
     const current_num = workflowItems.length + gcssStoredItems.length;
     const last_num = parseInt(await chrome.action.getBadgeText({})) || 0;
@@ -127,7 +127,7 @@ export default async function CreateNotification(force_update = false) {
     // if (fetch_error) return;
 
     // Map items to notification format
-    const combined = [...gcssStoredItems, ...workflowItems].map(MapToNotificationItem);
+    const combined = [...gcssStoredItems, ...workflowItems].map(mapToNotificationItem);
     if (combined.length < 1) return;
 
     // Create notification

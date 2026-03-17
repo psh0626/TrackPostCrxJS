@@ -1,7 +1,7 @@
-import { COMMANDS, Msg } from "../../lib/Message";
-import CreateNotification from "../../lib/Notification";
+import { COMMANDS, MSG } from "../../lib/message";
+import createNotification from "../../lib/notification";
 import { PostAPI } from "../../lib/PostUtil";
-import { GcssItem, WorkflowItem } from "../GetUnreadReplies/DataWrapper";
+import { GcssItem, WorkflowItem } from "../pending-replies/dataWrapper";
 import { PopupTracker } from "../serviceworker";
 
 declare global {
@@ -22,9 +22,9 @@ declare global {
 }
 
 export default function ProcessMessage(
-    Message: Msg,
+    Message: MSG,
     sender: chrome.runtime.MessageSender,
-    SendResponse: (response?: unknown) => void
+    SendResponse: (response?: unknown) => void,
 ) {
     const today = new Date();
     console.log(today.toLocaleString(), "\nmessage received from sender: ", sender.tab?.url, "\ncontent: ", Message);
@@ -40,7 +40,7 @@ export default function ProcessMessage(
                     console.log(`item id is undefined`);
                     return;
                 }
-                const post_elm = await PostAPI.FetchPostElement(Message.Param);
+                const post_elm = await PostAPI.fetchPostElement(Message.Param);
                 SendResponse(post_elm);
                 console.log("Response Sent");
                 console.log(post_elm);
@@ -77,7 +77,7 @@ export default function ProcessMessage(
                     await chrome.storage.session.set({ FETCH_ERROR: err });
                     await chrome.storage.session.set({ GCSS_UNREAD_REPLIES: replies });
                 }
-                await CreateNotification();
+                await createNotification();
             })();
             return; // false since we're not sending response
 
@@ -85,7 +85,7 @@ export default function ProcessMessage(
             void (async () => {
                 const requests = Message.Param as WorkflowItem[];
                 await chrome.storage.session.set({ ICARE_UNREAD_REQUESTS: requests });
-                await CreateNotification();
+                await createNotification();
             })();
             return;
 
@@ -94,7 +94,7 @@ export default function ProcessMessage(
                 const reqs = Message.Param as GcssItem[];
                 await chrome.storage.session.set({ GCSS_UNREAD_REQUESTS: reqs });
                 console.log("MESSAGE HUB SESSION SET - GCSS UNREAD REQUESTS");
-                await CreateNotification();
+                await createNotification();
             })();
             return;
 
@@ -104,7 +104,7 @@ export default function ProcessMessage(
                 const session_store: { [key: string]: GcssItem[] } = {};
                 session_store[Message.Command] = Message.Param as GcssItem[];
                 await chrome.storage.session.set(session_store);
-                await CreateNotification(false);
+                await createNotification(false);
             })();
             return;
 
@@ -114,7 +114,7 @@ export default function ProcessMessage(
                 const session_store: { [key: string]: WorkflowItem[] } = {};
                 session_store[Message.Command] = Message.Param as WorkflowItem[];
                 await chrome.storage.session.set(session_store);
-                await CreateNotification(false);
+                await createNotification(false);
             })();
             return;
 

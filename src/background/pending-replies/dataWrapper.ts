@@ -1,4 +1,4 @@
-export function TrimObject(obj: any): any {
+export function trimObject(obj: any): any {
     if (typeof obj !== "object" || obj === null) {
         // If it's not an object or it's null, return it as is
         return obj;
@@ -14,7 +14,7 @@ export function TrimObject(obj: any): any {
                 obj[key] = value.trim();
             } else if (typeof value === "object") {
                 // Recursively trim nested objects
-                TrimObject(value);
+                trimObject(value);
             }
         }
     }
@@ -22,28 +22,28 @@ export function TrimObject(obj: any): any {
     return obj;
 }
 export class GcssItem {
-    RequestingCallcenter = "";
-    OriginCountry = "";
-    DestinationCountry = "";
-    ItemId = "";
-    WorkflowLevel = "";
-    ServiceType = "";
-    ServiceName = "";
-    ReadStatus = "";
-    RequestAuthor = "";
-    RequestType = "";
-    ReplyAuthor = "";
-    InternalItemId = -1;
-    InternalMessageId = -1;
-    InternalTaskId = -1;
-    WorkflowLink = "";
-    MessageType = "";
-    NumberOfSum = -1;
-    NotificationReason = "";
-    NotificationStatus = "REPLY_COMPLETED";
-    NotificationCreationDate = "";
-    NotificationId = -1;
-    NotificationLink = "";
+    requestingCallcenter = "";
+    originCountry = "";
+    destinationCountry = "";
+    itemId = "";
+    workflowLevel = "";
+    serviceType = "";
+    serviceName = "";
+    readStatus = "";
+    requestAuthor = "";
+    requestType = "";
+    replyAuthor = "";
+    internalItemId = -1;
+    internalMessageId = -1;
+    internalTaskId = -1;
+    workflowLink = "";
+    messageType = "";
+    numberOfSum = -1;
+    notificationReason = "";
+    notificationStatus = "REPLY_COMPLETED";
+    notificationCreationDate = "";
+    notificationId = -1;
+    notificationLink = "";
 
     constructor(data?: Partial<GcssItem>) {
         if (data) Object.assign(this, data);
@@ -53,46 +53,46 @@ export class GcssItem {
     public static FromRawItem(rawItem: GcssRawItem): GcssItem {
         if (rawItem.messageType.substring(0, 1) === "N") {
             return new GcssItem({
-                OriginCountry: rawItem.originCountry!,
-                DestinationCountry: rawItem.destCountry,
-                RequestingCallcenter: rawItem.origCallCentre,
-                ItemId: rawItem.itemId,
-                ReadStatus: rawItem.readStatus,
-                RequestAuthor: rawItem.originAuthor!,
-                NotificationReason: this.ConvertReason(rawItem.notificationReasonLabel!),
-                NotificationCreationDate: this.ConvertDate(rawItem.notificationStatusCreationDate!),
-                NotificationId: rawItem.notificationStatusId!,
-                NotificationStatus: rawItem.notificationStatus!,
-                NotificationLink: `https://gcss.ipc.be/CSS/gcss/EMS/notification/showRequest/${rawItem.notificationStatusId!}`,
-                MessageType: rawItem.messageType,
+                originCountry: rawItem.originCountry!,
+                destinationCountry: rawItem.destCountry,
+                requestingCallcenter: rawItem.origCallCentre,
+                itemId: rawItem.itemId,
+                readStatus: rawItem.readStatus,
+                requestAuthor: rawItem.originAuthor!,
+                notificationReason: this.ConvertReason(rawItem.notificationReasonLabel!),
+                notificationCreationDate: this.ConvertDate(rawItem.notificationStatusCreationDate!),
+                notificationId: rawItem.notificationStatusId!,
+                notificationStatus: rawItem.notificationStatus!,
+                notificationLink: `https://gcss.ipc.be/CSS/gcss/EMS/notification/showRequest/${rawItem.notificationStatusId!}`,
+                messageType: rawItem.messageType,
             });
         } else
             return new GcssItem({
-                OriginCountry: rawItem.origCountry,
-                DestinationCountry: rawItem.destCountry,
-                RequestingCallcenter: rawItem.origCallCentre,
-                ItemId: rawItem.itemId,
-                WorkflowLevel: rawItem.taskDescription,
-                ServiceType: rawItem.product,
-                ServiceName: rawItem.productName,
-                ReadStatus: rawItem.readStatus,
-                RequestAuthor: rawItem.requestAuthor,
-                RequestType: rawItem.requestTypeMnemonic,
-                ReplyAuthor: rawItem.replyAuthor,
-                InternalItemId: rawItem.itemPk,
-                InternalMessageId: rawItem.messageId,
-                InternalTaskId: rawItem.taskId,
-                NumberOfSum: rawItem.numberOfSum,
-                MessageType: rawItem.messageType,
+                originCountry: rawItem.origCountry,
+                destinationCountry: rawItem.destCountry,
+                requestingCallcenter: rawItem.origCallCentre,
+                itemId: rawItem.itemId,
+                workflowLevel: rawItem.taskDescription,
+                serviceType: rawItem.product,
+                serviceName: rawItem.productName,
+                readStatus: rawItem.readStatus,
+                requestAuthor: rawItem.requestAuthor,
+                requestType: rawItem.requestTypeMnemonic,
+                replyAuthor: rawItem.replyAuthor,
+                internalItemId: rawItem.itemPk,
+                internalMessageId: rawItem.messageId,
+                internalTaskId: rawItem.taskId,
+                numberOfSum: rawItem.numberOfSum,
+                messageType: rawItem.messageType,
             });
     }
     private GenerateLink() {
-        const is_reply = (this.RequestingCallcenter || this.OriginCountry).includes("KR") ? "reply" : "request";
-        this.WorkflowLink =
-            `https://gcss.ipc.be/CSS/gcss/${this.ServiceType}` +
-            `/${is_reply}/show/message/${this.InternalMessageId}` +
-            `/item/${this.InternalItemId}` +
-            `/task/${this.InternalTaskId}`;
+        const is_reply = (this.requestingCallcenter || this.originCountry).includes("KR") ? "reply" : "request";
+        this.workflowLink =
+            `https://gcss.ipc.be/CSS/gcss/${this.serviceType}` +
+            `/${is_reply}/show/message/${this.internalMessageId}` +
+            `/item/${this.internalItemId}` +
+            `/task/${this.internalTaskId}`;
     }
     private static ConvertReason(reason: string) {
         switch (reason) {
@@ -182,23 +182,23 @@ export interface GcssRawItem {
 }
 
 export class WorkflowItem {
-    internal_id: string = "";
-    tracking_id: string = "";
+    internalId: string = "";
+    trackingId: string = "";
     link: string = "";
-    dispatch_no: string = "";
-    last_trace: string = "";
-    due_date: string = "";
-    current_level: number = 0;
+    dispatchNo: string = "";
+    lastTrace: string = "";
+    dueDate: string = "";
+    currentLevel: number = 0;
     duration: number = 0;
-    request_type: string = "";
-    workflow_status: string = "";
-    requesting_op: string = "";
-    replying_op: string = "";
+    requestType: string = "";
+    workflowStatus: string = "";
+    requestingOperator: string = "";
+    replyingOperator: string = "";
     author: string = "";
-    last_updated: string = "";
+    lastUpdated: string = "";
     created: string = "";
-    read_status: string = "";
-    is_notification: boolean = false;
+    readStatus: string = "";
+    isNotification: boolean = false;
 
     constructor(data?: RawData | Partial<WorkflowItem>) {
         if (!data) {
@@ -206,39 +206,39 @@ export class WorkflowItem {
         }
 
         if (this.isRawData(data)) {
-            this.is_notification = data[3].includes("module=notification");
-            if (this.is_notification) {
-                this.internal_id = this.extractNameAttribute(data[0]);
-                this.tracking_id = this.extractInnerText(data[3]);
+            this.isNotification = data[3].includes("module=notification");
+            if (this.isNotification) {
+                this.internalId = this.extractNameAttribute(data[0]);
+                this.trackingId = this.extractInnerText(data[3]);
                 this.link = this.extractHrefAndPrefix(data[3]);
-                this.last_trace = data[4];
-                this.request_type = this.convertNotificationType(data[5]);
-                this.workflow_status = data[6];
-                this.requesting_op = data[7];
-                this.replying_op = data[8];
+                this.lastTrace = data[4];
+                this.requestType = this.convertNotificationType(data[5]);
+                this.workflowStatus = data[6];
+                this.requestingOperator = data[7];
+                this.replyingOperator = data[8];
                 this.author = data[9];
-                this.dispatch_no = data[10];
-                this.last_updated = this.extractInnerText(data[11]);
+                this.dispatchNo = data[10];
+                this.lastUpdated = this.extractInnerText(data[11]);
                 this.created = this.extractInnerText(data[12]);
-                this.read_status = data.DT_RowClass;
+                this.readStatus = data.DT_RowClass;
                 return;
             }
-            this.internal_id = this.extractNameAttribute(data[0]);
-            this.tracking_id = this.extractInnerText(data[3]);
+            this.internalId = this.extractNameAttribute(data[0]);
+            this.trackingId = this.extractInnerText(data[3]);
             this.link = this.extractHrefAndPrefix(data[3]);
-            this.dispatch_no = data[4];
-            this.last_trace = data[5];
-            this.due_date = this.extractInnerText(data[6]);
-            this.current_level = parseInt(data[7]);
+            this.dispatchNo = data[4];
+            this.lastTrace = data[5];
+            this.dueDate = this.extractInnerText(data[6]);
+            this.currentLevel = parseInt(data[7]);
             this.duration = parseInt(data[8]);
-            this.request_type = this.convertRequestType(data[9]);
-            this.workflow_status = data[10];
-            this.requesting_op = data[11];
-            this.replying_op = data[12];
+            this.requestType = this.convertRequestType(data[9]);
+            this.workflowStatus = data[10];
+            this.requestingOperator = data[11];
+            this.replyingOperator = data[12];
             this.author = data[13];
-            this.last_updated = this.extractInnerText(data[14]);
+            this.lastUpdated = this.extractInnerText(data[14]);
             this.created = this.extractInnerText(data[15]);
-            this.read_status = data.DT_RowClass;
+            this.readStatus = data.DT_RowClass;
         } else {
             Object.assign(this, data);
         }

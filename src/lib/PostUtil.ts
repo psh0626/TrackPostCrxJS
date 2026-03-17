@@ -29,7 +29,7 @@ export class PostElement {
 }
 
 export class PostAPI {
-    private static async XmlToPostElement(xml: string, trackingNumber: string): Promise<PostElement> {
+    private static async xmlToPostElement(xml: string, trackingNumber: string): Promise<PostElement> {
         try {
             const result = await parseStringPromise(xml, {
                 explicitArray: false,
@@ -68,7 +68,7 @@ export class PostAPI {
         }
     }
 
-    private static async FetchPostXML(trackingNumber: string): Promise<string> {
+    private static async fetchPostXML(trackingNumber: string): Promise<string> {
         const postURL = "https://ems.epost.go.kr/trace.RegisterEmsClaimAjax.postal";
         try {
             const response = await fetch(postURL, {
@@ -95,7 +95,7 @@ export class PostAPI {
         }
     }
 
-    static async FetchPostElement(trackingNumber: string): Promise<PostElement> {
-        return await this.FetchPostXML(trackingNumber).then((xml) => this.XmlToPostElement(xml, trackingNumber));
+    static async fetchPostElement(trackingNumber: string): Promise<PostElement> {
+        return await this.fetchPostXML(trackingNumber).then((xml) => this.xmlToPostElement(xml, trackingNumber));
     }
 }

@@ -9,9 +9,9 @@
         "48": "src/ext-icon.png",
         "128": "src/ext-icon.png"
     },
-    "options_page": "pages/options.html",
+    "options_page": "src/ui/options.html",
     "action": {
-        "default_popup": "pages/popup.html",
+        "default_popup": "src/ui/popup.html",
         "default_title": "IMIC TRACKPOST V3"
     },
     "permissions": [
@@ -26,7 +26,7 @@
         "scripting"
     ],
     "side_panel": {
-        "default_path": "pages/sidepanel.html"
+        "default_path": "src/ui/sidepanel.html"
     },
     "background": {
         "service_worker": "src/background/serviceworker.ts",

@@ -1,5 +1,5 @@
-import FloatingHelper from "./FloatingHelper";
-import InjectUtil from "./InjectUtil";
+import FloatingHelper from "./floatingHelper";
+import InjectUtil from "./injectUtil";
 
 export default class OldGcssInjectUtil {
     private static InjectFor(target_element: HTMLInputElement, val: string, manual: boolean = false) {

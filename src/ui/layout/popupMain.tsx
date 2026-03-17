@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import SidePanelApp from "../app/sidepanel_app";
+import PopUpApp from "../app/popupApp";
 // import "@fontsource/noto-sans-kr/300.css";
 // import "@fontsource/noto-sans-kr/400.css";
 // import "@fontsource/noto-sans-kr/500.css";
@@ -8,6 +8,7 @@ import SidePanelApp from "../app/sidepanel_app";
 import "@fontsource/noto-sans-kr";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { deepOrange, orange } from "@mui/material/colors";
+import PopupHeader from "../app/popupHeader";
 
 const myTheme = createTheme({
     palette: {
@@ -26,7 +27,8 @@ const myTheme = createTheme({
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <ThemeProvider theme={myTheme}>
-            <SidePanelApp />
+            <PopupHeader></PopupHeader>
+            <PopUpApp />
         </ThemeProvider>
     </React.StrictMode>
 );

@@ -1,6 +1,7 @@
-import FloatingHelper from "./FloatingHelper";
-import InjectUtil from "./InjectUtil";
-import PersonalRemarksSelect from "./PersonalRemarks";
+import FloatingHelper from "./floatingHelper";
+import InjectUtil from "./injectUtil";
+import PersonalRemarksSelect from "./personalRemarks";
+
 
 export default class IcareInjectUtil {
     private static InjectFor(target_elm: HTMLInputElement, val: string, manual: boolean = false) {

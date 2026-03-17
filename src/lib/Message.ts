@@ -20,7 +20,7 @@ export enum COMMANDS {
     KMMBOX_REFRESH = "KMMBOX_REFRESH",
 }
 
-export class Msg {
+export class MSG {
     public Command: COMMANDS;
     public Param: any = null;
 
@@ -29,9 +29,9 @@ export class Msg {
         this.Param = param;
     }
 }
-export async function SendRequest<T>(message: Msg, param?: any): Promise<T>;
-export async function SendRequest(message: Msg, param?: any): Promise<any>;
-export async function SendRequest<T>(message: Msg, param?: any): Promise<T | any> {
+export async function sendRequest<T>(message: MSG, param?: any): Promise<T>;
+export async function sendRequest(message: MSG, param?: any): Promise<any>;
+export async function sendRequest<T>(message: MSG, param?: any): Promise<T | any> {
     return new Promise((resolve) => {
         chrome.runtime.sendMessage(message, param, (response) => {
             resolve(response);

@@ -1,19 +1,18 @@
-import React, { useEffect, useRef } from "react";
-import { useState } from "react";
-import { PostElement, PostAPI } from "../../src/lib/PostUtil";
-import PopupTrack from "../../src/lib/PopupTrack";
-import { COMMANDS, Msg, SendRequest } from "../../src/lib/Message";
+import { useEffect, useRef, useState } from "react";
+import { COMMANDS, MSG, sendRequest } from "../../lib/message";
+import PopupTrack from "../../lib/PopupTrack";
+import { PostAPI, PostElement } from "../../lib/PostUtil";
 
-import Stack from "@mui/material/Stack";
-import Card from "@mui/material/Card";
-import Divider from "@mui/material/Divider";
-import Typography from "@mui/material/Typography";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import Button from "@mui/material/Button";
-import { InfoTextField, StyledTextField } from "../custom/components";
+import Card from "@mui/material/Card";
+import Divider from "@mui/material/Divider";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import { InfoTextField, StyledTextField } from "../components/components";
 
 function SidePanelApp() {
     // State for PostElement
@@ -24,7 +23,7 @@ function SidePanelApp() {
 
     const FetchPostItem = async (id: string) => {
         set_post_element(new PostElement({ ItemID: id }));
-        if (id) set_post_element(await PostAPI.FetchPostElement(id)); // Update the state with the fetched PostElement
+        if (id) set_post_element(await PostAPI.fetchPostElement(id)); // Update the state with the fetched PostElement
     };
 
     const CheckValue = (target: HTMLInputElement | HTMLTextAreaElement) => {
@@ -48,7 +47,7 @@ function SidePanelApp() {
     };
 
     const check_popup = async () => {
-        const popup = await SendRequest<PopupTrack>(new Msg(COMMANDS.SIDEPANEL_TRACK_REQUEST));
+        const popup = await sendRequest<PopupTrack>(new MSG(COMMANDS.SIDEPANEL_TRACK_REQUEST));
         console.log("response received: ", popup);
         return popup;
     };
@@ -98,10 +97,9 @@ function SidePanelApp() {
                             <Button
                                 variant="outlined"
                                 onClick={() => {
-                                    void navigator.clipboard.writeText(
-                                        post_element.AddresseeZipcode
-                                    );
-                                }}>
+                                    void navigator.clipboard.writeText(post_element.AddresseeZipcode);
+                                }}
+                            >
                                 {`${post_element.Destination} (${post_element.AddresseeZipcode})`}
                             </Button>
 
@@ -109,15 +107,13 @@ function SidePanelApp() {
                                 variant="outlined"
                                 onClick={() => {
                                     void navigator.clipboard.writeText(post_element.Contents);
-                                }}>
+                                }}
+                            >
                                 {`Contents: ${post_element.Contents}`}
                             </Button>
                         </Stack>
                     )}
-                    <Accordion
-                        disableGutters
-                        expanded={post_element.ItemTracked}
-                        style={{ margin: "10px 0 0 0" }}>
+                    <Accordion disableGutters expanded={post_element.ItemTracked} style={{ margin: "10px 0 0 0" }}>
                         <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
                             <Typography variant="h6">Sender</Typography>
                         </AccordionSummary>
@@ -172,8 +168,7 @@ function SidePanelApp() {
                         <Typography variant="body2" textAlign="center" margin="12px 0">
                             접 수 일: {post_element.ApplicationDate} <br />
                             {/* 배달완료종적: {post_element.DeliveryResult ? "있음" : "없음"} <br /> */}
-                            조사청구여부: {post_element.InquiryRequested ? "청구함" : "미청구"}{" "}
-                            <br />
+                            조사청구여부: {post_element.InquiryRequested ? "청구함" : "미청구"} <br />
                         </Typography>
                     )}
                 </Stack>

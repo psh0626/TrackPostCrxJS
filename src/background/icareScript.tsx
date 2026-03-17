@@ -1,13 +1,13 @@
-import { COMMANDS, Msg, SendRequest } from "../lib/Message";
-import { IMICSettings } from "../lib/OptionElement";
+import { IMICSettings } from "../lib/IMICSettings";
+import { COMMANDS, MSG, sendRequest } from "../lib/message";
 import { PostElement } from "../lib/PostUtil";
-import { IcareAPI2 } from "./GetUnreadReplies/IcareReplies";
-import IcareInjectUtil from "./injectDOM/IcareInjectUtil";
-import InjectUtil from "./injectDOM/InjectUtil";
+import IcareInjectUtil from "./inject-dom/icareInjectUtil";
+import InjectUtil from "./inject-dom/injectUtil";
+import { IcareAPI2 } from "./pending-replies/icareReplies";
 
 void (async () => {
     const settings = new IMICSettings();
-    await settings.RequestLoad();
+    await settings.requestLoad();
 
     IcareAPI2.settings = settings;
 
@@ -23,7 +23,7 @@ void (async () => {
 
     console.log("Content script loaded at: " + document.readyState);
 
-    chrome.runtime.onMessage.addListener((message: Msg) => {
+    chrome.runtime.onMessage.addListener((message: MSG) => {
         switch (message.Command) {
             case COMMANDS.ICARE_UNREAD_REPLIES:
                 console.log("IcareAPI2 fetching unread replies by tick");
@@ -31,7 +31,7 @@ void (async () => {
                 break;
             case COMMANDS.SETTINGS_CHANGED:
                 void (async () => {
-                    await settings.RequestLoad();
+                    await settings.requestLoad();
                     IcareAPI2.settings = settings;
                     console.log("Settings Reloaded", settings, IcareAPI2.settings);
                 })();
@@ -67,7 +67,7 @@ void (async () => {
             const port = chrome.runtime.connect();
             let post_element = new PostElement();
 
-            port.onMessage.addListener(async (message: Msg) => {
+            port.onMessage.addListener(async (message: MSG) => {
                 console.log("message received: ", message);
                 if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
                     IcareInjectUtil.InjectPersonalRemarks();
@@ -101,7 +101,7 @@ void (async () => {
             const item_id = dataset.trackingId ?? "";
             const remark_type = item_id.slice(-2) === "KR" ? "REQ" : "REP";
             const port = chrome.runtime.connect();
-            port.onMessage.addListener((message: Msg) => {
+            port.onMessage.addListener((message: MSG) => {
                 console.log("message received: ", message);
                 if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
                     IcareInjectUtil.InjectPersonalRemarks(remark_type);
@@ -181,6 +181,6 @@ void (async () => {
     }
 
     async function FindPostElement(item_id: string): Promise<PostElement> {
-        return await SendRequest<PostElement>(new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id));
+        return await sendRequest<PostElement>(new MSG(COMMANDS.FETCH_POST_ELEMENT, item_id));
     }
 })();

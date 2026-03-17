@@ -1,10 +1,10 @@
-import { COMMANDS, Msg } from "../lib/Message";
-import CreateNotification, { GetStorageItems } from "../lib/Notification";
+import { COMMANDS, MSG } from "../lib/message";
+import createNotification, { getStorageItems } from "../lib/notification";
 import PopupTrack from "../lib/PopupTrack";
-import "../lib/TimespanExtension";
-import { GcssItem, WorkflowItem } from "./GetUnreadReplies/DataWrapper";
-import { ServiceTypes } from "./GetUnreadReplies/GcssReplies";
-import ProcessMessage from "./MessageHub/MessageHub";
+import "../lib/timespanExtension";
+import ProcessMessage from "./message-hub/MessageHub";
+import { GcssItem, WorkflowItem } from "./pending-replies/dataWrapper";
+import { ServiceTypes } from "./pending-replies/gcssReplies";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
 void chrome.action.setBadgeBackgroundColor({ color: "#424242" });
@@ -49,7 +49,7 @@ function main() {
     }, MAIL_TAB_INTERVAL);
     console.log(
         new Date().toLocaleTimeString() + " Mail tab reloading timer has been started. Interval: ",
-        MAIL_TAB_INTERVAL
+        MAIL_TAB_INTERVAL,
     );
 }
 async function APICalls(count: number, final = false) {
@@ -64,9 +64,9 @@ async function APICalls(count: number, final = false) {
         ];
         let hasImportantUnread = false;
         for (const e of services) {
-            let itemList = await GetStorageItems<GcssItem | WorkflowItem>(e);
+            let itemList = await getStorageItems<GcssItem | WorkflowItem>(e);
             if (e === COMMANDS.GCSS_UNREAD_REQUESTS && itemList.length > 0) {
-                itemList = itemList.filter((i) => (i as GcssItem).ServiceType === ServiceTypes.EMS);
+                itemList = itemList.filter((i) => (i as GcssItem).serviceType === ServiceTypes.EMS);
             }
             if (itemList.length > 0) {
                 hasImportantUnread = true;
@@ -76,7 +76,7 @@ async function APICalls(count: number, final = false) {
 
         if (hasImportantUnread || count % 120 === 0) {
             console.log("There are important unread items. Forcing notification update.");
-            await CreateNotification(true);
+            await createNotification(true);
         }
     }
     const work_tabs = await chrome.tabs.query({
@@ -89,10 +89,10 @@ async function APICalls(count: number, final = false) {
     console.log("WORK TABS: ", work_tabs);
     if (Array.isArray(work_tabs)) {
         const icare_tab = work_tabs.filter((item: chrome.tabs.Tab) =>
-            item.url!.includes("icare.post")
+            item.url!.includes("icare.post"),
         )[0] as chrome.tabs.Tab;
         const gcss_tab = work_tabs.filter((item: chrome.tabs.Tab) =>
-            item.url!.includes("gcss.ipc.be")
+            item.url!.includes("gcss.ipc.be"),
         )[0] as chrome.tabs.Tab;
 
         if (!icare_tab && !gcss_tab) {
@@ -108,11 +108,11 @@ async function APICalls(count: number, final = false) {
         }
 
         if (icare_tab) {
-            await chrome.tabs.sendMessage(icare_tab.id!, new Msg(COMMANDS.ICARE_UNREAD_REPLIES));
+            await chrome.tabs.sendMessage(icare_tab.id!, new MSG(COMMANDS.ICARE_UNREAD_REPLIES));
             console.log(new Date().toLocaleTimeString(), "icare ticked");
         }
         if (gcss_tab) {
-            await chrome.tabs.sendMessage(gcss_tab.id!, new Msg(COMMANDS.GCSS_UNREAD_REPLIES));
+            await chrome.tabs.sendMessage(gcss_tab.id!, new MSG(COMMANDS.GCSS_UNREAD_REPLIES));
             console.log(new Date().toLocaleTimeString(), "gcss ticked");
         }
     }
@@ -141,7 +141,7 @@ chrome.webRequest.onCompleted.addListener(
                     return;
                 }
                 mailTabs.forEach((tab) => {
-                    chrome.tabs.sendMessage(tab.id!, new Msg(COMMANDS.WEB_REQUEST_COMPLETE));
+                    chrome.tabs.sendMessage(tab.id!, new MSG(COMMANDS.WEB_REQUEST_COMPLETE));
                     console.log("Message Sent to content script in: ", tab);
                 });
                 isTime = false;
@@ -152,7 +152,7 @@ chrome.webRequest.onCompleted.addListener(
             })();
         }
     },
-    { urls: ["https://kmmbox.korea.kr/*"] }
+    { urls: ["https://kmmbox.korea.kr/*"] },
 );
 
 chrome.webRequest.onCompleted.addListener(
@@ -164,7 +164,7 @@ chrome.webRequest.onCompleted.addListener(
     },
     {
         urls: ["https://github.com/shawnpark9494/TrackPostExtZip/commits/main/"],
-    }
+    },
 );
 chrome.webRequest.onCompleted.addListener(
     function (details) {
@@ -178,7 +178,7 @@ chrome.webRequest.onCompleted.addListener(
                             console.log("Message port is not open. Unable to send a message to the content script");
                             return;
                         }
-                        MsgPort[details.tabId].postMessage(new Msg(COMMANDS.WEB_REQUEST_COMPLETE));
+                        MsgPort[details.tabId].postMessage(new MSG(COMMANDS.WEB_REQUEST_COMPLETE));
                         console.log("Message Sent to content script in: ", tab.title);
                         return true;
                     }
@@ -196,7 +196,7 @@ chrome.webRequest.onCompleted.addListener(
                         console.log("Message port is not open. Unable to send a message to the content script");
                         return;
                     }
-                    MsgPort[details.tabId].postMessage(new Msg(COMMANDS.WEB_REQUEST_COMPLETE));
+                    MsgPort[details.tabId].postMessage(new MSG(COMMANDS.WEB_REQUEST_COMPLETE));
                     console.log("Message Sent to content script in: ", tab.title);
                     return true;
                 })();
@@ -204,7 +204,7 @@ chrome.webRequest.onCompleted.addListener(
             }
         }
     },
-    { urls: ["*://icare.post/*"] }
+    { urls: ["*://icare.post/*"] },
 );
 
 const GCSS_SUM_AJAX_URLS = [
@@ -229,13 +229,13 @@ chrome.webRequest.onCompleted.addListener(
                 const foundTabs = await chrome.tabs.query({ url: GCSS_SUM_PAGE_URLS });
                 console.log("WebRequest onCompleted found tabs: ", foundTabs);
                 const msgPromises = foundTabs.map((tab) =>
-                    tab.id ? chrome.tabs.sendMessage(tab.id, "GCSS_SUM_AJAX_COMPLETE") : Promise.resolve()
+                    tab.id ? chrome.tabs.sendMessage(tab.id, "GCSS_SUM_AJAX_COMPLETE") : Promise.resolve(),
                 );
                 await Promise.all(msgPromises);
             })();
         }
     },
-    { urls: GCSS_SUM_AJAX_URLS }
+    { urls: GCSS_SUM_AJAX_URLS },
 );
 
 chrome.runtime.onConnect.addListener((port) => {
@@ -250,7 +250,7 @@ chrome.runtime.onConnect.addListener((port) => {
             `${new Date().toLocaleString("ko-KR")} - MsgPort established with new connection.`,
             MsgPort,
             "background: ",
-            port
+            port,
         );
         port.onDisconnect.addListener((p) => {
             if (!p.sender || !p.sender.tab || !p.sender.tab.id) {
@@ -263,7 +263,7 @@ chrome.runtime.onConnect.addListener((port) => {
                 MsgPort,
                 "background: ",
                 port,
-                port === p
+                port === p,
             );
         });
     }

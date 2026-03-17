@@ -17,6 +17,6 @@
         "jsx": "react-jsx",
         "types": ["chrome"]
     },
-    "include": ["src", "pages"],
+    "include": ["src", "ui"],
     "references": [{ "path": "./tsconfig.node.json" }]
 }

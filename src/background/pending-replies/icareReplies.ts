@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
-import { COMMANDS, Msg } from "../../lib/Message";
-import { IMICSettings } from "../../lib/OptionElement";
-import { IcareResponse, WorkflowItem } from "./DataWrapper";
+import { IMICSettings } from "../../lib/IMICSettings";
+import { COMMANDS, MSG } from "../../lib/message";
+import { IcareResponse, WorkflowItem } from "./dataWrapper";
 
 export class IcareAPI2 {
     static LastCsrfToken: string = "";
@@ -63,7 +63,7 @@ export class IcareAPI2 {
             console.log(`ICARE FETCH: error`, e);
             console.log("NO RESPONSE", noResponse);
             if (noResponse >= this.MAX_RETRY_COUNT) {
-                await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?ICARE"));
+                await chrome.runtime.sendMessage(new MSG(COMMANDS.ICARE_UNREAD_REPLIES, "?ICARE"));
             } else {
                 setTimeout(() => {
                     void this.FetchUnreadReplies(this.LastCsrfToken, trialNo, ++noResponse);
@@ -82,12 +82,12 @@ export class IcareAPI2 {
                 `[FetchUnreadReplies] Attempt No.${trialNo} failed with CSRF Token:`,
                 csrfToken,
                 "\nResponse:",
-                result
+                result,
             );
 
             if (trialNo >= this.MAX_RETRY_COUNT) {
                 //this.UpdateCsrfToken(csrfToken);
-                await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, "?ICARE"));
+                await chrome.runtime.sendMessage(new MSG(COMMANDS.ICARE_UNREAD_REPLIES, "?ICARE"));
             } else {
                 if (response.status === 403) {
                     setTimeout(() => {
@@ -115,7 +115,7 @@ export class IcareAPI2 {
         if (response.ok && !see_other) {
             console.log(`[FetchUnreadRequests] Attempt successful`, result);
             const request_items = result!.content.data.map((data) => new WorkflowItem(data));
-            await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REQUESTS, request_items));
+            await chrome.runtime.sendMessage(new MSG(COMMANDS.ICARE_UNREAD_REQUESTS, request_items));
         } else {
             console.log(`[FetchUnreadRequests] Attempt failed with CSRF Token:`, csrfToken, "\nResponse:", result);
         }
@@ -144,17 +144,17 @@ export class IcareAPI2 {
             console.log(`[FetchNotifications] Attempt successful`, result);
             const notif_items = result!.content.data.map((data) => new WorkflowItem(data));
             if (isInboundNotiOn) {
-                const inbound = notif_items.filter((item) => item.tracking_id.slice(-2) !== "KR");
+                const inbound = notif_items.filter((item) => item.trackingId.slice(-2) !== "KR");
                 console.log(`[FetchNotifications] Notification inbound items filtered`, inbound);
-                await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_NOTIF_INBOUND, inbound));
+                await chrome.runtime.sendMessage(new MSG(COMMANDS.ICARE_UNREAD_NOTIF_INBOUND, inbound));
             }
             if (this.settings.IcareUnreadNotificationOutbound) {
-                let outbound = notif_items.filter((item) => item.tracking_id.slice(-2) === "KR");
+                let outbound = notif_items.filter((item) => item.trackingId.slice(-2) === "KR");
                 console.log(`[FetchNotifications] Notification outbound items filtered`, outbound);
 
                 if (this.settings.IcareOutboundNotificationCountries.length > 0) {
                     outbound = outbound.filter((item) =>
-                        this.IncludesOneOf(item.requesting_op, this.settings.IcareOutboundNotificationCountries)
+                        this.IncludesOneOf(item.requestingOperator, this.settings.IcareOutboundNotificationCountries),
                     );
                     console.log(`[FetchNotifications] Notification outbound items countries filtered`, outbound);
                 }
@@ -162,13 +162,13 @@ export class IcareAPI2 {
                     outbound = outbound.filter(
                         (item) =>
                             !this.IncludesOneOf(
-                                item.requesting_op,
-                                this.settings.IcareOutboundNotificationExcludedCountries
-                            )
+                                item.requestingOperator,
+                                this.settings.IcareOutboundNotificationExcludedCountries,
+                            ),
                     );
                     console.log(
                         `[FetchNotifications] Notification outbound items excluded countries filtered`,
-                        outbound
+                        outbound,
                     );
                 }
 
@@ -179,7 +179,7 @@ export class IcareAPI2 {
                             `[FetchNotifications] Notification Created at `,
                             created,
                             ` DateInSettings `,
-                            dayjs(this.settings.IcareOutboundNotificationDate)
+                            dayjs(this.settings.IcareOutboundNotificationDate),
                         );
                         return created.isSame(dayjs(this.settings.IcareOutboundNotificationDate), "week");
                     });
@@ -187,7 +187,7 @@ export class IcareAPI2 {
                     console.log(`[FetchNotifications] Notification outbound DateRange filtered`, outbound);
                 }
 
-                await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND, outbound));
+                await chrome.runtime.sendMessage(new MSG(COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND, outbound));
             }
         } else {
             console.log(`[FetchNotifications] Attempt failed with CSRF Token:`, csrfToken, "\nResponse:", result);
@@ -205,7 +205,7 @@ export class IcareAPI2 {
 
         console.log(`${workflow_items.length} items fetched:`, filtered_items);
 
-        await chrome.runtime.sendMessage(new Msg(COMMANDS.ICARE_UNREAD_REPLIES, filtered_items));
+        await chrome.runtime.sendMessage(new MSG(COMMANDS.ICARE_UNREAD_REPLIES, filtered_items));
 
         const today = new Date();
         console.log(today.toLocaleString(), "\nworkflows sent");

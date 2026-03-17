@@ -1,5 +1,5 @@
-import { ServiceTypes } from "../background/GetUnreadReplies/GcssReplies";
-import { COMMANDS, Msg, SendRequest } from "./Message";
+import { ServiceTypes } from "../background/pending-replies/gcssReplies";
+import { COMMANDS, MSG, sendRequest } from "./message";
 export class PersonalRemark {
     Section: string;
     Id: number;
@@ -34,7 +34,7 @@ export class IMICSettings {
     GcssAuthor: string[] = [];
     GcssServiceTypes: ServiceTypes[] = [ServiceTypes.EMS];
     static SavingFinished: NodeJS.Timeout | null = null;
-    private async NotifyTabs() {
+    private async notifyTabs() {
         const work_tabs = await chrome.tabs.query({
             url: ["https://icare.post/*", "https://gcss.ipc.be/*"],
             status: "complete",
@@ -50,17 +50,17 @@ export class IMICSettings {
 
         work_tabs.forEach(async (tab) => {
             if (tab.id && tab.id !== firstIcareTab?.id && tab.id !== firstGcssTab?.id) {
-                await chrome.tabs.sendMessage(tab.id, new Msg(COMMANDS.SETTINGS_CHANGED));
+                await chrome.tabs.sendMessage(tab.id, new MSG(COMMANDS.SETTINGS_CHANGED));
             }
         });
         IMICSettings.SavingFinished = null;
     }
-    async SaveOptions(immediately: boolean = true) {
+    async saveOptions(immediately: boolean = true) {
         const saveFunc = async () => {
             await chrome.storage.local.set({ IMICSettings: this });
             console.log("Options Saved as ", this);
             if (IMICSettings.SavingFinished) clearTimeout(IMICSettings.SavingFinished);
-            IMICSettings.SavingFinished = setTimeout(this.NotifyTabs, 4000);
+            IMICSettings.SavingFinished = setTimeout(this.notifyTabs, 4000);
         };
         if (immediately) {
             await saveFunc();
@@ -71,17 +71,17 @@ export class IMICSettings {
             void saveFunc();
         }, 2000);
     }
-    async LoadOptions() {
+    async loadOptions() {
         const newThis = await chrome.storage.local.get("IMICSettings");
         Object.assign(this, newThis.IMICSettings);
         console.log("Options loaded this: ", this);
     }
 
-    async RequestSave() {
-        await SendRequest(new Msg(COMMANDS.SAVE_OPTIONS, this));
+    async requestSave() {
+        await sendRequest(new MSG(COMMANDS.SAVE_OPTIONS, this));
     }
 
-    async RequestLoad() {
-        Object.assign(this, await SendRequest<IMICSettings>(new Msg(COMMANDS.LOAD_OPTIONS)));
+    async requestLoad() {
+        Object.assign(this, await sendRequest<IMICSettings>(new MSG(COMMANDS.LOAD_OPTIONS)));
     }
 }

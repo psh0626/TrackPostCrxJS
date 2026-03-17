@@ -1,5 +1,5 @@
-import { COMMANDS, Msg } from "../lib/Message";
-import "../lib/TimespanExtension";
+import { COMMANDS, MSG } from "../lib/message";
+import "../lib/timespanExtension";
 
 void (() => {
     let isFetching = false;
@@ -13,7 +13,6 @@ void (() => {
             console.log("New Folder ID: ", folderId);
         }, "5".toSeconds());
     }
-
 
     const elmCount = getUnreadCountByElement2();
 
@@ -59,7 +58,7 @@ void (() => {
             console.log("Unread count is NaN", unreadCount);
             return getUnreadCountByElement();
         }
-        
+
         return unreadCount;
     }
     function getUnreadCountByElement() {
@@ -99,26 +98,28 @@ void (() => {
         return id;
     }
     function executeWindowScript(folderId: string, count: number) {
-        chrome.runtime.sendMessage(new Msg(COMMANDS.KMMBOX_REFRESH, {fId: folderId, count: count, lastCount: getCurrentNumber()}) );
+        chrome.runtime.sendMessage(
+            new MSG(COMMANDS.KMMBOX_REFRESH, { fId: folderId, count: count, lastCount: getCurrentNumber() }),
+        );
     }
     function refreshUI(count: number) {
         if (count === 0) {
-            if (!document.querySelector('#r3-maill-unseen-cnt-td')?.classList.contains('x-hidden')) {
-                document.querySelector('#r3-maill-unseen-cnt-td')?.classList.add('x-hidden');
+            if (!document.querySelector("#r3-maill-unseen-cnt-td")?.classList.contains("x-hidden")) {
+                document.querySelector("#r3-maill-unseen-cnt-td")?.classList.add("x-hidden");
             }
         } else {
-            if (document.querySelector('#r3-maill-unseen-cnt-td')?.classList.contains('x-hidden')) {
-                document.querySelector('#r3-maill-unseen-cnt-td')?.classList.remove('x-hidden');
+            if (document.querySelector("#r3-maill-unseen-cnt-td")?.classList.contains("x-hidden")) {
+                document.querySelector("#r3-maill-unseen-cnt-td")?.classList.remove("x-hidden");
             }
-            document.getElementById('r3-maill-unseen-cnt')!.innerHTML = count.toString();
+            document.getElementById("r3-maill-unseen-cnt")!.innerHTML = count.toString();
         }
         executeWindowScript(folderId!, count);
     }
     async function getUnreadCountByFetch() {
         isFetching = true;
-        try{
+        try {
             const fetch = await fetchInbox();
-            
+
             if (!fetch) {
                 console.log("Fetch failed");
                 isFetching = false;
@@ -129,13 +130,11 @@ void (() => {
 
             console.log("Fetched unread count: ", unreadCount);
             return unreadCount;
-
         } finally {
             isFetching = false;
         }
     }
     async function fetchInbox() {
-        
         if (!folderId) {
             console.log("Folder ID not found, trying to get it again");
             folderId = getFolderId();
@@ -145,7 +144,6 @@ void (() => {
                 return;
             }
         }
-
 
         const request = await fetch("https://kmmbox.korea.kr/mail/list/mailbox.json", {
             headers: {
@@ -174,7 +172,7 @@ void (() => {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-    chrome.runtime.onMessage.addListener((message: Msg, sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener((message: MSG, sender, sendResponse) => {
         if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
             if (isFetching) {
                 console.log("Request already in progress, ignoring message");

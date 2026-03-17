@@ -1,7 +1,7 @@
-import React, { ChangeEvent, useRef } from "react";
-import { Box, Button, ButtonProps, Divider, Stack, Typography } from "@mui/material";
 import { Download, Upload } from "@mui/icons-material";
-import { IMICSettings } from "../../../src/lib/OptionElement";
+import { Box, Button, ButtonProps, Divider, Stack, Typography } from "@mui/material";
+import React, { ChangeEvent, useRef } from "react";
+import { IMICSettings } from "../../../lib/IMICSettings";
 
 interface ImportExportProps {
     settings: React.MutableRefObject<IMICSettings>;
@@ -40,7 +40,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({ settings }) => {
                 const _myImportedData = JSON.parse(this.result as string) as IMICSettings;
                 console.log("Importing data: ", _myImportedData);
                 Object.assign(settings.current, _myImportedData);
-                void settings.current.SaveOptions();
+                void settings.current.saveOptions();
                 alert("설정 불러오기 성공!");
             } catch (e) {
                 console.error(e);

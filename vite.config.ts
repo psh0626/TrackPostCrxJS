@@ -1,25 +1,28 @@
-import { defineConfig } from "vite";
 import { crx, ManifestV3Export } from "@crxjs/vite-plugin";
+import { defineConfig } from "vite";
 //@ts-ignore
-import viteReact from "@vitejs/plugin-react"
+import viteReact from "@vitejs/plugin-react";
 import manifest from "./manifest.json";
-const ReactCompilerConfig = { /* ... */ };
+const ReactCompilerConfig = {
+    /* ... */
+};
 // https://vitejs.dev/config/
-export default defineConfig(()=>{
+export default defineConfig(() => {
     return {
         plugins: [
             viteReact({
-            babel: {
-                plugins: [
-                    ["babel-plugin-react-compiler", ReactCompilerConfig],
-                ],
-            },
-        }), , crx({ manifest: manifest as unknown as ManifestV3Export })],
+                babel: {
+                    plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
+                },
+            }),
+            ,
+            crx({ manifest: manifest as unknown as ManifestV3Export }),
+        ],
         build: {
             rollupOptions: {
                 input: {
-                    sidepanel: "pages/sidepanel.html",
-                    options: "pages/options.html",
+                    sidepanel: "/src/ui/sidepanel.html",
+                    options: "/src/ui/options.html",
                 },
                 onwarn(warning, warn) {
                     // Suppress “Module level directives cause errors when bundled” warnings

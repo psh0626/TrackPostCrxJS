@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
-import FormControl from "@mui/material/FormControl";
 import { InputLabel, MenuItem, Select, SelectChangeEvent } from "@mui/material";
-import { IMICSettings, PersonalRemark } from "../../lib/OptionElement";
+import FormControl from "@mui/material/FormControl";
+import { useEffect, useRef, useState } from "react";
+import { IMICSettings, PersonalRemark } from "../../lib/IMICSettings";
 interface prSelectProp {
     type: string;
 }
@@ -46,7 +46,7 @@ export default function PersonalRemarksSelect({ type = "REQ" }: prSelectProp) {
 
     useEffect(() => {
         void (async () => {
-            await settings.current.RequestLoad();
+            await settings.current.requestLoad();
             set_pr_list(settings.current.PersonalRemarks);
             initialized.current = true;
             console.log("settings loaded:", settings.current);
@@ -61,7 +61,8 @@ export default function PersonalRemarksSelect({ type = "REQ" }: prSelectProp) {
                 value={selectedItem}
                 onChange={ItemChanged}
                 label="문구를 선택하세요."
-                size="small">
+                size="small"
+            >
                 <MenuItem disabled value="">
                     <em>문구를 선택하세요</em>
                 </MenuItem>
@@ -72,7 +73,7 @@ export default function PersonalRemarksSelect({ type = "REQ" }: prSelectProp) {
                                 <MenuItem key={item.Title} value={item.Content}>
                                     {item.Title}
                                 </MenuItem>
-                            )
+                            ),
                     )}
             </Select>
         </FormControl>

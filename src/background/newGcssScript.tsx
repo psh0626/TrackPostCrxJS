@@ -1,14 +1,14 @@
-import { COMMANDS, Msg, SendRequest } from "../lib/Message";
-import { IMICSettings } from "../lib/OptionElement";
+import { IMICSettings } from "../lib/IMICSettings";
+import { COMMANDS, MSG, sendRequest } from "../lib/message";
 import { PostElement } from "../lib/PostUtil";
-import InjectUtil from "./injectDOM/InjectUtil";
-import NewGcssInjectUtil from "./injectDOM/NewGcssInjectUtil";
+import InjectUtil from "./inject-dom/injectUtil";
+import NewGcssInjectUtil from "./inject-dom/newGcssInjectUtil";
 
 (async () => {
     console.log("Content script loaded at: " + document.readyState);
 
     const settings = new IMICSettings();
-    await settings.RequestLoad();
+    await settings.requestLoad();
 
     let lastPostElement: PostElement | null = null;
 
@@ -157,6 +157,6 @@ import NewGcssInjectUtil from "./injectDOM/NewGcssInjectUtil";
     }
 
     function findPostElement(item_id: string): Promise<PostElement> {
-        return SendRequest<PostElement>(new Msg(COMMANDS.FETCH_POST_ELEMENT, item_id));
+        return sendRequest<PostElement>(new MSG(COMMANDS.FETCH_POST_ELEMENT, item_id));
     }
 })();
