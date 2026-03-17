@@ -2,6 +2,7 @@ import { COMMANDS, Msg, SendRequest } from "../lib/Message";
 import { IMICSettings } from "../lib/OptionElement";
 import { PostElement } from "../lib/PostUtil";
 import { IcareAPI2 } from "./GetUnreadReplies/IcareReplies";
+import IcareInjectUtil from "./injectDOM/IcareInjectUtil";
 import InjectUtil from "./injectDOM/InjectUtil";
 
 void (async () => {
@@ -52,10 +53,10 @@ void (async () => {
         const param_module = currentURL.searchParams.get("module");
         const param_action = currentURL.searchParams.get("action");
         if (param_module === "dashboard") {
-            InjectUtil.InjectIcareIdSearchInput();
+            IcareInjectUtil.InjectIdSearchInput();
         } else if (param_action === "new") {
             if (currentURL.searchParams.get("module") === "notification") {
-                InjectUtil.InjectIcarePersonalRemarks("NOQ");
+                IcareInjectUtil.InjectPersonalRemarks("NOQ");
                 return;
             }
             const item_id = currentURL.searchParams.get("trackingId")?.toUpperCase();
@@ -69,7 +70,7 @@ void (async () => {
             port.onMessage.addListener(async (message: Msg) => {
                 console.log("message received: ", message);
                 if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
-                    InjectUtil.InjectIcarePersonalRemarks();
+                    IcareInjectUtil.InjectPersonalRemarks();
                     console.log(post_element);
                     if (!post_element.ItemTracked) {
                         for (let i = 0; i < 15; i++) {
@@ -92,10 +93,10 @@ void (async () => {
         } else if (param_action === "view") {
             if (currentURL.searchParams.get("module") === "notification") {
                 //noti 도착
-                InjectUtil.InjectIcarePersonalRemarks("NOP");
+                IcareInjectUtil.InjectPersonalRemarks("NOP");
                 return;
             }
-            InjectUtil.InjectIcarePersonalRemarks("SUM");
+            IcareInjectUtil.InjectPersonalRemarks("SUM");
             const dataset = (document.querySelector("div[data-tracking-id]") as HTMLDivElement).dataset;
             const item_id = dataset.trackingId ?? "";
             const remark_type = item_id.slice(-2) === "KR" ? "REQ" : "REP";
@@ -103,7 +104,7 @@ void (async () => {
             port.onMessage.addListener((message: Msg) => {
                 console.log("message received: ", message);
                 if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
-                    InjectUtil.InjectIcarePersonalRemarks(remark_type);
+                    IcareInjectUtil.InjectPersonalRemarks(remark_type);
                     // port.disconnect();
                 }
             });
@@ -161,19 +162,19 @@ void (async () => {
         dom.addr_city.value = ".";
 
         if (dom.addr_email.value.length > 1) {
-            InjectUtil.IcareSwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
+            IcareInjectUtil.SwitchValue(dom.addr_email, dom.addr_email.value.toLowerCase().replace(";", "@"));
         }
 
         if (post_element.ItemTracked) {
-            InjectUtil.IcareSwitchValue(dom.sndr_name, post_element.SenderName);
-            InjectUtil.IcareSwitchValue(dom.sndr_street, post_element.SenderAddress);
-            InjectUtil.IcareSwitchValue(dom.sndr_phone, post_element.SenderPhone);
+            IcareInjectUtil.SwitchValue(dom.sndr_name, post_element.SenderName);
+            IcareInjectUtil.SwitchValue(dom.sndr_street, post_element.SenderAddress);
+            IcareInjectUtil.SwitchValue(dom.sndr_phone, post_element.SenderPhone);
 
-            InjectUtil.IcareSwitchValue(dom.addr_name, post_element.AddresseeName);
-            InjectUtil.IcareSwitchValue(dom.addr_phone, post_element.AddresseePhone);
-            InjectUtil.IcareSwitchValue(dom.addr_street, post_element.AddresseeAddress);
-            InjectUtil.IcareSwitchValue(dom.addr_zipcode, post_element.AddresseeZipcode);
-            InjectUtil.IcareSwitchValue(dom.item_desc, post_element.Contents);
+            IcareInjectUtil.SwitchValue(dom.addr_name, post_element.AddresseeName);
+            IcareInjectUtil.SwitchValue(dom.addr_phone, post_element.AddresseePhone);
+            IcareInjectUtil.SwitchValue(dom.addr_street, post_element.AddresseeAddress);
+            IcareInjectUtil.SwitchValue(dom.addr_zipcode, post_element.AddresseeZipcode);
+            IcareInjectUtil.SwitchValue(dom.item_desc, post_element.Contents);
         }
 
         console.log("Dom Injected");

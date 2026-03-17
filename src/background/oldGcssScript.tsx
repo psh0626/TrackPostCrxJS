@@ -3,6 +3,7 @@ import { IMICSettings } from "../lib/OptionElement";
 import { PostElement } from "../lib/PostUtil";
 import { GcssAPI } from "./GetUnreadReplies/GcssReplies";
 import InjectUtil from "./injectDOM/InjectUtil";
+import OldGcssInjectUtil from "./injectDOM/OldGcssInjectUtil";
 
 (async () => {
     const settings = new IMICSettings();
@@ -38,17 +39,17 @@ import InjectUtil from "./injectDOM/InjectUtil";
         document.head.querySelector("link[rel='stylesheet']")?.removeAttribute("media");
         window.addEventListener("hashchange", (e) => {
             if (e.newURL.includes("/query")) {
-                InjectUtil.InjectGcssQueryInput();
+                OldGcssInjectUtil.InjectQueryInput();
             }
         });
         if (currentURL.toString().includes("/query")) {
-            InjectUtil.InjectGcssQueryInput();
+            OldGcssInjectUtil.InjectQueryInput();
         }
 
         if (settings.GcssUnreadReplies) GcssAPI.FetchReplies(false);
 
         if (currentURL.pathname.includes("/product-view") || currentURL.pathname.includes("/singleItemTracking")) {
-            InjectUtil.InjectGcssIdSearchInput();
+            OldGcssInjectUtil.InjectIdSearchInput();
             if (currentURL.pathname.includes("/multiview/")) {
                 const checkErr = () => document.querySelector("#validationErrors")?.textContent?.trim() ?? "";
                 for (let i = 0; i < 30; i++) {
@@ -162,7 +163,7 @@ import InjectUtil from "./injectDOM/InjectUtil";
                 const calc_item_value = Math.round(
                     (parseFloat(item_value.value) * getExchangeRate(item_value_currency.value)) / 1749,
                 );
-                InjectUtil.GcssSwitchValueForCurrency(item_value, item_value_currency, calc_item_value.toString());
+                OldGcssInjectUtil.SwitchValueForCurrency(item_value, item_value_currency, calc_item_value.toString());
             } else if (is_registered) {
                 item_value.value = "0";
             }
@@ -180,7 +181,7 @@ import InjectUtil from "./injectDOM/InjectUtil";
             // 이미 SDR이 지정되지 않은 경우에만
             if (postage_paid.value !== "") {
                 const calc_postage_paid = Math.round(parseFloat(postage_paid.value) / 1749);
-                InjectUtil.GcssSwitchValueForCurrency(
+                OldGcssInjectUtil.SwitchValueForCurrency(
                     postage_paid,
                     postage_paid_currency,
                     calc_postage_paid.toString(),
@@ -203,7 +204,7 @@ import InjectUtil from "./injectDOM/InjectUtil";
             // 이미 SDR이 지정되지 않은 경우에만
             if (item_value.value !== "" || postage_paid.value !== "") {
                 const calc_indemnity_amount = parseInt(item_value.value) + parseInt(postage_paid.value);
-                InjectUtil.GcssSwitchValueForCurrency(
+                OldGcssInjectUtil.SwitchValueForCurrency(
                     indemnity_amount,
                     indemnity_amount_currency,
                     calc_indemnity_amount.toString(),
@@ -318,7 +319,7 @@ import InjectUtil from "./injectDOM/InjectUtil";
         if (dom.addr_email.value.length > 1) {
             const raw_email = dom.addr_email.value;
             const fixed_email = replaceLast(raw_email.toLowerCase(), ";", "@");
-            InjectUtil.GcssSwitchValue(dom.addr_email, fixed_email);
+            OldGcssInjectUtil.SwitchValue(dom.addr_email, fixed_email);
         }
 
         if (dom.sndr_city.value === "") dom.sndr_city.value = ".";
@@ -338,18 +339,18 @@ import InjectUtil from "./injectDOM/InjectUtil";
         }
 
         // Contents
-        InjectUtil.GcssSwitchValue(dom.item_contents, post_element.Contents);
+        OldGcssInjectUtil.SwitchValue(dom.item_contents, post_element.Contents);
 
         // Addressee
-        InjectUtil.GcssSwitchValue(dom.addr_name, post_element.AddresseeName, dom.addr_name.value.length !== 0);
-        InjectUtil.GcssSwitchValue(dom.addr_street, post_element.AddresseeAddress);
-        InjectUtil.GcssSwitchValue(dom.addr_phone, post_element.AddresseePhone);
-        InjectUtil.GcssSwitchValue(dom.addr_postcode, post_element.AddresseeZipcode);
+        OldGcssInjectUtil.SwitchValue(dom.addr_name, post_element.AddresseeName, dom.addr_name.value.length !== 0);
+        OldGcssInjectUtil.SwitchValue(dom.addr_street, post_element.AddresseeAddress);
+        OldGcssInjectUtil.SwitchValue(dom.addr_phone, post_element.AddresseePhone);
+        OldGcssInjectUtil.SwitchValue(dom.addr_postcode, post_element.AddresseeZipcode);
 
         // Sender
-        InjectUtil.GcssSwitchValue(dom.sndr_name, post_element.SenderName, dom.sndr_name.value.length !== 0);
-        InjectUtil.GcssSwitchValue(dom.sndr_street, post_element.SenderAddress);
-        InjectUtil.GcssSwitchValue(dom.sndr_phone, post_element.SenderPhone);
+        OldGcssInjectUtil.SwitchValue(dom.sndr_name, post_element.SenderName, dom.sndr_name.value.length !== 0);
+        OldGcssInjectUtil.SwitchValue(dom.sndr_street, post_element.SenderAddress);
+        OldGcssInjectUtil.SwitchValue(dom.sndr_phone, post_element.SenderPhone);
 
         console.log("dom injected");
     }

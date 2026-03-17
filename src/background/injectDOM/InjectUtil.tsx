@@ -4,7 +4,7 @@ import FloatingHelper from "./DomInject";
 import PersonalRemarksSelect from "./PersonalRemarks";
 
 class InjectUtil {
-    private static InsertReact(react_component: ReactNode, target: HTMLElement, where: InsertPosition = "afterend") {
+    public static InsertReact(react_component: ReactNode, target: HTMLElement, where: InsertPosition = "afterend") {
         if (!target) {
             console.error("No target element found for: " + target);
             return;
@@ -21,19 +21,7 @@ class InjectUtil {
         target.insertAdjacentElement(where, new_div);
         return new_div;
     }
-    private static GcssInjectFor(target_element: HTMLInputElement, val: string, manual: boolean = false) {
-        this.InsertReact(
-            <FloatingHelper target={target_element} new_value={val} manual_change={manual} />,
-            target_element
-        );
-    }
 
-    private static IcareInjectFor(target_elm: HTMLInputElement, val: string, manual: boolean = false) {
-        this.InsertReact(
-            <FloatingHelper target={target_elm} new_value={val} manual_change={manual} for_icare={true} />,
-            target_elm
-        );
-    }
 
     private static separateKoreanSyllable(syllable: string): string {
         // console.log("St: " + syllable);
@@ -129,7 +117,7 @@ class InjectUtil {
         target_input: HTMLInputElement,
         target_form: HTMLFormElement,
         one_item_only = true,
-        trial = 0
+        trial = 0,
     ) {
         console.log("[ChangeAttributes] start");
         if (!target_input) {
@@ -188,10 +176,10 @@ class InjectUtil {
     static async TryQuerySelectFor<T>(
         selector: string,
         maxTries: number = 50,
-        waitTime: number = 100
-    ): Promise<Element | T | null> {
+        waitTime: number = 100,
+    ): Promise<T | null> {
         for (let i = 0; i < maxTries; i++) {
-            const element = document.querySelector(selector);
+            const element = document.querySelector(selector) as T | null;
             if (element) {
                 return element;
             }
@@ -199,101 +187,6 @@ class InjectUtil {
         }
         console.warn(`Element with selector "${selector}" not found after ${maxTries} tries.`);
         return null;
-    }
-    static async InjectGcssIdSearchInput() {
-        const input = (await this.TryQuerySelectFor("input#txtItemId")) as HTMLInputElement;
-        if (input) {
-            const form = document.querySelector("form:has(input#txtItemId)") as HTMLFormElement;
-            // form.action = "/CSS/gcss/multiview/singleItemTracking";
-            this.ChangeAttributes(input, form);
-        }
-    }
-    static async InjectGcssQueryInput() {
-        const old_input = (await this.TryQuerySelectFor("input[name='itemId']")) as HTMLInputElement;
-        if (old_input) {
-            const form = document.querySelector("form:has(input[name='itemId'])") as HTMLFormElement;
-            this.ChangeAttributes(old_input, form);
-        }
-    }
-    static async InjectIcareIdSearchInput() {
-        const old_input = (await this.TryQuerySelectFor("input[type='text']")) as HTMLInputElement;
-        if (old_input) {
-            const form = document.querySelector("form:has(input[type='text'])") as HTMLFormElement;
-            this.ChangeAttributes(old_input, form, false);
-        }
-    }
-
-    static async InjectIcarePersonalRemarks(type: string = "REQ") {
-        let selector: string;
-        switch (type) {
-            case "REQ":
-                selector = "div.request-fields > div > div > div.row.text-templates-row > div > div.input-container";
-                break;
-            case "REP":
-                selector = "div.reply-fields > div > div > div.row.text-templates-row > div > div.input-container";
-                break;
-            case "SUM":
-                selector = "div.update-message > form > div > div.row > div > div.input-container";
-                break;
-            default:
-                selector = "div.row.text-templates-row > div > div.input-container";
-        }
-        const target = (await this.TryQuerySelectFor(selector)) as HTMLElement;
-        if (!target) {
-            console.log("cannot find: 'div.input-container'\nunable to inject personal remarks");
-            return;
-        }
-        const new_div = this.InsertReact(<PersonalRemarksSelect type={type} />, target, "afterbegin");
-        new_div?.setAttribute("style", "z-index: 1; top: 3px; position: absolute; width: 100%; background: white;");
-    }
-
-    static GcssSwitchValueForCurrency(
-        original_element: HTMLInputElement,
-        currency_element: HTMLSelectElement,
-        change_to: string,
-        manual: boolean = false
-    ) {
-        if (!change_to) manual = true;
-        if (manual) {
-            this.InsertReact(
-                <FloatingHelper
-                    target={original_element}
-                    new_value={`${change_to} SDR`}
-                    manual_change={manual}
-                    currency_target={currency_element}
-                />,
-                original_element
-            );
-        } else {
-            this.InsertReact(
-                <FloatingHelper
-                    target={original_element}
-                    new_value={`${original_element.value} ${currency_element.selectedOptions[0].text}`}
-                    manual_change={manual}
-                    currency_target={currency_element}
-                />,
-                original_element
-            );
-            original_element.value = change_to;
-        }
-    }
-    static GcssSwitchValue(original_element: HTMLInputElement, change_to: string, manual: boolean = false) {
-        if (!change_to) manual = true;
-        if (manual) {
-            this.GcssInjectFor(original_element, change_to, manual);
-        } else {
-            this.GcssInjectFor(original_element, original_element.value);
-            original_element.value = change_to;
-        }
-    }
-    static IcareSwitchValue(original_element: HTMLInputElement, change_to: string, manual: boolean = false) {
-        if (!change_to) manual = true;
-        if (manual) {
-            this.IcareInjectFor(original_element, change_to, manual);
-        } else {
-            this.IcareInjectFor(original_element, original_element.value);
-            original_element.value = change_to;
-        }
     }
 }
 
