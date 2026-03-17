@@ -1,11 +1,11 @@
-import FloatingHelper from "./DomInject";
+import FloatingHelper from "./FloatingHelper";
 import InjectUtil from "./InjectUtil";
 import PersonalRemarksSelect from "./PersonalRemarks";
 
 export default class IcareInjectUtil {
     private static InjectFor(target_elm: HTMLInputElement, val: string, manual: boolean = false) {
         InjectUtil.InsertReact(
-            <FloatingHelper target={target_elm} new_value={val} manual_change={manual} for_icare={true} />,
+            <FloatingHelper target={target_elm} new_value={val} manual_change={manual} platform={"iCare"} />,
             target_elm,
         );
     }

@@ -1,10 +1,10 @@
-import FloatingHelper from "./DomInject";
+import FloatingHelper from "./FloatingHelper";
 import InjectUtil from "./InjectUtil";
 
 export default class OldGcssInjectUtil {
     private static InjectFor(target_element: HTMLInputElement, val: string, manual: boolean = false) {
         InjectUtil.InsertReact(
-            <FloatingHelper target={target_element} new_value={val} manual_change={manual} />,
+            <FloatingHelper target={target_element} new_value={val} manual_change={manual} platform={"OldGCSS"} />,
             target_element,
         );
     }

@@ -1,44 +1,45 @@
-import React, { Fragment } from "react";
-import { useState } from "react";
+import React, { Fragment, useState } from "react";
 
-import Fab from "@mui/material/Fab";
 import CachedIcon from "@mui/icons-material/Cached";
 import { Tooltip, Typography } from "@mui/material";
+import Fab from "@mui/material/Fab";
 interface HelperProps {
     target: HTMLInputElement;
     new_value: string;
     manual_change?: boolean;
-    for_icare?: boolean;
-    currency_target?: HTMLSelectElement;
+    platform?: "OldGCSS" | "NewGCSS" | "iCare";
+    currency_target?: HTMLSelectElement | HTMLInputElement | null;
 }
-function GetOptionValueText(select_element: HTMLSelectElement, input: string) {
+function GetOptionValueText(select_element: HTMLSelectElement | HTMLInputElement, input: string) {
     if (!select_element) return "";
 
-    // Iterate through each option in the select element
-    for (const option of select_element.options) {
-        // Check if input matches the value or the inner text
-        if (option.value === input) {
-            console.log("OPTION TEXT: ", option.text);
-            return option.text;
-        } else if (option.text === input) {
-            return option.value;
+    if (select_element instanceof HTMLSelectElement) {
+        // Iterate through each option in the select element
+        for (const option of select_element.options) {
+            // Check if input matches the value or the inner text
+            if (option.value === input) {
+                console.log("OPTION TEXT: ", option.text);
+                return option.text;
+            } else if (option.text === input) {
+                return option.value;
+            }
         }
+    } else if (select_element instanceof HTMLInputElement) {
+        return select_element.value;
     }
 
     // Return null if no match is found
     return "";
 }
 
-const FloatingHelper: React.FC<HelperProps> = ({
+const FloatingHelper = ({
     target,
     new_value,
     manual_change = false,
-    for_icare = false,
+    platform = "OldGCSS",
     currency_target = null,
-}) => {
-    const [tooltip_state, set_tooltip_state] = useState<string>(
-        manual_change ? "Original" : "Changed"
-    );
+}: HelperProps) => {
+    const [tooltip_state, set_tooltip_state] = useState<string>(manual_change ? "Original" : "Changed");
     const [tip, set_tip] = useState<string>(new_value);
 
     const buttonClicked = () => {
@@ -46,7 +47,11 @@ const FloatingHelper: React.FC<HelperProps> = ({
         let value_to_keep = target.value; // keep changed value
 
         if (currency_target) {
-            value_to_keep = target.value + " " + currency_target.selectedOptions[0].text;
+            if (currency_target instanceof HTMLSelectElement) {
+                value_to_keep = target.value + " " + currency_target.selectedOptions[0].text;
+            } else {
+                value_to_keep = target.value + " " + currency_target.value;
+            }
             const split_tip = tip.split(" ");
             target.value = split_tip[0] ?? ""; // original value to input
             currency_target.value = GetOptionValueText(currency_target, split_tip[1]);
@@ -81,6 +86,29 @@ const FloatingHelper: React.FC<HelperProps> = ({
         height: "34px",
     };
 
+    const fab_style_newGCSS: React.CSSProperties = {
+        position: "absolute",
+        zIndex: "999",
+        right: "-25px",
+        top: "-32px",
+        transform: "scale(0.6)",
+        alignItems: "center",
+        width: "130px",
+        height: "34px",
+    };
+
+    const get_fab_style = () => {
+        switch (platform) {
+            case "iCare":
+                return fab_style_icare;
+            case "NewGCSS":
+                return fab_style_newGCSS;
+            case "OldGCSS":
+            default:
+                return fab_style;
+        }
+    };
+
     return (
         <Tooltip
             arrow={true}
@@ -94,15 +122,17 @@ const FloatingHelper: React.FC<HelperProps> = ({
                 </Fragment>
             }
             placement="top"
-            leaveDelay={300}>
+            leaveDelay={300}
+        >
             <Fab
-                style={for_icare ? fab_style_icare : fab_style}
+                style={get_fab_style()}
                 variant="extended"
                 onClick={buttonClicked}
                 size="small"
                 color={tooltip_state === "Changed" ? "primary" : "default"}
                 id={`IMIC_${target.id}`}
-                sx={{ boxShadow: 0 }}>
+                sx={{ boxShadow: 0 }}
+            >
                 <CachedIcon />
                 <Typography textAlign="center" margin="12px 6px 12px 6px">
                     {tooltip_state}

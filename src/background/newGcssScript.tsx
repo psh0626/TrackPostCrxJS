@@ -2,6 +2,7 @@ import { COMMANDS, Msg, SendRequest } from "../lib/Message";
 import { IMICSettings } from "../lib/OptionElement";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./injectDOM/InjectUtil";
+import NewGcssInjectUtil from "./injectDOM/NewGcssInjectUtil";
 
 (async () => {
     console.log("Content script loaded at: " + document.readyState);
@@ -15,54 +16,90 @@ import InjectUtil from "./injectDOM/InjectUtil";
         const url = new URL(e.destination.url);
         console.log("Navigated to:", url.href);
 
-        const paramURL = new URL(e.destination.url.replace("/#", ""));
+        const paramURL = new URL(url.href.replace("/#", ""));
         console.log("url with params:", paramURL);
 
-        if (paramURL.searchParams.get("form") === "L1Q") {
-            console.log("L1Q form detected");
-
+        if (checkURLIfRequesting(paramURL)) {
             const itemId = paramURL.pathname.replace("/items/", "");
-
-            let postElement: PostElement | null = null;
-
-            if (lastPostElement && lastPostElement.ItemID === itemId) {
-                console.log("Post element already fetched for item ID:", itemId);
-                postElement = lastPostElement;
-            } else {
-                postElement = await findPostElement(itemId);
-                console.log("Fetched post element:", postElement);
-            }
-
+            const postElement = await fetchPostElement(itemId);
             if (!postElement) {
-                console.error("Post element not found for item ID:", itemId);
+                console.error("Failed to fetch post element for item ID:", itemId);
                 return;
             }
-
-            lastPostElement = postElement;
-
-            await setSelect("itemDetails.contentType", "OTHER_VARIOUS");
-            const currencyInput = getInput("itemDetails.itemValueCurrency");
-            const itemValueInput = getInput("itemDetails.itemValue");
-            
-            if (!currencyInput || !itemValueInput) {
-                console.log("Currency or item value input not found");
-                return;
-            }
-
-            itemValueInput.value = Math.round(
-                (parseFloat(itemValueInput.value) * getExchangeRate(currencyInput.value)) / 1749).toString();
+            await waitUntilRequestTypeSelected();
+            await InjectRequestForm(postElement);
         }
     });
+    (async function Main() {
+        await NewGcssInjectUtil.InjectIdSearchInput();
+    })();
 
+    function checkURLIfRequesting(url: URL) {
+        const formParam = url.searchParams.get("form")!;
+        if (/L\d{1:2}Q/.test(formParam)) {
+            console.log("Request form detected:", formParam);
+            return true;
+        }
+        return false;
+    }
+
+    async function fetchPostElement(itemId: string): Promise<PostElement | null> {
+        let postElement: PostElement | null = null;
+
+        if (lastPostElement && lastPostElement.ItemID === itemId) {
+            console.log("Post element already fetched for item ID:", itemId);
+            postElement = lastPostElement;
+        } else {
+            postElement = await findPostElement(itemId);
+            console.log("Fetched post element:", postElement);
+        }
+
+        if (!postElement) {
+            console.error("Post element not found for item ID:", itemId);
+            return null;
+        }
+
+        lastPostElement = postElement;
+        return postElement;
+    }
+
+    async function waitUntilRequestTypeSelected() {
+        const requestType = await InjectUtil.TryQuerySelectFor<HTMLInputElement>(
+            "input[aria-labelledby='requestType']`",
+        );
+        if (!requestType) {
+            console.log("Request type input not found");
+            return;
+        }
+
+        do {
+            await InjectUtil.wait(500);
+        } while (!requestType.value);
+    }
+    async function InjectRequestForm(postElement: PostElement) {
+        await setSelect("itemDetails.contentType", "OTHER_VARIOUS");
+        const currencyInput = getInput("itemDetails.itemValueCurrency");
+        const itemValueInput = getInput("itemDetails.itemValue");
+
+        if (!currencyInput || !itemValueInput) {
+            console.log("Currency or item value input not found");
+            return;
+        }
+        const rateSDR = 1749;
+        const calcValue = Math.round(
+            (parseFloat(itemValueInput.value) * getExchangeRate(currencyInput.value)) / rateSDR,
+        ).toString();
+        NewGcssInjectUtil.SwitchValueForCurrency(itemValueInput, currencyInput, calcValue);
+    }
     function getInput(name: string) {
         return document.querySelector<HTMLInputElement>(`input[aria-labelledby='${name}']`);
     }
-    function getSelect(name: string) {
+    function tryGetSelect(name: string) {
         return InjectUtil.TryQuerySelectFor<HTMLDivElement>(`div[aria-labelledby='${name}']`);
     }
 
     async function setSelect(name: string, value: string) {
-        const select = await getSelect(name);
+        const select = await tryGetSelect(name);
         if (!select) {
             console.log(`Select element with aria-labelledby='${name}' not found`);
             return;
@@ -97,23 +134,23 @@ import InjectUtil from "./injectDOM/InjectUtil";
     }
 
     function getExchangeRate(currency_value: string) {
-        let rate = 1500; // USD
+        let rate = 1600; // USD
 
         switch (currency_value) {
-            case "2": // EUR
-                rate = 1700;
+            case "EUR": // EUR
+                rate = 1900;
                 break;
-            case "89": // KRW
+            case "KRW": // KRW
                 rate = 1;
                 break;
-            case "111": // GBP
-                rate = 2000;
+            case "GBP": // GBP
+                rate = 2200;
                 break;
-            case "87": // JPY
-                rate = 1000;
+            case "JPY": // JPY
+                rate = 12;
                 break;
-            case "80": // CNY
-                rate = 200;
+            case "CNY": // CNY
+                rate = 300;
                 break;
         }
         return rate;

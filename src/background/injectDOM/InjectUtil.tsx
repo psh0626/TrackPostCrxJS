@@ -1,7 +1,5 @@
 import { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import FloatingHelper from "./DomInject";
-import PersonalRemarksSelect from "./PersonalRemarks";
 
 class InjectUtil {
     public static InsertReact(react_component: ReactNode, target: HTMLElement, where: InsertPosition = "afterend") {
@@ -21,7 +19,6 @@ class InjectUtil {
         target.insertAdjacentElement(where, new_div);
         return new_div;
     }
-
 
     private static separateKoreanSyllable(syllable: string): string {
         // console.log("St: " + syllable);
@@ -115,7 +112,7 @@ class InjectUtil {
 
     static ChangeAttributes(
         target_input: HTMLInputElement,
-        target_form: HTMLFormElement,
+        target_form: HTMLFormElement | null,
         one_item_only = true,
         trial = 0,
     ) {
@@ -151,13 +148,16 @@ class InjectUtil {
                 input.value = getProcessedValue(value, 13);
             } else {
                 target_input.removeAttribute("maxlength");
-                target_input.setAttribute("pattern", String.raw`([A-Z]{2}\d{9}[A-Z]{2}\s?)+`);
+                target_input.setAttribute(
+                    "pattern",
+                    target_form ? String.raw`([A-Z]{2}\d{9}[A-Z]{2}\s?)+` : String.raw`([A-Z]{2}\d{9}[A-Z]{2};?\s?)+`,
+                );
 
-                const endsWithSpace = /\s$/.test(value);
-                let items = value.split(/\s+/).filter(Boolean);
-                let processed = items.map((item) => getProcessedValue(item, 13));
-                let newValue = processed.join(" ");
-                if (endsWithSpace) newValue += " ";
+                const endsWithSpace = /;?\s$/.test(value);
+                let items = value.split(/;?\s+/).filter(Boolean);
+                let processed = items.map((item) => getProcessedValue(item, target_form ? 13 : 999));
+                let newValue = processed.join(target_form ? " " : "; ");
+                if (endsWithSpace) newValue += target_form ? " " : "; ";
 
                 if (input.value !== newValue) {
                     input.value = newValue;
@@ -166,9 +166,17 @@ class InjectUtil {
             }
         });
 
-        target_form.onsubmit = () => {
-            target_input.value = target_input.value.toUpperCase();
-        };
+        if (target_form) {
+            target_form.onsubmit = () => {
+                target_input.value = target_input.value.toUpperCase();
+            };
+        } else {
+            target_input.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    target_input.value = target_input.value.toUpperCase();
+                }
+            });
+        }
     }
     static async wait(ms: number): Promise<void> {
         return new Promise((resolve) => setTimeout(resolve, ms));
