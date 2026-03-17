@@ -19,24 +19,33 @@ import NewGcssInjectUtil from "./inject-dom/newGcssInjectUtil";
         const paramURL = new URL(url.href.replace("/#", ""));
         console.log("url with params:", paramURL);
 
-        if (checkURLIfRequesting(paramURL)) {
-            const itemId = paramURL.pathname.replace("/items/", "");
-            const postElement = await fetchPostElement(itemId);
-            if (!postElement) {
-                console.error("Failed to fetch post element for item ID:", itemId);
-                return;
-            }
-            await waitUntilRequestTypeSelected();
-            await InjectRequestForm(postElement);
-        }
+        await injectBasedOnURL(paramURL);
     });
     (async function Main() {
         await NewGcssInjectUtil.InjectIdSearchInput();
+        const paramURL = new URL(location.href.replace("/#", ""));
+        console.log("location url with params:", paramURL);
+
+        await injectBasedOnURL(paramURL);
     })();
 
+    async function injectBasedOnURL(url: URL) {
+        if (checkURLIfRequesting(url)) {
+            const itemId = url.pathname.replace("/items/", "");
+            let promises = await Promise.allSettled([fetchPostElement(itemId), waitUntilRequestTypeSelected()]);
+
+            const postElement = promises[0].status === "fulfilled" ? promises[0].value : await fetchPostElement(itemId);
+
+            if (!postElement) {
+                console.error("Failed to fetch post element for item ID:", itemId);
+            }
+
+            await InjectRequestForm(postElement);
+        }
+    }
     function checkURLIfRequesting(url: URL) {
         const formParam = url.searchParams.get("form")!;
-        if (/L\d{1:2}Q/.test(formParam)) {
+        if (/(L\d\d?Q)/.test(formParam)) {
             console.log("Request form detected:", formParam);
             return true;
         }
@@ -76,7 +85,7 @@ import NewGcssInjectUtil from "./inject-dom/newGcssInjectUtil";
             await InjectUtil.wait(500);
         } while (!requestType.value);
     }
-    async function InjectRequestForm(postElement: PostElement) {
+    async function InjectRequestForm(postElement: PostElement | null) {
         await setSelect("itemDetails.contentType", "OTHER_VARIOUS");
         const currencyInput = getInput("itemDetails.itemValueCurrency");
         const itemValueInput = getInput("itemDetails.itemValue");

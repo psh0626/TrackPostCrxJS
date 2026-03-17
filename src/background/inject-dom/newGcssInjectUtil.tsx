@@ -46,6 +46,7 @@ export default class NewGcssInjectUtil {
                 original_element,
             );
             original_element.value = change_to;
+            currency_element.value = "SDR";
         }
     }
     static SwitchValue(original_element: HTMLInputElement, change_to: string, manual: boolean = false) {
