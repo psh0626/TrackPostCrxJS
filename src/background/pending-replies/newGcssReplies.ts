@@ -77,13 +77,13 @@ export class GcssWorkflowService {
         }
     }
 
-    static filterUnread(workflows: GCSSWorkflow[] | undefined) {
+    private static filterUnread(workflows: GCSSWorkflow[] | undefined) {
         const filtered = workflows?.filter((workflow) => workflow.readStatus === "UNREAD");
         console.log("Filtered unread workflows", filtered);
         return filtered;
     }
 
-    static filterByUserSettings(
+    private static filterByUserSettings(
         responseData: GCSSWorkflow[] | null,
         criteria: ((workflow: GCSSWorkflow) => boolean) | Array<(workflow: GCSSWorkflow) => boolean>,
     ) {
@@ -92,7 +92,7 @@ export class GcssWorkflowService {
         console.log("Filtered workflows according to settings", filteredWorkflows);
         return filteredWorkflows;
     }
-    static async getResponseData(viewType: ViewType) {
+    private static async getResponseData(viewType: ViewType) {
         await this.client.getWorkflows("REPLY_RECEIVED");
         const response = await this.client.getWorkflows("REPLY_RECEIVED");
         console.log("GCSS workflows fetched: ", response);
@@ -102,10 +102,10 @@ export class GcssWorkflowService {
         }
         return response.data;
     }
-    static async notifyMessageHub(messageType: COMMANDS, workflows: GCSSWorkflow[]) {
+    private static async notifyMessageHub(messageType: COMMANDS, workflows: GCSSWorkflow[]) {
         return chrome.runtime.sendMessage(new MSG(messageType, workflows));
     }
-    static includesOneOf(target: string, options: string[]) {
+    private static includesOneOf(target: string, options: string[]) {
         return options.some((option) => target.toLowerCase().includes(option.toLowerCase()));
     }
 }
