@@ -25,7 +25,7 @@ function GetOptionValueText(select_element: HTMLSelectElement | HTMLInputElement
             }
         }
     } else if (select_element instanceof HTMLInputElement) {
-        return select_element.value;
+        return input;
     }
 
     // Return null if no match is found
@@ -43,7 +43,7 @@ const FloatingHelper = ({
     const [tip, set_tip] = useState<string>(new_value);
 
     const buttonClicked = () => {
-        const tooltip_element = document.getElementById(`IMIC_${target.id}`)! as HTMLButtonElement;
+        const tooltip_element = document.getElementById(`IMIC_${getName(target)}`)! as HTMLButtonElement;
         let value_to_keep = target.value; // keep changed value
 
         if (currency_target) {
@@ -88,10 +88,10 @@ const FloatingHelper = ({
 
     const fab_style_newGCSS: React.CSSProperties = {
         position: "absolute",
-        zIndex: "999",
-        right: "-25px",
+        zIndex: "0",
+        right: "-29px",
         top: "-32px",
-        transform: "scale(0.6)",
+        transform: "scale(0.55)",
         alignItems: "center",
         width: "130px",
         height: "34px",
@@ -109,6 +109,11 @@ const FloatingHelper = ({
         }
     };
 
+    const getName = (target: HTMLInputElement | HTMLSelectElement) => {
+        if (target.id) return target.id;
+        if (target.name) return target.name;
+        return target.getAttribute("aria-labelledby");
+    };
     return (
         <Tooltip
             arrow={true}
@@ -130,7 +135,7 @@ const FloatingHelper = ({
                 onClick={buttonClicked}
                 size="small"
                 color={tooltip_state === "Changed" ? "primary" : "default"}
-                id={`IMIC_${target.id}`}
+                id={`IMIC_${getName(target)}`}
                 sx={{ boxShadow: 0 }}
             >
                 <CachedIcon />

@@ -11,9 +11,10 @@ export default class NewGcssInjectUtil {
 
     static async InjectIdSearchInput() {
         const input = (await InjectUtil.TryQuerySelectFor("input[name='search']")) as HTMLInputElement;
-        if (input) {
+        if (input && !input.dataset.isInjected) {
             // form.action = "/CSS/gcss/multiview/singleItemTracking";
             InjectUtil.ChangeAttributes(input, null, false);
+            input.dataset.isInjected = "true";
         }
     }
 
@@ -46,7 +47,7 @@ export default class NewGcssInjectUtil {
                 original_element,
             );
             original_element.value = change_to;
-            currency_element.value = "SDR";
+            InjectUtil.wait(1000).then(() => { currency_element.value = "SDR"; });
         }
     }
     static SwitchValue(original_element: HTMLInputElement, change_to: string, manual: boolean = false) {

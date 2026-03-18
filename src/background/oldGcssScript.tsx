@@ -160,7 +160,7 @@ import { GcssAPI } from "./pending-replies/gcssReplies";
         if (item_value_currency.value !== "3") {
             // 이미 SDR이 지정되지 않은 경우에만
             if (item_value.value !== "") {
-                const calc_item_value = Math.round(
+                const calc_item_value = Math.ceil(
                     (parseFloat(item_value.value) * getExchangeRate(item_value_currency.value)) / 1749,
                 );
                 OldGcssInjectUtil.SwitchValueForCurrency(item_value, item_value_currency, calc_item_value.toString());
@@ -180,7 +180,7 @@ import { GcssAPI } from "./pending-replies/gcssReplies";
         if (postage_paid_currency.value !== "3") {
             // 이미 SDR이 지정되지 않은 경우에만
             if (postage_paid.value !== "") {
-                const calc_postage_paid = Math.round(parseFloat(postage_paid.value) / 1749);
+                const calc_postage_paid = Math.ceil(parseFloat(postage_paid.value) / 1749);
                 OldGcssInjectUtil.SwitchValueForCurrency(
                     postage_paid,
                     postage_paid_currency,
