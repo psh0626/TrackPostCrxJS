@@ -3,12 +3,14 @@ import { COMMANDS, MSG, sendRequest } from "../lib/Message";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./inject-dom/injectUtil";
 import NewGcssInjectUtil from "./inject-dom/newGcssInjectUtil";
+import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
 
 (async () => {
     console.log("Content script loaded at: " + document.readyState);
 
     const settings = new IMICSettings();
     await settings.requestLoad();
+    GcssWorkflowService.settings = settings;
 
     let lastPostElement: PostElement | null = null;
     let isInjecting = false;
@@ -23,6 +25,22 @@ import NewGcssInjectUtil from "./inject-dom/newGcssInjectUtil";
         NewGcssInjectUtil.InjectIdSearchInput();
         await injectBasedOnURL(paramURL);
     });
+    
+    chrome.runtime.onMessage.addListener((message: MSG) => {
+        switch (message.Command) {
+            case COMMANDS.GCSS_UNREAD_REPLIES:
+                void GcssAPI.FetchReplies(false);
+                break;
+            case COMMANDS.SETTINGS_CHANGED:
+                void (async () => {
+                    await settings.requestLoad();
+                    GcssAPI.settings = settings;
+                    console.log("Settings Reloaded", settings, GcssAPI.settings);
+                })();
+                break;
+        }
+    });
+    
     (async function Main() {
         NewGcssInjectUtil.InjectIdSearchInput();
         const paramURL = new URL(location.href.replace("/#", ""));
