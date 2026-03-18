@@ -1,4 +1,4 @@
-import { COMMANDS, MSG } from "../lib/message";
+import { COMMANDS, MSG } from "../lib/Message";
 import "../lib/timespanExtension";
 
 void (() => {

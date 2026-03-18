@@ -1,4 +1,4 @@
-import { COMMANDS, MSG } from "./message";
+import { COMMANDS, MSG } from "./Message";
 
 export default class PopupTrack {
     ItemId: string = "";

@@ -1,5 +1,5 @@
 import { IMICSettings } from "../lib/IMICSettings";
-import { COMMANDS, MSG, sendRequest } from "../lib/message";
+import { COMMANDS, MSG, sendRequest } from "../lib/Message";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./inject-dom/injectUtil";
 import OldGcssInjectUtil from "./inject-dom/oldGcssInjectUtil";

@@ -1,5 +1,5 @@
-import { COMMANDS, MSG } from "../lib/message";
-import createNotification, { getStorageItems } from "../lib/notification";
+import { COMMANDS, MSG } from "../lib/Message";
+import createNotification, { getStorageItems } from "../lib/Notification";
 import PopupTrack from "../lib/PopupTrack";
 import "../lib/timespanExtension";
 import ProcessMessage from "./message-hub/MessageHub";

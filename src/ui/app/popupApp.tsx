@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 import { GcssItem, WorkflowItem } from "../../background/pending-replies/dataWrapper";
 import { ServiceNames, ServiceTypes } from "../../background/pending-replies/gcssReplies";
 import { IMICSettings } from "../../lib/IMICSettings";
-import { COMMANDS } from "../../lib/message";
+import { COMMANDS } from "../../lib/Message";
 import PopupTrack from "../../lib/PopupTrack";
 import { MyList, StyledTextField } from "../components/components";
 

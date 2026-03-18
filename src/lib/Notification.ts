@@ -1,13 +1,13 @@
 import { GcssItem, WorkflowItem } from "../background/pending-replies/dataWrapper";
 import { IMICSettings } from "./IMICSettings";
-import { COMMANDS } from "./message";
+import { COMMANDS } from "./Message";
 
 async function checkFetchError() {
     type FetchError = {
         ICARE: boolean;
         GCSS: boolean;
     };
-    const err: FetchError = (await chrome.storage.session.get("FETCH_ERROR")).FETCH_ERROR;
+    const err: FetchError | undefined = (await chrome.storage.session.get("FETCH_ERROR")).FETCH_ERROR as FetchError;
     if (!err) return false;
     if (err.GCSS || err.ICARE) {
         return err;

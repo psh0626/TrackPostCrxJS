@@ -1,4 +1,4 @@
-import { COMMANDS, MSG, sendRequest } from "./message";
+import { COMMANDS, MSG, sendRequest } from "./Message";
 
 export default async function getIcareUserId() {
     let user_id = "";

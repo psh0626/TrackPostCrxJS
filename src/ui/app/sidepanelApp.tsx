@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { COMMANDS, MSG, sendRequest } from "../../lib/message";
+import { COMMANDS, MSG, sendRequest } from "../../lib/Message";
 import PopupTrack from "../../lib/PopupTrack";
 import { PostAPI, PostElement } from "../../lib/PostUtil";
 

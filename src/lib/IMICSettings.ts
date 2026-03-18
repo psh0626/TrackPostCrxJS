@@ -1,5 +1,5 @@
 import { ServiceTypes } from "../background/pending-replies/gcssReplies";
-import { COMMANDS, MSG, sendRequest } from "./message";
+import { COMMANDS, MSG, sendRequest } from "./Message";
 export class PersonalRemark {
     Section: string;
     Id: number;

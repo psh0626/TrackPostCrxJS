@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { IMICSettings } from "../../lib/IMICSettings";
-import { COMMANDS, MSG } from "../../lib/message";
+import { COMMANDS, MSG } from "../../lib/Message";
 import { IcareResponse, WorkflowItem } from "./dataWrapper";
 
 export class IcareAPI2 {

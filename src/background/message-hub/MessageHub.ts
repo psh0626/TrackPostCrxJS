@@ -1,5 +1,5 @@
-import { COMMANDS, MSG } from "../../lib/message";
-import createNotification from "../../lib/notification";
+import { COMMANDS, MSG } from "../../lib/Message";
+import createNotification from "../../lib/Notification";
 import { PostAPI } from "../../lib/PostUtil";
 import { GcssItem, WorkflowItem } from "../pending-replies/dataWrapper";
 import { PopupTracker } from "../serviceworker";
@@ -66,7 +66,7 @@ export default function ProcessMessage(
                 if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES) replies = Message.Param as WorkflowItem[];
                 else replies = Message.Param as GcssItem[];
 
-                const err: FetchError = (await chrome.storage.session.get("FETCH_ERROR")).FETCH_ERROR;
+                const err: FetchError | undefined = (await chrome.storage.session.get("FETCH_ERROR")).FETCH_ERROR as FetchError;
 
                 if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES) {
                     if (err) err.ICARE = false;
