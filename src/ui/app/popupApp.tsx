@@ -5,6 +5,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { GcssItem, WorkflowItem } from "../../background/pending-replies/dataWrapper";
 import { ServiceNames, ServiceTypes } from "../../background/pending-replies/gcssReplies";
+import { GCSSNotification, GCSSWorkflow } from "../../background/pending-replies/newGcssWrapper";
 import { IMICSettings } from "../../lib/IMICSettings";
 import { COMMANDS } from "../../lib/Message";
 import PopupTrack from "../../lib/PopupTrack";
@@ -26,6 +27,12 @@ function PopUpApp() {
     const [gcss_req_items, set_gcss_req] = useState<GcssItem[]>([]);
     const [gcss_notif_in_items, set_gcss_notif_in_items] = useState<GcssItem[]>([]);
     const [gcss_notif_out_items, set_gcss_notif_out_items] = useState<GcssItem[]>([]);
+
+    const [new_gcss_items, set_new_gcss_items] = useState<GCSSWorkflow[]>([]);
+    const [new_gcss_req_items, set_new_gcss_req_items] = useState<GCSSWorkflow[]>([]);
+    const [new_gcss_notif_in_items, set_new_gcss_notif_in_items] = useState<GCSSNotification[]>([]);
+    const [new_gcss_notif_out_items, set_new_gcss_notif_out_items] = useState<GCSSNotification[]>([]);
+
     const [gcss_author, set_gcss_author] = useState<string[]>([]);
     const [gcss_services, set_gcss_services] = useState<ServiceTypes[]>([ServiceTypes.EMS]);
     const [gcss_req_services, set_gcss_req_services] = useState<ServiceTypes[]>([ServiceTypes.EMS]);
@@ -129,12 +136,20 @@ function PopUpApp() {
                 const dict = (await chrome.storage.session.get("GCSS_UNREAD_REPLIES"))
                     .GCSS_UNREAD_REPLIES as GcssItem[];
                 if (typeof dict !== "undefined" && dict.length > 0) set_gcss_items(dict);
+                const dict2 = (await chrome.storage.session.get(COMMANDS.NEW_GCSS_UNREAD_REPLIES))[
+                    COMMANDS.NEW_GCSS_UNREAD_REPLIES
+                ] as GCSSWorkflow[];
+                if (typeof dict2 !== "undefined" && dict2.length > 0) set_new_gcss_items(dict2);
             }
 
             if (settings.current.GcssUnreadRequests) {
                 const dict = (await chrome.storage.session.get("GCSS_UNREAD_REQUESTS"))
                     .GCSS_UNREAD_REQUESTS as GcssItem[];
                 if (typeof dict !== "undefined" && dict.length > 0) set_gcss_req(dict);
+                const dict2 = (await chrome.storage.session.get(COMMANDS.NEW_GCSS_UNREAD_REQUESTS))[
+                    COMMANDS.NEW_GCSS_UNREAD_REQUESTS
+                ] as GCSSWorkflow[];
+                if (typeof dict2 !== "undefined" && dict2.length > 0) set_new_gcss_req_items(dict2);
             }
 
             if (settings.current.IcareUnreadNotificationInbound) {
@@ -156,6 +171,10 @@ function PopUpApp() {
                     COMMANDS.GCSS_UNREAD_NOTIF_INBOUND
                 ] as GcssItem[];
                 if (typeof dict !== "undefined" && dict.length > 0) set_gcss_notif_in_items(dict);
+                const dict2 = (await chrome.storage.session.get(COMMANDS.NEW_GCSS_UNREAD_NOTIF_INBOUND))[
+                    COMMANDS.NEW_GCSS_UNREAD_NOTIF_INBOUND
+                ] as GCSSNotification[];
+                if (typeof dict2 !== "undefined" && dict2.length > 0) set_new_gcss_notif_in_items(dict2);
             }
 
             if (settings.current.GcssUnreadNotificationOutbound) {
@@ -163,6 +182,10 @@ function PopUpApp() {
                     COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND
                 ] as GcssItem[];
                 if (typeof dict !== "undefined" && dict.length > 0) set_gcss_notif_out_items(dict);
+                const dict2 = (await chrome.storage.session.get(COMMANDS.NEW_GCSS_UNREAD_NOTIF_OUTBOUND))[
+                    COMMANDS.NEW_GCSS_UNREAD_NOTIF_OUTBOUND
+                ] as GCSSNotification[];
+                if (typeof dict2 !== "undefined" && dict2.length > 0) set_new_gcss_notif_out_items(dict2);
             }
 
             // chrome.storage.session.onChanged.addListener((dict) => {

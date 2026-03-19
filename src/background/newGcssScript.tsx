@@ -54,7 +54,8 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
     async function injectBasedOnURL(url: URL) {
         if (isInjecting) return;
         isInjecting = true;
-        if (checkURLIfRequesting(url)) {
+        const [isRequesting, requestLevel] = checkURLIfRequesting(url);
+        if (isRequesting) {
             const itemId = url.pathname.replace("/items/", "");
             let promises = await Promise.allSettled([fetchPostElement(itemId), waitUntilRequestTypeSelected()]);
 
@@ -69,7 +70,7 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
                 console.error("Failed to fetch post element for item ID:", itemId);
             }
 
-            await InjectRequestForm(postElement);
+            await InjectRequestForm(postElement, requestLevel!);
         }
         isInjecting = false;
     }
@@ -77,9 +78,9 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
         const formParam = url.searchParams.get("form")!;
         if (/(L\d\d?Q)/.test(formParam)) {
             console.log("Request form detected:", formParam);
-            return true;
+            return [true, formParam] as const;
         }
-        return false;
+        return [false, null] as const;
     }
 
     async function fetchPostElement(itemId: string): Promise<PostElement | null> {
@@ -116,7 +117,7 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
         } while (!requestType.value);
         console.log("Request type selected:", requestType.value);
     }
-    async function InjectRequestForm(postElement: PostElement | null) {
+    async function InjectRequestForm(postElement: PostElement | null, requestLevel: string) {
         console.log("Injecting request form with post element:");
         await setSelect("itemDetails.contentType", "OTHER_VARIOUS");
         setSelect("itemDetails.itemType", "PACKET");
@@ -199,6 +200,9 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
         if (thisForm.podRequired && thisForm.podRequired.checked === false) {
             thisForm.podRequired.parentElement?.click();
         }
+
+        if (requestLevel !== "L1Q") return;
+
         if (postElement) {
             if (thisForm.dateOfPosting && !thisForm.dateOfPosting.value) {
                 const date = postElement.ApplicationDate;
