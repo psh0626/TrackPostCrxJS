@@ -31,7 +31,7 @@ class NewGcssState {
 async function loadSessionData<T>(key: COMMANDS): Promise<T[]> {
     const data = await chrome.storage.session.get(key).then((result) => result[key]);
     if (!data) {
-        console.warn(`No data found in session storage for key: ${key}`);
+        console.log(`No data found in session storage for key: ${key}`);
     } else {
         console.log(`Data loaded from session storage for key: ${key}`, data);
     }
@@ -199,7 +199,7 @@ function PopUpApp() {
                 return settings.current.GcssServiceTypes.map((serv) => (
                     <MyList
                         key={serv}
-                        items={oldGcssState.replyItems}
+                        items={oldGcssState.replyItems.filter((el) => el.serviceType === serv)}
                         type="replies"
                         author=""
                         serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
@@ -307,6 +307,7 @@ function PopUpApp() {
                 />
             )),
         });
+
     const renderNewGcssReplies = () => {
         if (!settings.current.GcssUnreadReplies) return null;
         if (newGcssState.replyItems.length < 1) return renderEmpty("New GCSS 발송 회신: 모두 읽음 ✔️");
@@ -318,9 +319,7 @@ function PopUpApp() {
                     <MyList
                         key={user}
                         items={newGcssState.replyItems.filter((el) =>
-                            "inquiryAuthorName" in el
-                                ? el.inquiryAuthorName.toLowerCase().includes(user.toLowerCase())
-                                : false,
+                            el.inquiryAuthorName.toLowerCase().includes(user.toLowerCase()),
                         )}
                         type="replies"
                         author={user}
@@ -333,7 +332,7 @@ function PopUpApp() {
                 return settings.current.GcssServiceTypes.map((serv) => (
                     <MyList
                         key={serv}
-                        items={newGcssState.replyItems}
+                        items={newGcssState.replyItems.filter((el) => el.product === serv)}
                         type="replies"
                         author=""
                         serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
@@ -347,7 +346,6 @@ function PopUpApp() {
                             items={newGcssState.replyItems.filter(
                                 (el) =>
                                     el.product === serv &&
-                                    "inquiryAuthorName" in el &&
                                     el.inquiryAuthorName.toLowerCase().includes(user.toLowerCase()),
                             )}
                             type="replies"
