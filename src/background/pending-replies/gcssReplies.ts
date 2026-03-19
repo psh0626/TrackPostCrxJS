@@ -20,11 +20,6 @@ export enum ServiceNames {
 export class GcssAPI {
     static settings: IMICSettings;
 
-    static ScheduleAnotherFetch() {
-        setTimeout(async () => {
-            await this.FetchReplies();
-        }, 15000);
-    }
     private static async PostFetch(
         folder: "RPLYRCVD" | "TODO" | "NOTIFRCVD" = "RPLYRCVD",
         serviceType: ServiceTypes[] | string = ServiceTypes.EMS,
@@ -121,7 +116,7 @@ export class GcssAPI {
     private static IncludesOneOf(target: string, search_strings: string[]) {
         return search_strings.some((item) => target.toLowerCase().includes(item.toLowerCase()));
     }
-    static async FetchReplies(repeat: boolean = true) {
+    static async FetchReplies() {
         if (!this.settings.GcssUnreadReplies) {
             if (this.settings.GcssUnreadRequests) {
                 await this.FetchRequests();
@@ -137,7 +132,6 @@ export class GcssAPI {
             console.error(response.status);
             if (this.settings.GcssUnreadReplies)
                 await chrome.runtime.sendMessage(new MSG(COMMANDS.GCSS_UNREAD_REPLIES, "?GCSS"));
-            //this.ScheduleAnotherFetch();
             return;
         }
         const fetched_obj = trimObject(await response.json()) as GcssRawItem[];
@@ -159,7 +153,5 @@ export class GcssAPI {
 
         if (this.settings.GcssUnreadRequests) await this.FetchRequests();
         await this.FetchNotifications();
-
-        if (repeat) this.ScheduleAnotherFetch();
     }
 }

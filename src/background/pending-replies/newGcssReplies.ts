@@ -60,7 +60,8 @@ export class GcssWorkflowService {
 
             const filteredWorkflows = workflows
                 .filterServiceTypes(this.settings.GcssRequestServiceTypes)
-                .filterUnread();
+                .filterUnread()
+                .mapToGcssWorkflow();
 
             if (filteredWorkflows.length > 0)
                 messages.push(this.notifyMessageHub(COMMANDS.NEW_GCSS_UNREAD_REQUESTS, filteredWorkflows));
@@ -77,7 +78,8 @@ export class GcssWorkflowService {
             const filteredWorkflows = workflows
                 .filterAuthor(this.settings.GcssAuthor)
                 .filterServiceTypes(this.settings.GcssServiceTypes)
-                .filterUnread();
+                .filterUnread()
+                .mapToGcssWorkflow();
 
             if (filteredWorkflows.length > 0)
                 messages.push(this.notifyMessageHub(COMMANDS.NEW_GCSS_UNREAD_REPLIES, filteredWorkflows));
@@ -87,14 +89,15 @@ export class GcssWorkflowService {
             const notifications = await this.client.getMessages(notification("RECEIVED"));
 
             if (this.settings.GcssUnreadNotificationInbound) {
-                const inbound = notifications.filterInbound();
+                const inbound = notifications.filterInbound().mapToGcssNotification();
                 messages.push(this.notifyMessageHub(COMMANDS.NEW_GCSS_UNREAD_NOTIF_INBOUND, inbound));
             }
             if (this.settings.GcssUnreadNotificationOutbound) {
                 const outbound = notifications
                     .filterOutbound()
                     .filterOutboundByCountries(this.settings.GcssOutboundNotificationCountries)
-                    .filterOutboundExcludeCountries(this.settings.GcssOutboundNotificationExcludedCountries);
+                    .filterOutboundExcludeCountries(this.settings.GcssOutboundNotificationExcludedCountries)
+                    .mapToGcssNotification();
                 messages.push(this.notifyMessageHub(COMMANDS.NEW_GCSS_UNREAD_NOTIF_OUTBOUND, outbound));
             }
         }

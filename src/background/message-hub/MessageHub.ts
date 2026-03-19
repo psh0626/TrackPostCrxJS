@@ -31,7 +31,6 @@ export default function ProcessMessage(
         ICARE: boolean;
         GCSS: boolean;
     };
-
     switch (Message.Command) {
         case COMMANDS.FETCH_POST_ELEMENT:
             void (async () => {
@@ -45,26 +44,6 @@ export default function ProcessMessage(
                 console.log(post_elm);
             })();
             return true; // true makes connection a bit longer;
-
-        case COMMANDS.GCSS_UNREAD_REPLIES:
-        case COMMANDS.ICARE_UNREAD_REPLIES:
-            void (async () => {
-                let replies = Message.Param;
-
-                const err: FetchError | undefined = (await chrome.storage.session.get("FETCH_ERROR"))
-                    .FETCH_ERROR as FetchError;
-
-                if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES) {
-                    if (err) err.ICARE = false;
-                    await chrome.storage.session.set({ FETCH_ERROR: err });
-                    await chrome.storage.session.set({ ICARE_UNREAD_REPLIES: replies });
-                } else {
-                    if (err) err.GCSS = false;
-                    await chrome.storage.session.set({ GCSS_UNREAD_REPLIES: replies });
-                }
-                await createNotification();
-            })();
-            return; // false since we're not sending response
 
         case COMMANDS.ICARE_UNREAD_REQUESTS:
         case COMMANDS.ICARE_UNREAD_REPLIES:
@@ -84,8 +63,6 @@ export default function ProcessMessage(
                 return;
             }
             void (async () => {
-                let replies = Message.Param;
-
                 const err: FetchError | undefined = (await chrome.storage.session.get("FETCH_ERROR"))
                     .FETCH_ERROR as FetchError;
 

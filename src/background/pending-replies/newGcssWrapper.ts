@@ -1,3 +1,16 @@
+// Type guard for GCSSMessage
+export function isGCSSMessage(obj: any): obj is GCSSMessage {
+    return (
+        obj &&
+        typeof obj === "object" &&
+        typeof obj.id === "string" &&
+        typeof obj.href === "string" &&
+        typeof obj.product === "string"
+    );
+}
+export function isGCSSNotification(obj: any): obj is GCSSNotification {
+    return obj && typeof obj === "object" && typeof obj.ignored === "boolean";
+}
 export interface IGCSSNotification {
     id: string;
     href: string;
@@ -71,7 +84,8 @@ export interface GcssResponse {
     totalResults: number;
 }
 
-class GCSSMessage {
+export type GCSSMessage = GCSSWorkflow | GCSSNotification;
+export class GCSSMessageBase {
     id!: string;
     href!: string;
     itemId!: string;
@@ -84,12 +98,11 @@ class GCSSMessage {
     receivingCountry!: string;
     attachmentCount!: number;
     readStatus!: string;
-
-    constructor(data: Partial<GCSSMessage>) {
+    constructor(data: Partial<GCSSMessageBase>) {
         Object.assign(this, data);
     }
 }
-export class GCSSWorkflow extends GCSSMessage implements IGCSSWorkflow {
+export class GCSSWorkflow extends GCSSMessageBase implements IGCSSWorkflow {
     status!: string;
     returnItem!: boolean;
     inquiryType!: string;
@@ -111,12 +124,15 @@ export class GCSSWorkflow extends GCSSMessage implements IGCSSWorkflow {
     qumCount!: number;
     qumrCount!: number;
     reactivationCount!: number;
+    isNotification(): this is GCSSNotification {
+        return false;
+    }
     constructor(data: IGCSSWorkflow) {
         super(data);
         Object.assign(this, data);
     }
 }
-export class GCSSNotification extends GCSSMessage implements IGCSSNotification {
+export class GCSSNotification extends GCSSMessageBase implements IGCSSNotification {
     constructor(data: IGCSSNotification) {
         super(data);
         Object.assign(this, data);
@@ -137,24 +153,16 @@ export class GCSSNotification extends GCSSMessage implements IGCSSNotification {
     status!: string;
     statusLabel!: string;
     reply!: null;
-
-    /**
-     * Returns true if the notification is unread.
-     */
+    isNotification(): this is GCSSNotification {
+        return true;
+    }
     isUnread(): boolean {
         return this.readStatus !== "READ";
     }
 
-    /**
-     * Returns true if the notification has attachments.
-     */
     hasAttachments(): boolean {
         return this.attachmentCount > 0;
     }
-
-    /**
-     * Returns a formatted string for the notification.
-     */
     toString(): string {
         return `[${this.typeLabel}] ${this.reasonLabel} (${this.statusLabel})`;
     }
@@ -168,52 +176,61 @@ export class GcssArray<T extends IGCSSWorkflow | IGCSSNotification> extends Arra
         }
         Object.setPrototypeOf(this, GcssArray.prototype); // Ensures correct prototype chain
     }
-
-    filter(predicate: (value: T, index: number, array: T[]) => boolean): GcssArray<T> {
-        const filtered = Array.prototype.filter.call(this, predicate);
-        return new GcssArray(filtered);
+    mapToGcssWorkflow(): GcssArray<GCSSWorkflow> {
+        const mapped = Array.prototype.map.call(
+            this,
+            (item: IGCSSWorkflow) => new GCSSWorkflow(item),
+        ) as GCSSWorkflow[];
+        return new GcssArray(mapped);
+    }
+    mapToGcssNotification(): GcssArray<GCSSNotification> {
+        const mapped = Array.prototype.map.call(
+            this,
+            (item: IGCSSNotification) => new GCSSNotification(item),
+        ) as GCSSNotification[];
+        return new GcssArray(mapped);
     }
     filterServiceTypes(serviceTypes: string[]): GcssArray<T> {
         const filtered = this.filter((item) => this.includesOneOf(item.product, serviceTypes));
         console.log("Filtered by service types", filtered);
-        return filtered;
+        return new GcssArray(filtered);
     }
     filterAuthor(authorNames: string[]): GcssArray<T> {
         const filtered = this.filter(
             (item) => "inquiryAuthorName" in item && this.includesOneOf((item as any).inquiryAuthorName, authorNames),
         );
         console.log("Filtered by authors", filtered);
-        return filtered;
+        return new GcssArray(filtered);
     }
-    filterUnread() {
+    filterUnread(): GcssArray<T> {
         const filtered = this.filter((item) => item.readStatus !== "READ");
         console.log("Filtered by unread status", filtered);
-        return filtered;
+        return new GcssArray(filtered);
     }
-    filterInbound() {
+    filterInbound(): GcssArray<T> {
         const filtered = this.filter((item) => "itemId" in item && (item as any).itemId.slice(-2) !== "KR");
         console.log("Filtered by inbound notifications", filtered);
-        return filtered;
+        return new GcssArray(filtered);
     }
-    filterOutbound() {
+    filterOutbound(): GcssArray<T> {
         const filtered = this.filter((item) => "itemId" in item && (item as any).itemId.slice(-2) === "KR");
         console.log("Filtered by outbound notifications", filtered);
-        return filtered;
+        return new GcssArray(filtered);
     }
-    filterOutboundByCountries(countries: string[]) {
+    filterOutboundByCountries(countries: string[]): GcssArray<T> {
         const filtered = this.filter(
             (item) => "sendingCountry" in item && this.includesOneOf((item as any).sendingCountry, countries),
         );
         console.log("Filtered by outbound notification countries", filtered);
-        return filtered;
+        return new GcssArray(filtered);
     }
 
-    filterOutboundExcludeCountries(countries: string[]) {
+    filterOutboundExcludeCountries(countries: string[]): GcssArray<T> {
         const filtered = this.filter(
             (item) => "sendingCountry" in item && !this.includesOneOf((item as any).sendingCountry, countries),
         );
         console.log("Filtered by outbound notification excluded countries", filtered);
-        return filtered;
+        return new GcssArray(filtered);
     }
 
     includesOneOf(target: string, options: string[]) {

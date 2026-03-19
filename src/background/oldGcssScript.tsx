@@ -15,7 +15,7 @@ import { GcssAPI } from "./pending-replies/gcssReplies";
     chrome.runtime.onMessage.addListener((message: MSG) => {
         switch (message.Command) {
             case COMMANDS.GCSS_UNREAD_REPLIES:
-                void GcssAPI.FetchReplies(false);
+                void GcssAPI.FetchReplies();
                 break;
             case COMMANDS.SETTINGS_CHANGED:
                 void (async () => {
@@ -46,7 +46,7 @@ import { GcssAPI } from "./pending-replies/gcssReplies";
             OldGcssInjectUtil.InjectQueryInput();
         }
 
-        if (settings.GcssUnreadReplies) GcssAPI.FetchReplies(false);
+        if (settings.GcssUnreadReplies) GcssAPI.FetchReplies();
 
         if (currentURL.pathname.includes("/product-view") || currentURL.pathname.includes("/singleItemTracking")) {
             OldGcssInjectUtil.InjectIdSearchInput();

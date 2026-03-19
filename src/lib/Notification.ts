@@ -1,4 +1,11 @@
-import { GcssItem, WorkflowItem } from "../background/pending-replies/dataWrapper";
+import { GcssItem, isGcssItem, isWorkflowItem, WorkflowItem } from "../background/pending-replies/dataWrapper";
+import {
+    GCSSMessage,
+    GCSSNotification,
+    GCSSWorkflow,
+    isGCSSMessage,
+    isGCSSNotification,
+} from "../background/pending-replies/newGcssWrapper";
 import { IMICSettings } from "./IMICSettings";
 import { COMMANDS } from "./Message";
 
@@ -25,13 +32,12 @@ export async function getStorageItems<T>(key: string): Promise<T[]> {
     const dict = await chrome.storage.session.get(key);
     return (dict[key] as T[]) || [];
 }
-
-async function gatherStorageItems(items: StorageItem[]): Promise<(WorkflowItem | GcssItem)[]> {
-    const results: (WorkflowItem | GcssItem)[] = [];
+async function gatherStorageItems(items: StorageItem[]): Promise<(WorkflowItem | GcssItem | GCSSMessage)[]> {
+    const results: (WorkflowItem | GcssItem | GCSSMessage)[] = [];
 
     for (const item of items) {
         if (!item.setting) continue;
-        const storedItems = await getStorageItems<WorkflowItem | GcssItem>(item.key);
+        const storedItems = await getStorageItems<WorkflowItem | GcssItem | GCSSWorkflow | GCSSNotification>(item.key);
         if (Array.isArray(storedItems)) {
             results.push(...storedItems);
         }
@@ -40,34 +46,47 @@ async function gatherStorageItems(items: StorageItem[]): Promise<(WorkflowItem |
     return results;
 }
 
-function mapToNotificationItem(item: WorkflowItem | GcssItem): chrome.notifications.NotificationItem {
-    const isOutbound = ("trackingId" in item ? item.trackingId : item.itemId).slice(-2) === "KR";
+function mapToNotificationItem(item: WorkflowItem | GcssItem | GCSSMessage): chrome.notifications.NotificationItem {
+    const isOutbound = (isWorkflowItem(item) ? item.trackingId : item.itemId).slice(-2) === "KR";
 
-    if ("messageType" in item) {
-        // GcssItem
-        if (item.messageType === "NQ") {
+    if (isGcssItem(item)) {
+        // Old GCSS format
+        const thisItem = new GcssItem(item);
+        if (thisItem.messageType === "NQ") {
             return {
                 title: `GCSS NQ ${isOutbound ? "발송" : "도착"}`,
-                message: `${item.itemId} ${isOutbound ? "(" + item.originCountry + ")" : ""}`,
+                message: `${thisItem.itemId} ${isOutbound ? "(" + thisItem.originCountry + ")" : ""}`,
             };
         }
         return {
-            title: `GCSS ${item.workflowLevel} ${isOutbound ? "발송" : "도착"}`,
-            message: `${item.itemId} ${isOutbound ? "(" + item.destinationCountry + ")" : ""}`,
+            title: `GCSS ${thisItem.workflowLevel} ${isOutbound ? "발송" : "도착"}`,
+            message: `${thisItem.itemId} ${isOutbound ? "(" + thisItem.destinationCountry + ")" : ""}`,
         };
-    }
-
-    // WorkflowItem
-    if (item.isNotification) {
+    } else if (isGCSSMessage(item)) {
+        // New GCSS format
+        if (isGCSSNotification(item)) {
+            return {
+                title: `GCSS NQ ${isOutbound ? "발송" : "도착"}`,
+                message: `${item.itemId} ${isOutbound ? "(" + item.sendingCountry + ")" : ""}`,
+            };
+        }
         return {
-            title: `iCare NQ ${isOutbound ? "발송" : "도착"}`,
-            message: `${item.trackingId} ${isOutbound ? "(" + item.requestingOperator.substring(0, 2) + ")" : ""}`,
+            title: `GCSS ${item.inquiryType} ${isOutbound ? "발송" : "도착"}`,
+            message: `${item.itemId} ${isOutbound ? "(" + item.sendingCountry + ")" : ""}`,
+        };
+    } else {
+        // iCare format
+        if (item.isNotification) {
+            return {
+                title: `iCare NQ ${isOutbound ? "발송" : "도착"}`,
+                message: `${item.trackingId} ${isOutbound ? "(" + item.requestingOperator.substring(0, 2) + ")" : ""}`,
+            };
+        }
+        return {
+            title: `iCare L${item.currentLevel} ${isOutbound ? "발송" : "도착"}`,
+            message: `${item.trackingId} ${isOutbound ? "(" + item.replyingOperator.substring(0, 2) + ")" : ""}`,
         };
     }
-    return {
-        title: `iCare L${item.currentLevel} ${isOutbound ? "발송" : "도착"}`,
-        message: `${item.trackingId} ${isOutbound ? "(" + item.replyingOperator.substring(0, 2) + ")" : ""}`,
-    };
 }
 
 export default async function createNotification(force_update = false) {
@@ -106,11 +125,27 @@ export default async function createNotification(force_update = false) {
         },
     ];
 
+    const newGcssItems: StorageItem[] = [
+        { key: COMMANDS.NEW_GCSS_UNREAD_REPLIES, setting: settings.GcssUnreadReplies, items: [] },
+        { key: COMMANDS.NEW_GCSS_UNREAD_REQUESTS, setting: settings.GcssUnreadRequests, items: [] },
+        {
+            key: COMMANDS.NEW_GCSS_UNREAD_NOTIF_INBOUND,
+            setting: settings.GcssUnreadNotificationInbound,
+            items: [],
+        },
+        {
+            key: COMMANDS.NEW_GCSS_UNREAD_NOTIF_OUTBOUND,
+            setting: settings.GcssUnreadNotificationOutbound,
+            items: [],
+        },
+    ];
+
     // Fetch and combine items
     const workflowItems = await gatherStorageItems(icareItems);
     const gcssStoredItems = await gatherStorageItems(gcssItems);
+    const newGcssStoredItems = await gatherStorageItems(newGcssItems);
 
-    const current_num = workflowItems.length + gcssStoredItems.length;
+    const current_num = workflowItems.length + gcssStoredItems.length + newGcssStoredItems.length;
     const last_num = parseInt(await chrome.action.getBadgeText({})) || 0;
 
     console.log("current number: ", current_num, "  last number: ", last_num);
@@ -127,7 +162,7 @@ export default async function createNotification(force_update = false) {
     // if (fetch_error) return;
 
     // Map items to notification format
-    const combined = [...gcssStoredItems, ...workflowItems].map(mapToNotificationItem);
+    const combined = [...gcssStoredItems, ...workflowItems, ...newGcssStoredItems].map(mapToNotificationItem);
     if (combined.length < 1) return;
 
     // Create notification

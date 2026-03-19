@@ -1,3 +1,28 @@
+
+// Type guard for GcssItem
+export function isGcssItem(obj: any): obj is GcssItem {
+    return (
+        obj &&
+        typeof obj === "object" &&
+        typeof obj.requestingCallcenter === "string" &&
+        typeof obj.workflowLink === "string" &&
+        typeof obj.internalItemId === "number"
+    );
+}
+
+// Type guard for WorkflowItem
+export function isWorkflowItem(obj: any): obj is WorkflowItem {
+    return (
+        obj &&
+        typeof obj === "object" &&
+        typeof obj.internalId === "string" &&
+        typeof obj.trackingId === "string" &&
+        typeof obj.link === "string" &&
+        typeof obj.readStatus === "string"
+    );
+}
+
+
 export function trimObject(obj: any): any {
     if (typeof obj !== "object" || obj === null) {
         // If it's not an object or it's null, return it as is
