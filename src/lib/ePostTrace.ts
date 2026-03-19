@@ -4,7 +4,7 @@ fetch("https://service.epost.go.kr/trace.RetrieveEmsRigiTraceList.comm?POST_CODE
     .then((e) => e.body.querySelector("table.detail_off > tbody"))
     .then((bd) =>
         console.log(
-            [...bd.children].map((tr) =>
+            [...bd!.children].map((tr) =>
                 [...tr.children].map((td) => td.textContent.replaceAll("\n", "").replaceAll("\t", "").trim()),
             ),
         ),
