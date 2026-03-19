@@ -12,40 +12,50 @@ import PopupTrack from "../../lib/PopupTrack";
 import { MyList, StyledTextField } from "../components/components";
 
 function PopUpApp() {
-    // TODO: GCSS Author Name Separation.
-    // Tracking number state (you might want to bind this as well)
-    const [item_id_field, set_item_id_field] = useState("");
-    const [is_valid, set_is_valid] = useState(true);
+    const [inputState, setInputState] = useState({
+        itemIdField: "",
+        isValid: true,
+    });
 
-    const [icare_items, set_icare_items] = useState<WorkflowItem[]>([]);
-    const [icare_req_items, set_icare_req] = useState<WorkflowItem[]>([]);
-    const [icare_notif_in_items, set_icare_notif_in_items] = useState<WorkflowItem[]>([]);
-    const [icare_notif_out_items, set_icare_notif_out_items] = useState<WorkflowItem[]>([]);
-    const [icare_author, set_icare_author] = useState<string[]>([]);
+    const [icareState, setIcareState] = useState({
+        items: [] as WorkflowItem[],
+        reqItems: [] as WorkflowItem[],
+        notifInItems: [] as WorkflowItem[],
+        notifOutItems: [] as WorkflowItem[],
+        author: [] as string[],
+    });
 
-    const [gcss_items, set_gcss_items] = useState<GcssItem[]>([]);
-    const [gcss_req_items, set_gcss_req] = useState<GcssItem[]>([]);
-    const [gcss_notif_in_items, set_gcss_notif_in_items] = useState<GcssItem[]>([]);
-    const [gcss_notif_out_items, set_gcss_notif_out_items] = useState<GcssItem[]>([]);
+    const [gcssState, setGcssState] = useState({
+        items: [] as GcssItem[],
+        reqItems: [] as GcssItem[],
+        notifInItems: [] as GcssItem[],
+        notifOutItems: [] as GcssItem[],
+        author: [] as string[],
+        services: [ServiceTypes.EMS] as ServiceTypes[],
+        reqServices: [ServiceTypes.EMS] as ServiceTypes[],
+    });
 
-    const [new_gcss_items, set_new_gcss_items] = useState<GCSSWorkflow[]>([]);
-    const [new_gcss_req_items, set_new_gcss_req_items] = useState<GCSSWorkflow[]>([]);
-    const [new_gcss_notif_in_items, set_new_gcss_notif_in_items] = useState<GCSSNotification[]>([]);
-    const [new_gcss_notif_out_items, set_new_gcss_notif_out_items] = useState<GCSSNotification[]>([]);
+    const [newGcssState, setNewGcssState] = useState({
+        items: [] as GCSSWorkflow[],
+        reqItems: [] as GCSSWorkflow[],
+        notifInItems: [] as GCSSNotification[],
+        notifOutItems: [] as GCSSNotification[],
+    });
 
-    const [gcss_author, set_gcss_author] = useState<string[]>([]);
-    const [gcss_services, set_gcss_services] = useState<ServiceTypes[]>([ServiceTypes.EMS]);
-    const [gcss_req_services, set_gcss_req_services] = useState<ServiceTypes[]>([ServiceTypes.EMS]);
-
-    const [chk_rep, set_chk_rep] = useState(false);
-    const [chk_req, set_chk_req] = useState(false);
-    const [chk_notif_in, set_chk_notif_in] = useState(false);
-    const [chk_notif_out, set_chk_notif_out] = useState(false);
-
-    const [chk_gcss_rep, set_chk_gcssrep] = useState(false);
-    const [chk_gcss_req, set_chk_gcssreq] = useState(false);
-    const [chk_gcss_notif_in, set_chk_gcss_notif_in] = useState(false);
-    const [chk_gcss_notif_out, set_chk_gcss_notif_out] = useState(false);
+    const [flags, setFlags] = useState({
+        icare: {
+            rep: false,
+            req: false,
+            notifIn: false,
+            notifOut: false,
+        },
+        gcss: {
+            rep: false,
+            req: false,
+            notifIn: false,
+            notifOut: false,
+        },
+    });
 
     const textfield_ref = useRef<HTMLInputElement>(null);
     const settings = useRef(new IMICSettings());
@@ -56,17 +66,15 @@ function PopUpApp() {
     // };
     const CheckValue = (target: HTMLInputElement | HTMLTextAreaElement) => {
         const pretty_value = target.value.trim().toUpperCase();
-        set_item_id_field(pretty_value); // Update
-        if (pretty_value === "") {
-            set_is_valid(true);
-        } else {
-            set_is_valid(target.validity.valid);
-        }
+        setInputState({
+            itemIdField: pretty_value,
+            isValid: pretty_value === "" ? true : target.validity.valid,
+        });
     };
 
     const OpenSidePanel = () => {
         chrome.windows.getCurrent(async (w) => {
-            await tracker.SetItemId(item_id_field);
+            await tracker.SetItemId(inputState.itemIdField);
             await chrome.sidePanel.open({ windowId: w.id! });
             window.close();
         });
@@ -80,18 +88,36 @@ function PopUpApp() {
 
         void (async () => {
             await settings.current.loadOptions();
-            set_chk_rep(settings.current.IcareUnreadReplies);
-            set_chk_req(settings.current.IcareUnreadRequests);
-            set_chk_notif_in(settings.current.IcareUnreadNotificationInbound);
-            set_chk_notif_out(settings.current.IcareUnreadNotificationOutbound);
-            set_icare_author(settings.current.IcareAuthor);
-            set_chk_gcssrep(settings.current.GcssUnreadReplies);
-            set_chk_gcssreq(settings.current.GcssUnreadRequests);
-            set_chk_gcss_notif_in(settings.current.GcssUnreadNotificationInbound);
-            set_chk_gcss_notif_out(settings.current.GcssUnreadNotificationOutbound);
-            set_gcss_author(settings.current.GcssAuthor);
-            set_gcss_services(
-                settings.current.GcssServiceTypes.sort((a, b) => {
+            const nextFlags = {
+                icare: {
+                    rep: settings.current.IcareUnreadReplies,
+                    req: settings.current.IcareUnreadRequests,
+                    notifIn: settings.current.IcareUnreadNotificationInbound,
+                    notifOut: settings.current.IcareUnreadNotificationOutbound,
+                },
+                gcss: {
+                    rep: settings.current.GcssUnreadReplies,
+                    req: settings.current.GcssUnreadRequests,
+                    notifIn: settings.current.GcssUnreadNotificationInbound,
+                    notifOut: settings.current.GcssUnreadNotificationOutbound,
+                },
+            };
+
+            const nextIcareState = {
+                items: [] as WorkflowItem[],
+                reqItems: [] as WorkflowItem[],
+                notifInItems: [] as WorkflowItem[],
+                notifOutItems: [] as WorkflowItem[],
+                author: settings.current.IcareAuthor,
+            };
+
+            const nextGcssState = {
+                items: [] as GcssItem[],
+                reqItems: [] as GcssItem[],
+                notifInItems: [] as GcssItem[],
+                notifOutItems: [] as GcssItem[],
+                author: settings.current.GcssAuthor,
+                services: [...settings.current.GcssServiceTypes].sort((a, b) => {
                     const serviceOrder = [
                         ServiceTypes.EMS,
                         ServiceTypes.Parcel,
@@ -100,9 +126,7 @@ function PopUpApp() {
                     ];
                     return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
                 }),
-            );
-            set_gcss_req_services(
-                settings.current.GcssRequestServiceTypes.sort((a, b) => {
+                reqServices: [...settings.current.GcssRequestServiceTypes].sort((a, b) => {
                     const serviceOrder = [
                         ServiceTypes.EMS,
                         ServiceTypes.Parcel,
@@ -112,14 +136,21 @@ function PopUpApp() {
                     ];
                     return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
                 }),
-            );
+            };
+
+            const nextNewGcssState = {
+                items: [] as GCSSWorkflow[],
+                reqItems: [] as GCSSWorkflow[],
+                notifInItems: [] as GCSSNotification[],
+                notifOutItems: [] as GCSSNotification[],
+            };
 
             if (settings.current.IcareUnreadReplies) {
                 const dict = (await chrome.storage.session.get("ICARE_UNREAD_REPLIES"))
                     .ICARE_UNREAD_REPLIES as WorkflowItem[];
 
                 if (typeof dict !== "undefined" && dict.length > 0) {
-                    set_icare_items(dict);
+                    nextIcareState.items = dict;
                     console.log("icare replies loaded from storage local: ", dict);
                 } else {
                     console.log("icare replies  count is 0 or below");
@@ -129,64 +160,91 @@ function PopUpApp() {
             if (settings.current.IcareUnreadRequests) {
                 const dict = (await chrome.storage.session.get("ICARE_UNREAD_REQUESTS"))
                     .ICARE_UNREAD_REQUESTS as WorkflowItem[];
-                if (typeof dict !== "undefined" && dict.length > 0) set_icare_req(dict);
+                if (typeof dict !== "undefined" && dict.length > 0) {
+                    nextIcareState.reqItems = dict;
+                }
             }
 
             if (settings.current.GcssUnreadReplies) {
                 const dict = (await chrome.storage.session.get("GCSS_UNREAD_REPLIES"))
                     .GCSS_UNREAD_REPLIES as GcssItem[];
-                if (typeof dict !== "undefined" && dict.length > 0) set_gcss_items(dict);
+                if (typeof dict !== "undefined" && dict.length > 0) {
+                    nextGcssState.items = dict;
+                }
                 const dict2 = (await chrome.storage.session.get(COMMANDS.NEW_GCSS_UNREAD_REPLIES))[
                     COMMANDS.NEW_GCSS_UNREAD_REPLIES
                 ] as GCSSWorkflow[];
-                if (typeof dict2 !== "undefined" && dict2.length > 0) set_new_gcss_items(dict2);
+                if (typeof dict2 !== "undefined" && dict2.length > 0) {
+                    nextNewGcssState.items = dict2;
+                }
             }
 
             if (settings.current.GcssUnreadRequests) {
                 const dict = (await chrome.storage.session.get("GCSS_UNREAD_REQUESTS"))
                     .GCSS_UNREAD_REQUESTS as GcssItem[];
-                if (typeof dict !== "undefined" && dict.length > 0) set_gcss_req(dict);
+                if (typeof dict !== "undefined" && dict.length > 0) {
+                    nextGcssState.reqItems = dict;
+                }
                 const dict2 = (await chrome.storage.session.get(COMMANDS.NEW_GCSS_UNREAD_REQUESTS))[
                     COMMANDS.NEW_GCSS_UNREAD_REQUESTS
                 ] as GCSSWorkflow[];
-                if (typeof dict2 !== "undefined" && dict2.length > 0) set_new_gcss_req_items(dict2);
+                if (typeof dict2 !== "undefined" && dict2.length > 0) {
+                    nextNewGcssState.reqItems = dict2;
+                }
             }
 
             if (settings.current.IcareUnreadNotificationInbound) {
                 const dict = (await chrome.storage.session.get(COMMANDS.ICARE_UNREAD_NOTIF_INBOUND))[
                     COMMANDS.ICARE_UNREAD_NOTIF_INBOUND
                 ] as WorkflowItem[];
-                if (typeof dict !== "undefined" && dict.length > 0) set_icare_notif_in_items(dict);
+                if (typeof dict !== "undefined" && dict.length > 0) {
+                    nextIcareState.notifInItems = dict;
+                }
             }
 
             if (settings.current.IcareUnreadNotificationOutbound) {
                 const dict = (await chrome.storage.session.get(COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND))[
                     COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND
                 ] as WorkflowItem[];
-                if (typeof dict !== "undefined" && dict.length > 0) set_icare_notif_out_items(dict);
+                if (typeof dict !== "undefined" && dict.length > 0) {
+                    nextIcareState.notifOutItems = dict;
+                }
             }
 
             if (settings.current.GcssUnreadNotificationInbound) {
                 const dict = (await chrome.storage.session.get(COMMANDS.GCSS_UNREAD_NOTIF_INBOUND))[
                     COMMANDS.GCSS_UNREAD_NOTIF_INBOUND
                 ] as GcssItem[];
-                if (typeof dict !== "undefined" && dict.length > 0) set_gcss_notif_in_items(dict);
+                if (typeof dict !== "undefined" && dict.length > 0) {
+                    nextGcssState.notifInItems = dict;
+                }
                 const dict2 = (await chrome.storage.session.get(COMMANDS.NEW_GCSS_UNREAD_NOTIF_INBOUND))[
                     COMMANDS.NEW_GCSS_UNREAD_NOTIF_INBOUND
                 ] as GCSSNotification[];
-                if (typeof dict2 !== "undefined" && dict2.length > 0) set_new_gcss_notif_in_items(dict2);
+                if (typeof dict2 !== "undefined" && dict2.length > 0) {
+                    nextNewGcssState.notifInItems = dict2;
+                }
             }
 
             if (settings.current.GcssUnreadNotificationOutbound) {
                 const dict = (await chrome.storage.session.get(COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND))[
                     COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND
                 ] as GcssItem[];
-                if (typeof dict !== "undefined" && dict.length > 0) set_gcss_notif_out_items(dict);
+                if (typeof dict !== "undefined" && dict.length > 0) {
+                    nextGcssState.notifOutItems = dict;
+                }
                 const dict2 = (await chrome.storage.session.get(COMMANDS.NEW_GCSS_UNREAD_NOTIF_OUTBOUND))[
                     COMMANDS.NEW_GCSS_UNREAD_NOTIF_OUTBOUND
                 ] as GCSSNotification[];
-                if (typeof dict2 !== "undefined" && dict2.length > 0) set_new_gcss_notif_out_items(dict2);
+                if (typeof dict2 !== "undefined" && dict2.length > 0) {
+                    nextNewGcssState.notifOutItems = dict2;
+                }
             }
+
+            setFlags(nextFlags);
+            setIcareState(nextIcareState);
+            setGcssState(nextGcssState);
+            setNewGcssState(nextNewGcssState);
 
             // chrome.storage.session.onChanged.addListener((dict) => {
             //   set_workflow_items(dict.ICARE_UNREAD_REPLIES.newValue as WorkflowItem[]);
@@ -195,67 +253,72 @@ function PopUpApp() {
         })();
     }, []);
 
-    const render_gcss_requests = () => {
-        if (!chk_gcss_req) return null;
-        if (gcss_req_items.length < 1)
-            return (
-                <Stack alignItems="center">
-                    <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
-                        GCSS 도착 회신: 모두 읽음 ✔️
-                    </Typography>
-                </Stack>
-            );
+    // Helper for empty state
+    const renderEmpty = (msg: string) => (
+        <Stack alignItems="center">
+            <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
+                {msg}
+            </Typography>
+        </Stack>
+    );
 
-        return gcss_req_services.map((serv) => (
-            <MyList
-                key={serv}
-                items={gcss_req_items.filter((el) => el.serviceType === serv)}
-                type="requests"
-                service="GCSS"
-                serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
-            />
-        ));
+    // Generic list renderer
+    const renderList = (show: boolean, items: any[], emptyMsg: string, props: any) => {
+        if (!show) return null;
+        if (!items || items.length < 1) return renderEmpty(emptyMsg);
+        return <MyList {...props} items={items} />;
     };
 
-    const render_gcss_replies = () => {
-        if (!chk_gcss_rep) return null;
+    // GCSS requests
+    const render_gcss_requests = () =>
+        renderList(flags.gcss.req, gcssState.reqItems, "GCSS 도착 회신: 모두 읽음 ✔️", {
+            type: "requests",
+            service: "GCSS",
+            serviceType: undefined,
+            children: gcssState.reqServices.map((serv) => (
+                <MyList
+                    key={serv}
+                    items={gcssState.reqItems.filter((el) => el.serviceType === serv)}
+                    type="requests"
+                    service="GCSS"
+                    serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
+                />
+            )),
+        });
 
-        if (gcss_items.length < 1)
-            return (
-                <Stack alignItems="center">
-                    <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
-                        GCSS 발송 회신: 모두 읽음 ✔️
-                    </Typography>
-                </Stack>
-            );
-        console.log("GCSS POPUP: services--", gcss_services, "author--", gcss_author);
-        if (gcss_services.length === 1) {
-            if (gcss_author.length <= 1) {
+    // GCSS replies
+    const render_gcss_replies = () => {
+        if (!flags.gcss.rep) return null;
+        if (gcssState.items.length < 1) return renderEmpty("GCSS 발송 회신: 모두 읽음 ✔️");
+        if (gcssState.services.length === 1) {
+            if (gcssState.author.length <= 1) {
                 return (
                     <MyList
-                        items={gcss_items.filter((el) => el.serviceType === gcss_services[0])}
+                        items={gcssState.items.filter((el) => el.serviceType === gcssState.services[0])}
                         type="replies"
                         service="GCSS"
                     />
                 );
             } else {
-                return gcss_author.map((user) => (
+                return gcssState.author.map((user) => (
                     <MyList
                         key={user}
-                        items={gcss_items.filter((el) => el.requestAuthor.toLowerCase().includes(user.toLowerCase()))}
+                        items={gcssState.items.filter((el) =>
+                            el.requestAuthor.toLowerCase().includes(user.toLowerCase()),
+                        )}
                         type="replies"
                         service="GCSS"
                         author={user}
-                        serviceType={ServiceNames[gcss_services[0] as keyof typeof ServiceNames]}
+                        serviceType={ServiceNames[gcssState.services[0] as keyof typeof ServiceNames]}
                     />
                 ));
             }
         } else {
-            if (gcss_author.length <= 1) {
-                return gcss_services.map((serv) => (
+            if (gcssState.author.length <= 1) {
+                return gcssState.services.map((serv) => (
                     <MyList
                         key={serv}
-                        items={gcss_items.filter((el) => el.serviceType === serv)}
+                        items={gcssState.items.filter((el) => el.serviceType === serv)}
                         type="replies"
                         service="GCSS"
                         author=""
@@ -263,11 +326,11 @@ function PopUpApp() {
                     />
                 ));
             } else {
-                return gcss_services.flatMap((serv) =>
-                    gcss_author.map((user) => (
+                return gcssState.services.flatMap((serv) =>
+                    gcssState.author.map((user) => (
                         <MyList
                             key={`${serv}-${user}`}
-                            items={gcss_items.filter(
+                            items={gcssState.items.filter(
                                 (el) =>
                                     el.serviceType === serv &&
                                     el.requestAuthor.toLowerCase().includes(user.toLowerCase()),
@@ -283,85 +346,37 @@ function PopUpApp() {
         }
     };
 
-    const render_gcss_notifications = () => {
-        if (!chk_gcss_notif_in) {
-            return null;
-        }
-        if (gcss_notif_in_items.length < 1) {
-            return (
-                <Stack alignItems="center">
-                    <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
-                        GCSS 도착 통지: 모두 읽음 ✔️
-                    </Typography>
-                </Stack>
-            );
-        }
-        return <MyList items={gcss_notif_in_items} type="requests" service="GCSS" isNotification={true} />;
-    };
+    // GCSS inbound notifications
+    const render_gcss_inbound_notifications = () =>
+        renderList(flags.gcss.req && flags.gcss.notifIn, gcssState.notifInItems, "GCSS 도착 통지: 모두 읽음 ✔️", {
+            type: "requests",
+            service: "GCSS",
+            isNotification: true,
+        });
 
-    const render_gcss_inbound_notifications = () => {
-        if (!chk_gcss_req || !chk_gcss_notif_in) {
-            return null;
-        }
-        if (gcss_notif_in_items.length < 1) {
-            return (
-                <Stack alignItems="center">
-                    <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
-                        GCSS 도착 통지: 모두 읽음 ✔️
-                    </Typography>
-                </Stack>
-            );
-        }
-        return <MyList items={gcss_notif_in_items} type="requests" service="GCSS" isNotification={true} />;
-    };
+    // GCSS outbound notifications
+    const render_gcss_outbound_notifications = () =>
+        renderList(flags.gcss.rep && flags.gcss.notifOut, gcssState.notifOutItems, "GCSS 발송 통지: 모두 읽음 ✔️", {
+            type: "replies",
+            service: "GCSS",
+            isNotification: true,
+        });
 
-    const render_gcss_outbound_notifications = () => {
-        if (!chk_gcss_rep || !chk_gcss_notif_out) {
-            return null;
-        }
-        if (gcss_notif_out_items.length < 1) {
-            return (
-                <Stack alignItems="center">
-                    <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
-                        GCSS 발송 통지: 모두 읽음 ✔️
-                    </Typography>
-                </Stack>
-            );
-        }
-        return <MyList items={gcss_notif_out_items} type="replies" service="GCSS" isNotification={true} />;
-    };
+    // iCare inbound notifications
+    const render_icare_inbound_notifications = () =>
+        renderList(flags.icare.req && flags.icare.notifIn, icareState.notifInItems, "iCare 도착 통지: 모두 읽음 ✔️", {
+            type: "requests",
+            service: "iCare",
+            isNotification: true,
+        });
 
-    const render_icare_inbound_notifications = () => {
-        if (!chk_req || !chk_notif_in) {
-            return null;
-        }
-        if (icare_notif_in_items.length < 1) {
-            return (
-                <Stack alignItems="center">
-                    <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
-                        iCare 도착 통지: 모두 읽음 ✔️
-                    </Typography>
-                </Stack>
-            );
-        }
-        return <MyList items={icare_notif_in_items} type="requests" service="iCare" isNotification={true} />;
-    };
-
-    const render_icare_outbound_notifications = () => {
-        if (!chk_rep || !chk_notif_out) {
-            return null;
-        }
-        if (icare_notif_out_items.length < 1) {
-            return (
-                <Stack alignItems="center">
-                    <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
-                        iCare 발송 통지: 모두 읽음 ✔️
-                    </Typography>
-                </Stack>
-            );
-        }
-        return <MyList items={icare_notif_out_items} type="replies" service="iCare" isNotification={true} />;
-    };
+    // iCare outbound notifications
+    const render_icare_outbound_notifications = () =>
+        renderList(flags.icare.rep && flags.icare.notifOut, icareState.notifOutItems, "iCare 발송 통지: 모두 읽음 ✔️", {
+            type: "replies",
+            service: "iCare",
+            isNotification: true,
+        });
 
     return (
         <Stack spacing={0} margin={6} marginTop={0} width="300px">
@@ -369,7 +384,7 @@ function PopUpApp() {
                 inputRef={textfield_ref}
                 variant="outlined"
                 label="Tracking Number"
-                error={!is_valid}
+                error={!inputState.isValid}
                 onFocus={(e) => e.target.select()}
                 slotProps={{
                     htmlInput: {
@@ -384,10 +399,10 @@ function PopUpApp() {
                         style: { textAlign: "center" },
                     },
                 }}
-                helperText={is_valid ? " " : "Invalid Tracking Number"}
+                helperText={inputState.isValid ? " " : "Invalid Tracking Number"}
                 onChange={(e) => CheckValue(e.target)}
                 onKeyUp={(e) => {
-                    if (e.key === "Enter" && is_valid) {
+                    if (e.key === "Enter" && inputState.isValid) {
                         OpenSidePanel();
                     }
                     return true;
@@ -404,9 +419,9 @@ function PopUpApp() {
             {render_gcss_outbound_notifications()}
             <Divider variant="middle" sx={{ m: "15px" }}></Divider>
 
-            {chk_req ? (
-                icare_req_items.length > 0 ? (
-                    <MyList items={icare_req_items} type="requests" />
+            {flags.icare.req ? (
+                icareState.reqItems.length > 0 ? (
+                    <MyList items={icareState.reqItems} type="requests" />
                 ) : (
                     <Stack alignItems="center">
                         <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
@@ -418,20 +433,22 @@ function PopUpApp() {
 
             {render_icare_inbound_notifications()}
 
-            {chk_rep ? (
-                icare_items.length > 0 ? (
-                    icare_author.length > 1 ? (
-                        icare_author.map((user) => (
+            {flags.icare.rep ? (
+                icareState.items.length > 0 ? (
+                    icareState.author.length > 1 ? (
+                        icareState.author.map((user) => (
                             <MyList
                                 key={user}
-                                items={icare_items.filter((e) => e.author.toLowerCase().includes(user.toLowerCase()))}
+                                items={icareState.items.filter((e) =>
+                                    e.author.toLowerCase().includes(user.toLowerCase()),
+                                )}
                                 type="replies"
                                 service="iCare"
                                 author={user}
                             />
                         ))
                     ) : (
-                        <MyList items={icare_items} />
+                        <MyList items={icareState.items} />
                     )
                 ) : (
                     <Stack alignItems="center">
