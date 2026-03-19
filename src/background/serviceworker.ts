@@ -80,7 +80,7 @@ async function APICalls(count: number, final = false) {
         }
     }
     const work_tabs = await chrome.tabs.query({
-        url: ["https://icare.post/*", "https://gcss.ipc.be/*"],
+        url: ["https://icare.post/*", "https://gcss.ipc.be/*", "https://gcss-uat.ipc.be/*"],
         status: "complete",
     });
     if (!work_tabs) {
@@ -91,11 +91,14 @@ async function APICalls(count: number, final = false) {
         const icare_tab = work_tabs.filter((item: chrome.tabs.Tab) =>
             item.url!.includes("icare.post"),
         )[0] as chrome.tabs.Tab;
-        const gcss_tab = work_tabs.filter((item: chrome.tabs.Tab) =>
+        const old_gcss_tab = work_tabs.filter((item: chrome.tabs.Tab) =>
             item.url!.includes("gcss.ipc.be"),
         )[0] as chrome.tabs.Tab;
+        const new_gcss_tab = work_tabs.filter((item: chrome.tabs.Tab) =>
+            item.url!.includes("gcss-uat.ipc.be"),
+        )[0] as chrome.tabs.Tab;
 
-        if (!icare_tab && !gcss_tab) {
+        if (!icare_tab && !(old_gcss_tab || !new_gcss_tab)) {
             if (final) {
                 await chrome.action.setBadgeText({ text: "?" });
             } else {
@@ -111,9 +114,13 @@ async function APICalls(count: number, final = false) {
             await chrome.tabs.sendMessage(icare_tab.id!, new MSG(COMMANDS.ICARE_UNREAD_REPLIES));
             console.log(new Date().toLocaleTimeString(), "icare ticked");
         }
-        if (gcss_tab) {
-            await chrome.tabs.sendMessage(gcss_tab.id!, new MSG(COMMANDS.GCSS_UNREAD_REPLIES));
-            console.log(new Date().toLocaleTimeString(), "gcss ticked");
+        if (old_gcss_tab) {
+            await chrome.tabs.sendMessage(old_gcss_tab.id!, new MSG(COMMANDS.GCSS_UNREAD_REPLIES));
+            console.log(new Date().toLocaleTimeString(), "old gcss ticked");
+        }
+        if (new_gcss_tab) {
+            await chrome.tabs.sendMessage(new_gcss_tab.id!, new MSG(COMMANDS.GCSS_UNREAD_REPLIES));
+            console.log(new Date().toLocaleTimeString(), "new gcss ticked");
         }
     }
 }

@@ -22,30 +22,32 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
         const paramURL = new URL(url.href.replace("/#", ""));
         console.log("url with params:", paramURL);
 
+        if (settings.GcssUnreadReplies || settings.GcssUnreadRequests) GcssWorkflowService.fetchWorkflows();
         NewGcssInjectUtil.InjectIdSearchInput();
         await injectBasedOnURL(paramURL);
     });
-    
+
     chrome.runtime.onMessage.addListener((message: MSG) => {
         switch (message.Command) {
             case COMMANDS.GCSS_UNREAD_REPLIES:
-                void GcssAPI.FetchReplies(false);
+                GcssWorkflowService.fetchWorkflows();
                 break;
             case COMMANDS.SETTINGS_CHANGED:
                 void (async () => {
                     await settings.requestLoad();
-                    GcssAPI.settings = settings;
-                    console.log("Settings Reloaded", settings, GcssAPI.settings);
+                    GcssWorkflowService.settings = settings;
+                    console.log("Settings Reloaded", settings, GcssWorkflowService.settings);
                 })();
                 break;
         }
     });
-    
+
     (async function Main() {
         NewGcssInjectUtil.InjectIdSearchInput();
         const paramURL = new URL(location.href.replace("/#", ""));
         console.log("location url with params:", paramURL);
 
+        if (settings.GcssUnreadReplies || settings.GcssUnreadRequests) GcssWorkflowService.fetchWorkflows();
         await injectBasedOnURL(paramURL);
     })();
 

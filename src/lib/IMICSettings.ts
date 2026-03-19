@@ -36,20 +36,27 @@ export class IMICSettings {
     static SavingFinished: NodeJS.Timeout | null = null;
     private async notifyTabs() {
         const work_tabs = await chrome.tabs.query({
-            url: ["https://icare.post/*", "https://gcss.ipc.be/*"],
+            url: ["https://icare.post/*", "https://gcss.ipc.be/*", "https://gcss-uat.ipc.be/*"],
             status: "complete",
         });
         if (!work_tabs || !Array.isArray(work_tabs)) {
             return;
         }
         const [firstIcareTab] = work_tabs.filter((tab) => tab.url?.includes("icare.post"));
-        const [firstGcssTab] = work_tabs.filter((tab) => tab.url?.includes("gcss.ipc.be"));
+        const [firstOldGcssTab] = work_tabs.filter((tab) => tab.url?.includes("gcss.ipc.be"));
+        const [firstNewGcssTab] = work_tabs.filter((tab) => tab.url?.includes("gcss-uat.ipc.be"));
 
         if (firstIcareTab) void chrome.tabs.reload(firstIcareTab.id!);
-        if (firstGcssTab) void chrome.tabs.reload(firstGcssTab.id!);
+        if (firstOldGcssTab) void chrome.tabs.reload(firstOldGcssTab.id!);
+        if (firstNewGcssTab) void chrome.tabs.reload(firstNewGcssTab.id!);
 
         work_tabs.forEach(async (tab) => {
-            if (tab.id && tab.id !== firstIcareTab?.id && tab.id !== firstGcssTab?.id) {
+            if (
+                tab.id &&
+                tab.id !== firstIcareTab?.id &&
+                tab.id !== firstOldGcssTab?.id &&
+                tab.id !== firstNewGcssTab?.id
+            ) {
                 await chrome.tabs.sendMessage(tab.id, new MSG(COMMANDS.SETTINGS_CHANGED));
             }
         });

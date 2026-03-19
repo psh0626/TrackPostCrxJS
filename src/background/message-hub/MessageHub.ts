@@ -1,7 +1,6 @@
 import { COMMANDS, MSG } from "../../lib/Message";
 import createNotification from "../../lib/Notification";
 import { PostAPI } from "../../lib/PostUtil";
-import { GcssItem, WorkflowItem } from "../pending-replies/dataWrapper";
 import { PopupTracker } from "../serviceworker";
 
 declare global {
@@ -49,6 +48,30 @@ export default function ProcessMessage(
 
         case COMMANDS.GCSS_UNREAD_REPLIES:
         case COMMANDS.ICARE_UNREAD_REPLIES:
+            void (async () => {
+                let replies = Message.Param;
+
+                const err: FetchError | undefined = (await chrome.storage.session.get("FETCH_ERROR"))
+                    .FETCH_ERROR as FetchError;
+
+                if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES) {
+                    if (err) err.ICARE = false;
+                    await chrome.storage.session.set({ FETCH_ERROR: err });
+                    await chrome.storage.session.set({ ICARE_UNREAD_REPLIES: replies });
+                } else {
+                    if (err) err.GCSS = false;
+                    await chrome.storage.session.set({ GCSS_UNREAD_REPLIES: replies });
+                }
+                await createNotification();
+            })();
+            return; // false since we're not sending response
+
+        case COMMANDS.ICARE_UNREAD_REQUESTS:
+        case COMMANDS.ICARE_UNREAD_REPLIES:
+        case COMMANDS.GCSS_UNREAD_REQUESTS:
+        case COMMANDS.GCSS_UNREAD_REPLIES:
+        case COMMANDS.NEW_GCSS_UNREAD_REQUESTS:
+        case COMMANDS.NEW_GCSS_UNREAD_REPLIES:
             if (["?ICARE", "?GCSS"].includes(Message.Param)) {
                 void (async () => {
                     const err_msg = Message.Param.replace("?", "") as keyof FetchError;
@@ -60,59 +83,38 @@ export default function ProcessMessage(
                 })();
                 return;
             }
-
             void (async () => {
-                let replies;
-                if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES) replies = Message.Param as WorkflowItem[];
-                else replies = Message.Param as GcssItem[];
+                let replies = Message.Param;
 
-                const err: FetchError | undefined = (await chrome.storage.session.get("FETCH_ERROR")).FETCH_ERROR as FetchError;
+                const err: FetchError | undefined = (await chrome.storage.session.get("FETCH_ERROR"))
+                    .FETCH_ERROR as FetchError;
 
-                if (Message.Command === COMMANDS.ICARE_UNREAD_REPLIES) {
+                if (
+                    Message.Command === COMMANDS.ICARE_UNREAD_REPLIES ||
+                    Message.Command === COMMANDS.ICARE_UNREAD_REQUESTS
+                ) {
                     if (err) err.ICARE = false;
                     await chrome.storage.session.set({ FETCH_ERROR: err });
-                    await chrome.storage.session.set({ ICARE_UNREAD_REPLIES: replies });
                 } else {
                     if (err) err.GCSS = false;
                     await chrome.storage.session.set({ FETCH_ERROR: err });
-                    await chrome.storage.session.set({ GCSS_UNREAD_REPLIES: replies });
                 }
-                await createNotification();
-            })();
-            return; // false since we're not sending response
-
-        case COMMANDS.ICARE_UNREAD_REQUESTS:
-            void (async () => {
-                const requests = Message.Param as WorkflowItem[];
-                await chrome.storage.session.set({ ICARE_UNREAD_REQUESTS: requests });
-                await createNotification();
-            })();
-            return;
-
-        case COMMANDS.GCSS_UNREAD_REQUESTS:
-            void (async () => {
-                const reqs = Message.Param as GcssItem[];
-                await chrome.storage.session.set({ GCSS_UNREAD_REQUESTS: reqs });
-                console.log("MESSAGE HUB SESSION SET - GCSS UNREAD REQUESTS");
+                const session_store: { [key: string]: any[] } = {};
+                session_store[Message.Command] = Message.Param;
+                await chrome.storage.session.set(session_store);
                 await createNotification();
             })();
             return;
 
         case COMMANDS.GCSS_UNREAD_NOTIF_INBOUND:
         case COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND:
-            void (async () => {
-                const session_store: { [key: string]: GcssItem[] } = {};
-                session_store[Message.Command] = Message.Param as GcssItem[];
-                await chrome.storage.session.set(session_store);
-                await createNotification(false);
-            })();
-            return;
-
+        case COMMANDS.NEW_GCSS_UNREAD_NOTIF_INBOUND:
+        case COMMANDS.NEW_GCSS_UNREAD_NOTIF_OUTBOUND:
         case COMMANDS.ICARE_UNREAD_NOTIF_INBOUND:
         case COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND:
             void (async () => {
-                const session_store: { [key: string]: WorkflowItem[] } = {};
-                session_store[Message.Command] = Message.Param as WorkflowItem[];
+                const session_store: { [key: string]: any[] } = {};
+                session_store[Message.Command] = Message.Param;
                 await chrome.storage.session.set(session_store);
                 await createNotification(false);
             })();

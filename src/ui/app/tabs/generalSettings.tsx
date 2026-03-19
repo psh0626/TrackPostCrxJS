@@ -275,7 +275,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                             <NotificationSettings
                                 label="iCare 도착 문의 알림"
                                 checked={settingsState.IcareUnreadRequests}
-                                onChange={(c) => updateSetting("IcareUnreadRequests", c)}
+                                onChange={(c) => {
+                                    updateSetting("IcareUnreadRequests", c);
+                                    if (!c) updateSetting("IcareUnreadNotificationInbound", false);
+                                }}
                                 subSettings={
                                     <FormControlLabel
                                         sx={{ transform: "scale(0.9)", ml: "10px" }}
@@ -300,7 +303,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                             <NotificationSettings
                                 label="iCare 발송 회신 알림"
                                 checked={settingsState.IcareUnreadReplies}
-                                onChange={(c) => updateSetting("IcareUnreadReplies", c)}
+                                onChange={(c) => {
+                                    updateSetting("IcareUnreadReplies", c);
+                                    if (!c) updateSetting("IcareUnreadNotificationOutbound", false);
+                                }}
                                 subSettings={
                                     <Stack>
                                         <Stack direction="row">
@@ -382,6 +388,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
 
                                     if ((settingsState.GcssRequestServiceTypes || []).length < 1)
                                         updateSetting("GcssRequestServiceTypes", [ServiceTypes.EMS]);
+                                    if (!c) updateSetting("GcssUnreadNotificationInbound", false);
                                 }}
                                 subSettings={
                                     <FormControlLabel
@@ -409,6 +416,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                 checked={settingsState.GcssUnreadReplies}
                                 onChange={(c) => {
                                     updateSetting("GcssUnreadReplies", c);
+                                    if (!c) updateSetting("GcssUnreadNotificationOutbound", false);
                                     if ((settingsState.GcssServiceTypes || []).length < 1)
                                         updateSetting("GcssServiceTypes", [ServiceTypes.EMS]);
                                 }}
