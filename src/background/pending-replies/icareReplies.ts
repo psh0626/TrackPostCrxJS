@@ -201,7 +201,10 @@ export class IcareAPI2 {
     private static async OnSuccess(response: IcareResponse) {
         const workflow_items = response.content.data.map((rawdata: object) => new WorkflowItem(rawdata));
 
-        const filtered_items = workflow_items.filter((e) => this.IncludesOneOf(e.author, this.settings.IcareAuthor));
+        const filtered_items =
+            this.settings.IcareAuthor.length === 0
+                ? workflow_items
+                : workflow_items.filter((e) => this.IncludesOneOf(e.author, this.settings.IcareAuthor));
 
         console.log(`${workflow_items.length} items fetched:`, filtered_items);
 

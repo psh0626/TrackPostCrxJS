@@ -10,60 +10,122 @@ import { IMICSettings } from "../../lib/IMICSettings";
 import { COMMANDS } from "../../lib/Message";
 import PopupTrack from "../../lib/PopupTrack";
 import { MyList, StyledTextField } from "../components/components";
-
+class iCareState {
+    replyItems: WorkflowItem[] = [];
+    requestItems: WorkflowItem[] = [];
+    notifInItems: WorkflowItem[] = [];
+    notifOutItems: WorkflowItem[] = [];
+}
+class OldGcssState {
+    replyItems: GcssItem[] = [];
+    requestItems: GcssItem[] = [];
+    notifInItems: GcssItem[] = [];
+    notifOutItems: GcssItem[] = [];
+}
+class NewGcssState {
+    replyItems: GCSSWorkflow[] = [];
+    requestItems: GCSSWorkflow[] = [];
+    notifInItems: GCSSNotification[] = [];
+    notifOutItems: GCSSNotification[] = [];
+}
+async function loadSessionData<T>(key: COMMANDS): Promise<T[]> {
+    const data = await chrome.storage.session.get(key).then((result) => result[key]);
+    if (!data) {
+        console.warn(`No data found in session storage for key: ${key}`);
+    } else {
+        console.log(`Data loaded from session storage for key: ${key}`, data);
+    }
+    return (data ?? []) as T[];
+}
 function PopUpApp() {
     const [inputState, setInputState] = useState({
         itemIdField: "",
         isValid: true,
     });
 
-    const [icareState, setIcareState] = useState({
-        items: [] as WorkflowItem[],
-        reqItems: [] as WorkflowItem[],
-        notifInItems: [] as WorkflowItem[],
-        notifOutItems: [] as WorkflowItem[],
-        author: [] as string[],
-    });
+    const [icareState, setIcareState] = useState<iCareState>(new iCareState());
+    const [oldGcssState, setOldGcssState] = useState<OldGcssState>(new OldGcssState());
+    const [newGcssState, setNewGcssState] = useState<NewGcssState>(new NewGcssState());
 
-    const [gcssState, setGcssState] = useState({
-        items: [] as GcssItem[],
-        reqItems: [] as GcssItem[],
-        notifInItems: [] as GcssItem[],
-        notifOutItems: [] as GcssItem[],
-        author: [] as string[],
-        services: [ServiceTypes.EMS] as ServiceTypes[],
-        reqServices: [ServiceTypes.EMS] as ServiceTypes[],
-    });
-
-    const [newGcssState, setNewGcssState] = useState({
-        items: [] as GCSSWorkflow[],
-        reqItems: [] as GCSSWorkflow[],
-        notifInItems: [] as GCSSNotification[],
-        notifOutItems: [] as GCSSNotification[],
-    });
-
-    const [flags, setFlags] = useState({
-        icare: {
-            rep: false,
-            req: false,
-            notifIn: false,
-            notifOut: false,
-        },
-        gcss: {
-            rep: false,
-            req: false,
-            notifIn: false,
-            notifOut: false,
-        },
-    });
-
+    const settings = useRef<IMICSettings>(new IMICSettings());
     const textfield_ref = useRef<HTMLInputElement>(null);
-    const settings = useRef(new IMICSettings());
+    const initialized = useRef(false);
     const tracker = new PopupTrack();
 
-    // const IncludesOneOf = (target: string, search_strings: string[]) => {
-    //   return search_strings.some((item) => target.toLowerCase().includes(item.toLowerCase()));
-    // };
+    useEffect(() => {
+        if (textfield_ref.current) {
+            textfield_ref.current.focus();
+        }
+
+        void (async () => {
+            await settings.current.loadOptions();
+            const thisSettings = settings.current;
+
+            const serviceOrder = [ServiceTypes.EMS, ServiceTypes.Parcel, ServiceTypes.Registered, ServiceTypes.KPacket];
+            thisSettings.GcssServiceTypes = thisSettings.GcssServiceTypes.sort((a, b) => {
+                return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
+            });
+            thisSettings.GcssRequestServiceTypes = thisSettings.GcssRequestServiceTypes.sort((a, b) => {
+                return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
+            });
+
+            const nextIcareState = new iCareState();
+            const nextOldGcssState = new OldGcssState();
+            const nextNewGcssState = new NewGcssState();
+
+            if (thisSettings.IcareUnreadReplies) {
+                nextIcareState.replyItems = await loadSessionData<WorkflowItem>(COMMANDS.ICARE_UNREAD_REPLIES);
+            }
+
+            if (thisSettings.IcareUnreadRequests) {
+                nextIcareState.requestItems = await loadSessionData<WorkflowItem>(COMMANDS.ICARE_UNREAD_REQUESTS);
+            }
+
+            if (thisSettings.GcssUnreadReplies) {
+                nextOldGcssState.replyItems = await loadSessionData<GcssItem>(COMMANDS.GCSS_UNREAD_REPLIES);
+                nextNewGcssState.replyItems = await loadSessionData<GCSSWorkflow>(COMMANDS.NEW_GCSS_UNREAD_REPLIES);
+            }
+
+            if (thisSettings.GcssUnreadRequests) {
+                nextOldGcssState.requestItems = await loadSessionData<GcssItem>(COMMANDS.GCSS_UNREAD_REQUESTS);
+                nextNewGcssState.requestItems = await loadSessionData<GCSSWorkflow>(COMMANDS.NEW_GCSS_UNREAD_REQUESTS);
+            }
+
+            if (thisSettings.IcareUnreadNotificationInbound) {
+                nextIcareState.notifInItems = await loadSessionData<WorkflowItem>(COMMANDS.ICARE_UNREAD_NOTIF_INBOUND);
+            }
+
+            if (thisSettings.IcareUnreadNotificationOutbound) {
+                nextIcareState.notifOutItems = await loadSessionData<WorkflowItem>(
+                    COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND,
+                );
+            }
+
+            if (thisSettings.GcssUnreadNotificationInbound) {
+                nextOldGcssState.notifInItems = await loadSessionData<GcssItem>(COMMANDS.GCSS_UNREAD_NOTIF_INBOUND);
+                nextNewGcssState.notifInItems = await loadSessionData<GCSSNotification>(
+                    COMMANDS.NEW_GCSS_UNREAD_NOTIF_INBOUND,
+                );
+            }
+
+            if (thisSettings.GcssUnreadNotificationOutbound) {
+                nextOldGcssState.notifOutItems = await loadSessionData<GcssItem>(COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND);
+                nextNewGcssState.notifOutItems = await loadSessionData<GCSSNotification>(
+                    COMMANDS.NEW_GCSS_UNREAD_NOTIF_OUTBOUND,
+                );
+            }
+
+            setIcareState(nextIcareState);
+            setOldGcssState(nextOldGcssState);
+            setNewGcssState(nextNewGcssState);
+
+            // chrome.storage.session.onChanged.addListener((dict) => {
+            //   set_workflow_items(dict.ICARE_UNREAD_REPLIES.newValue as WorkflowItem[]);
+            //   set_gcss_items(dict.GCSS_UNREAD_REPLIES.newValue as GcssItem[]);
+            // });
+        })();
+    }, []);
+
     const CheckValue = (target: HTMLInputElement | HTMLTextAreaElement) => {
         const pretty_value = target.value.trim().toUpperCase();
         setInputState({
@@ -80,178 +142,6 @@ function PopUpApp() {
         });
         console.log("Popup sidepanel opened state:", tracker);
     };
-
-    useEffect(() => {
-        if (textfield_ref.current) {
-            textfield_ref.current.focus();
-        }
-
-        void (async () => {
-            await settings.current.loadOptions();
-            const nextFlags = {
-                icare: {
-                    rep: settings.current.IcareUnreadReplies,
-                    req: settings.current.IcareUnreadRequests,
-                    notifIn: settings.current.IcareUnreadNotificationInbound,
-                    notifOut: settings.current.IcareUnreadNotificationOutbound,
-                },
-                gcss: {
-                    rep: settings.current.GcssUnreadReplies,
-                    req: settings.current.GcssUnreadRequests,
-                    notifIn: settings.current.GcssUnreadNotificationInbound,
-                    notifOut: settings.current.GcssUnreadNotificationOutbound,
-                },
-            };
-
-            const nextIcareState = {
-                items: [] as WorkflowItem[],
-                reqItems: [] as WorkflowItem[],
-                notifInItems: [] as WorkflowItem[],
-                notifOutItems: [] as WorkflowItem[],
-                author: settings.current.IcareAuthor,
-            };
-
-            const nextGcssState = {
-                items: [] as GcssItem[],
-                reqItems: [] as GcssItem[],
-                notifInItems: [] as GcssItem[],
-                notifOutItems: [] as GcssItem[],
-                author: settings.current.GcssAuthor,
-                services: [...settings.current.GcssServiceTypes].sort((a, b) => {
-                    const serviceOrder = [
-                        ServiceTypes.EMS,
-                        ServiceTypes.Parcel,
-                        ServiceTypes.Registered,
-                        ServiceTypes.KPacket,
-                    ];
-                    return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
-                }),
-                reqServices: [...settings.current.GcssRequestServiceTypes].sort((a, b) => {
-                    const serviceOrder = [
-                        ServiceTypes.EMS,
-                        ServiceTypes.Parcel,
-                        ServiceTypes.KPacket,
-                        ServiceTypes.Registered,
-                        ServiceTypes.Insured,
-                    ];
-                    return serviceOrder.indexOf(a) - serviceOrder.indexOf(b);
-                }),
-            };
-
-            const nextNewGcssState = {
-                items: [] as GCSSWorkflow[],
-                reqItems: [] as GCSSWorkflow[],
-                notifInItems: [] as GCSSNotification[],
-                notifOutItems: [] as GCSSNotification[],
-            };
-
-            if (settings.current.IcareUnreadReplies) {
-                const dict = (await chrome.storage.session.get("ICARE_UNREAD_REPLIES"))
-                    .ICARE_UNREAD_REPLIES as WorkflowItem[];
-
-                if (typeof dict !== "undefined" && dict.length > 0) {
-                    nextIcareState.items = dict;
-                    console.log("icare replies loaded from storage local: ", dict);
-                } else {
-                    console.log("icare replies  count is 0 or below");
-                }
-            }
-
-            if (settings.current.IcareUnreadRequests) {
-                const dict = (await chrome.storage.session.get("ICARE_UNREAD_REQUESTS"))
-                    .ICARE_UNREAD_REQUESTS as WorkflowItem[];
-                if (typeof dict !== "undefined" && dict.length > 0) {
-                    nextIcareState.reqItems = dict;
-                }
-            }
-
-            if (settings.current.GcssUnreadReplies) {
-                const dict = (await chrome.storage.session.get("GCSS_UNREAD_REPLIES"))
-                    .GCSS_UNREAD_REPLIES as GcssItem[];
-                if (typeof dict !== "undefined" && dict.length > 0) {
-                    nextGcssState.items = dict;
-                }
-                const dict2 = (await chrome.storage.session.get(COMMANDS.NEW_GCSS_UNREAD_REPLIES))[
-                    COMMANDS.NEW_GCSS_UNREAD_REPLIES
-                ] as GCSSWorkflow[];
-                if (typeof dict2 !== "undefined" && dict2.length > 0) {
-                    nextNewGcssState.items = dict2;
-                }
-            }
-
-            if (settings.current.GcssUnreadRequests) {
-                const dict = (await chrome.storage.session.get("GCSS_UNREAD_REQUESTS"))
-                    .GCSS_UNREAD_REQUESTS as GcssItem[];
-                if (typeof dict !== "undefined" && dict.length > 0) {
-                    nextGcssState.reqItems = dict;
-                }
-                const dict2 = (await chrome.storage.session.get(COMMANDS.NEW_GCSS_UNREAD_REQUESTS))[
-                    COMMANDS.NEW_GCSS_UNREAD_REQUESTS
-                ] as GCSSWorkflow[];
-                if (typeof dict2 !== "undefined" && dict2.length > 0) {
-                    nextNewGcssState.reqItems = dict2;
-                }
-            }
-
-            if (settings.current.IcareUnreadNotificationInbound) {
-                const dict = (await chrome.storage.session.get(COMMANDS.ICARE_UNREAD_NOTIF_INBOUND))[
-                    COMMANDS.ICARE_UNREAD_NOTIF_INBOUND
-                ] as WorkflowItem[];
-                if (typeof dict !== "undefined" && dict.length > 0) {
-                    nextIcareState.notifInItems = dict;
-                }
-            }
-
-            if (settings.current.IcareUnreadNotificationOutbound) {
-                const dict = (await chrome.storage.session.get(COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND))[
-                    COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND
-                ] as WorkflowItem[];
-                if (typeof dict !== "undefined" && dict.length > 0) {
-                    nextIcareState.notifOutItems = dict;
-                }
-            }
-
-            if (settings.current.GcssUnreadNotificationInbound) {
-                const dict = (await chrome.storage.session.get(COMMANDS.GCSS_UNREAD_NOTIF_INBOUND))[
-                    COMMANDS.GCSS_UNREAD_NOTIF_INBOUND
-                ] as GcssItem[];
-                if (typeof dict !== "undefined" && dict.length > 0) {
-                    nextGcssState.notifInItems = dict;
-                }
-                const dict2 = (await chrome.storage.session.get(COMMANDS.NEW_GCSS_UNREAD_NOTIF_INBOUND))[
-                    COMMANDS.NEW_GCSS_UNREAD_NOTIF_INBOUND
-                ] as GCSSNotification[];
-                if (typeof dict2 !== "undefined" && dict2.length > 0) {
-                    nextNewGcssState.notifInItems = dict2;
-                }
-            }
-
-            if (settings.current.GcssUnreadNotificationOutbound) {
-                const dict = (await chrome.storage.session.get(COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND))[
-                    COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND
-                ] as GcssItem[];
-                if (typeof dict !== "undefined" && dict.length > 0) {
-                    nextGcssState.notifOutItems = dict;
-                }
-                const dict2 = (await chrome.storage.session.get(COMMANDS.NEW_GCSS_UNREAD_NOTIF_OUTBOUND))[
-                    COMMANDS.NEW_GCSS_UNREAD_NOTIF_OUTBOUND
-                ] as GCSSNotification[];
-                if (typeof dict2 !== "undefined" && dict2.length > 0) {
-                    nextNewGcssState.notifOutItems = dict2;
-                }
-            }
-
-            setFlags(nextFlags);
-            setIcareState(nextIcareState);
-            setGcssState(nextGcssState);
-            setNewGcssState(nextNewGcssState);
-
-            // chrome.storage.session.onChanged.addListener((dict) => {
-            //   set_workflow_items(dict.ICARE_UNREAD_REPLIES.newValue as WorkflowItem[]);
-            //   set_gcss_items(dict.GCSS_UNREAD_REPLIES.newValue as GcssItem[]);
-            // });
-        })();
-    }, []);
 
     // Helper for empty state
     const renderEmpty = (msg: string) => (
@@ -270,73 +160,62 @@ function PopUpApp() {
     };
 
     // GCSS requests
-    const render_gcss_requests = () =>
-        renderList(flags.gcss.req, gcssState.reqItems, "GCSS 도착 회신: 모두 읽음 ✔️", {
+    const renderOldGcssRequests = () =>
+        renderList(settings.current.GcssUnreadRequests, oldGcssState.requestItems, "GCSS 도착 회신: 모두 읽음 ✔️", {
             type: "requests",
             service: "GCSS",
-            serviceType: undefined,
-            children: gcssState.reqServices.map((serv) => (
+            children: settings.current.GcssRequestServiceTypes.map((serv) => (
                 <MyList
                     key={serv}
-                    items={gcssState.reqItems.filter((el) => el.serviceType === serv)}
+                    items={oldGcssState.requestItems.filter((el) => el.serviceType === serv)}
                     type="requests"
-                    service="GCSS"
                     serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
                 />
             )),
         });
 
     // GCSS replies
-    const render_gcss_replies = () => {
-        if (!flags.gcss.rep) return null;
-        if (gcssState.items.length < 1) return renderEmpty("GCSS 발송 회신: 모두 읽음 ✔️");
-        if (gcssState.services.length === 1) {
-            if (gcssState.author.length <= 1) {
-                return (
-                    <MyList
-                        items={gcssState.items.filter((el) => el.serviceType === gcssState.services[0])}
-                        type="replies"
-                        service="GCSS"
-                    />
-                );
+    const renderOldGcssReplies = () => {
+        if (!settings.current.GcssUnreadReplies) return null;
+        if (oldGcssState.replyItems.length < 1) return renderEmpty("GCSS 발송 회신: 모두 읽음 ✔️");
+        if (settings.current.GcssServiceTypes.length === 1) {
+            if (settings.current.GcssAuthor.length <= 1) {
+                return <MyList items={oldGcssState.replyItems} type="replies" />;
             } else {
-                return gcssState.author.map((user) => (
+                return settings.current.GcssAuthor.map((user) => (
                     <MyList
                         key={user}
-                        items={gcssState.items.filter((el) =>
+                        items={oldGcssState.replyItems.filter((el) =>
                             el.requestAuthor.toLowerCase().includes(user.toLowerCase()),
                         )}
                         type="replies"
-                        service="GCSS"
                         author={user}
-                        serviceType={ServiceNames[gcssState.services[0] as keyof typeof ServiceNames]}
+                        serviceType={ServiceNames[settings.current.GcssServiceTypes[0] as keyof typeof ServiceNames]}
                     />
                 ));
             }
         } else {
-            if (gcssState.author.length <= 1) {
-                return gcssState.services.map((serv) => (
+            if (settings.current.GcssAuthor.length <= 1) {
+                return settings.current.GcssServiceTypes.map((serv) => (
                     <MyList
                         key={serv}
-                        items={gcssState.items.filter((el) => el.serviceType === serv)}
+                        items={oldGcssState.replyItems}
                         type="replies"
-                        service="GCSS"
                         author=""
                         serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
                     />
                 ));
             } else {
-                return gcssState.services.flatMap((serv) =>
-                    gcssState.author.map((user) => (
+                return settings.current.GcssServiceTypes.flatMap((serv) =>
+                    settings.current.GcssAuthor.map((user) => (
                         <MyList
                             key={`${serv}-${user}`}
-                            items={gcssState.items.filter(
+                            items={oldGcssState.replyItems.filter(
                                 (el) =>
                                     el.serviceType === serv &&
                                     el.requestAuthor.toLowerCase().includes(user.toLowerCase()),
                             )}
                             type="replies"
-                            service="GCSS"
                             author={user}
                             serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
                         />
@@ -347,36 +226,159 @@ function PopUpApp() {
     };
 
     // GCSS inbound notifications
-    const render_gcss_inbound_notifications = () =>
-        renderList(flags.gcss.req && flags.gcss.notifIn, gcssState.notifInItems, "GCSS 도착 통지: 모두 읽음 ✔️", {
-            type: "requests",
-            service: "GCSS",
-            isNotification: true,
-        });
+    const renderOldGcssInboundNotifications = () =>
+        renderList(
+            settings.current.GcssUnreadRequests && settings.current.GcssUnreadNotificationInbound,
+            oldGcssState.notifInItems,
+            "GCSS 도착 통지: 모두 읽음 ✔️",
+            {
+                type: "requests",
+                service: "GCSS",
+            },
+        );
 
     // GCSS outbound notifications
-    const render_gcss_outbound_notifications = () =>
-        renderList(flags.gcss.rep && flags.gcss.notifOut, gcssState.notifOutItems, "GCSS 발송 통지: 모두 읽음 ✔️", {
-            type: "replies",
-            service: "GCSS",
-            isNotification: true,
-        });
+    const renderOldGcssOutboundNotifications = () =>
+        renderList(
+            settings.current.GcssUnreadReplies && settings.current.GcssUnreadNotificationOutbound,
+            oldGcssState.notifOutItems,
+            "GCSS 발송 통지: 모두 읽음 ✔️",
+            {
+                type: "replies",
+                service: "GCSS",
+            },
+        );
 
-    // iCare inbound notifications
-    const render_icare_inbound_notifications = () =>
-        renderList(flags.icare.req && flags.icare.notifIn, icareState.notifInItems, "iCare 도착 통지: 모두 읽음 ✔️", {
+    const renderIcareRequests = () =>
+        renderList(settings.current.IcareUnreadRequests, icareState.requestItems, "iCare 도착 문의: 모두 읽음 ✔️", {
             type: "requests",
             service: "iCare",
-            isNotification: true,
         });
+    const renderIcareReplies = () => {
+        if (!settings.current.IcareUnreadReplies) return null;
+        if (icareState.replyItems.length < 1) return renderEmpty("iCare 발송 회신: 모두 읽음 ✔️");
+        if (settings.current.IcareAuthor.length <= 1) {
+            return <MyList items={icareState.replyItems} type="replies" />;
+        } else {
+            return settings.current.IcareAuthor.map((user) => (
+                <MyList
+                    key={user}
+                    items={icareState.replyItems.filter((el) => el.author.toLowerCase().includes(user.toLowerCase()))}
+                    type="replies"
+                    author={user}
+                />
+            ));
+        }
+    };
+    // iCare inbound notifications
+    const renderIcareInboundNotifications = () =>
+        renderList(
+            settings.current.IcareUnreadRequests && settings.current.IcareUnreadNotificationInbound,
+            icareState.notifInItems,
+            "iCare 도착 통지: 모두 읽음 ✔️",
+            {
+                type: "requests",
+                service: "iCare",
+            },
+        );
 
     // iCare outbound notifications
-    const render_icare_outbound_notifications = () =>
-        renderList(flags.icare.rep && flags.icare.notifOut, icareState.notifOutItems, "iCare 발송 통지: 모두 읽음 ✔️", {
-            type: "replies",
-            service: "iCare",
-            isNotification: true,
+    const renderIcareOutboundNotifications = () =>
+        renderList(
+            settings.current.IcareUnreadReplies && settings.current.IcareUnreadNotificationOutbound,
+            icareState.notifOutItems,
+            "iCare 발송 통지: 모두 읽음 ✔️",
+            {
+                type: "replies",
+                service: "iCare",
+            },
+        );
+
+    const renderNewGcssRequests = () =>
+        renderList(settings.current.GcssUnreadRequests, newGcssState.requestItems, "GCSS 도착 회신: 모두 읽음 ✔️", {
+            type: "requests",
+            service: "GCSS",
+            children: settings.current.GcssRequestServiceTypes.map((serv) => (
+                <MyList
+                    key={serv}
+                    items={newGcssState.requestItems.filter((el) => el.product === serv)}
+                    type="requests"
+                    serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
+                />
+            )),
         });
+    const renderNewGcssReplies = () => {
+        if (!settings.current.GcssUnreadReplies) return null;
+        if (newGcssState.replyItems.length < 1) return renderEmpty("New GCSS 발송 회신: 모두 읽음 ✔️");
+        if (settings.current.GcssServiceTypes.length === 1) {
+            if (settings.current.GcssAuthor.length <= 1) {
+                return <MyList items={newGcssState.replyItems} type="replies" />;
+            } else {
+                return settings.current.GcssAuthor.map((user) => (
+                    <MyList
+                        key={user}
+                        items={newGcssState.replyItems.filter((el) =>
+                            "inquiryAuthorName" in el
+                                ? el.inquiryAuthorName.toLowerCase().includes(user.toLowerCase())
+                                : false,
+                        )}
+                        type="replies"
+                        author={user}
+                        serviceType={ServiceNames[settings.current.GcssServiceTypes[0] as keyof typeof ServiceNames]}
+                    />
+                ));
+            }
+        } else {
+            if (settings.current.GcssAuthor.length <= 1) {
+                return settings.current.GcssServiceTypes.map((serv) => (
+                    <MyList
+                        key={serv}
+                        items={newGcssState.replyItems}
+                        type="replies"
+                        author=""
+                        serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
+                    />
+                ));
+            } else {
+                return settings.current.GcssServiceTypes.flatMap((serv) =>
+                    settings.current.GcssAuthor.map((user) => (
+                        <MyList
+                            key={`${serv}-${user}`}
+                            items={newGcssState.replyItems.filter(
+                                (el) =>
+                                    el.product === serv &&
+                                    "inquiryAuthorName" in el &&
+                                    el.inquiryAuthorName.toLowerCase().includes(user.toLowerCase()),
+                            )}
+                            type="replies"
+                            author={user}
+                            serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
+                        />
+                    )),
+                );
+            }
+        }
+    };
+    const renderNewGcssInboundNotifications = () =>
+        renderList(
+            settings.current.GcssUnreadRequests && settings.current.GcssUnreadNotificationInbound,
+            newGcssState.notifInItems,
+            "GCSS 도착 통지: 모두 읽음 ✔️",
+            {
+                type: "requests",
+                service: "GCSS",
+            },
+        );
+    const renderNewGcssOutboundNotifications = () =>
+        renderList(
+            settings.current.GcssUnreadReplies && settings.current.GcssUnreadNotificationOutbound,
+            newGcssState.notifOutItems,
+            "GCSS 발송 통지: 모두 읽음 ✔️",
+            {
+                type: "replies",
+                service: "GCSS",
+            },
+        );
 
     return (
         <Stack spacing={0} margin={6} marginTop={0} width="300px">
@@ -410,55 +412,35 @@ function PopUpApp() {
             />
 
             <Divider style={{ margin: "15px 0" }} />
-            {render_gcss_requests()}
+            {renderOldGcssRequests()}
 
-            {render_gcss_inbound_notifications()}
+            {renderOldGcssInboundNotifications()}
 
-            {render_gcss_replies()}
+            {renderOldGcssReplies()}
 
-            {render_gcss_outbound_notifications()}
-            <Divider variant="middle" sx={{ m: "15px" }}></Divider>
+            {renderOldGcssOutboundNotifications()}
 
-            {flags.icare.req ? (
-                icareState.reqItems.length > 0 ? (
-                    <MyList items={icareState.reqItems} type="requests" />
-                ) : (
-                    <Stack alignItems="center">
-                        <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
-                            ICare 도착 문의: 모두 읽음 ✔️
-                        </Typography>
-                    </Stack>
-                )
+            {(settings.current.GcssUnreadReplies || settings.current.GcssUnreadRequests) &&
+            (settings.current.IcareUnreadReplies || settings.current.IcareUnreadRequests) ? (
+                <Divider variant="middle" sx={{ m: "15px" }}></Divider>
             ) : null}
 
-            {render_icare_inbound_notifications()}
+            {renderIcareRequests()}
 
-            {flags.icare.rep ? (
-                icareState.items.length > 0 ? (
-                    icareState.author.length > 1 ? (
-                        icareState.author.map((user) => (
-                            <MyList
-                                key={user}
-                                items={icareState.items.filter((e) =>
-                                    e.author.toLowerCase().includes(user.toLowerCase()),
-                                )}
-                                type="replies"
-                                service="iCare"
-                                author={user}
-                            />
-                        ))
-                    ) : (
-                        <MyList items={icareState.items} />
-                    )
-                ) : (
-                    <Stack alignItems="center">
-                        <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
-                            iCare 발송 회신: 모두 읽음 ✔️
-                        </Typography>
-                    </Stack>
-                )
+            {renderIcareInboundNotifications()}
+
+            {renderIcareReplies()}
+
+            {renderIcareOutboundNotifications()}
+
+            {(settings.current.IcareUnreadReplies || settings.current.IcareUnreadRequests) &&
+            (newGcssState.replyItems.length > 0 || newGcssState.requestItems.length > 0) ? (
+                <Divider variant="middle" sx={{ m: "15px" }}></Divider>
             ) : null}
-            {render_icare_outbound_notifications()}
+            {renderNewGcssRequests()}
+            {renderNewGcssInboundNotifications()}
+            {renderNewGcssReplies()}
+            {renderNewGcssOutboundNotifications()}
         </Stack>
     );
 }

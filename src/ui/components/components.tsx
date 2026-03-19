@@ -17,8 +17,15 @@ import {
 import { styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import React, { useEffect, useState } from "react";
-import { GcssItem, WorkflowItem } from "../../background/pending-replies/dataWrapper";
+import { GcssItem, isGcssItem, isWorkflowItem, WorkflowItem } from "../../background/pending-replies/dataWrapper";
 import { ServiceNames } from "../../background/pending-replies/gcssReplies";
+import {
+    GCSSMessage,
+    GCSSMessageBase,
+    GCSSNotification,
+    isGCSSMessage,
+    isGCSSNotification,
+} from "../../background/pending-replies/newGcssWrapper";
 
 export const CountryInput = (prop: { text: string; state: string[]; onChange: (countries: string[]) => void }) => {
     const [rawValue, setRawValue] = useState("");
@@ -110,27 +117,34 @@ export const InfoTextField: React.FC<InfoFieldType> = ({ label_text, binding_val
     );
 };
 interface MyListProps {
-    items: WorkflowItem[] | GcssItem[] | any[];
+    items: WorkflowItem[] | GcssItem[] | GCSSMessage[];
     type?: "replies" | "requests";
-    service?: "GCSS" | "iCare";
     author?: string;
     serviceType?: ServiceNames;
-    isNotification?: boolean;
 }
 export const MyList: React.FC<MyListProps> = ({
     items,
     type = "replies",
-    service = "iCare",
     author = "",
     serviceType = ServiceNames.EMS,
-    isNotification = false,
 }) => {
+    const service = isWorkflowItem(items[0]) ? "iCare" : "GCSS";
+    let isNotification = false;
+
+    const [firstItem] = items;
+    if (isGcssItem(firstItem)) {
+        isNotification = firstItem.messageType === "NQ";
+    } else if (isGCSSMessage(firstItem)) {
+        isNotification = isGCSSNotification(firstItem);
+    } else {
+        isNotification = firstItem.isNotification;
+    }
+
     let list_title =
         type === "replies" ? `${service} - ${serviceType} 발송 회신` : `${service} - ${serviceType} 도착 문의`;
     if (isNotification) list_title = list_title.replace("회신", "통지").replace("문의", "통지");
     list_title += `: ${items.length}건`;
     if (author !== "") list_title += ` (${author})`;
-
     const OpenNewTab = async (urlLink: string) => {
         const current_tab = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
         return await chrome.tabs.create({
@@ -144,9 +158,13 @@ export const MyList: React.FC<MyListProps> = ({
         // const reversed_items = [...items].reverse();
         const tab_promises = items.map(async (wf) => {
             let tab: chrome.tabs.Tab;
-            if (service === "GCSS") {
-                tab = isNotification ? await OpenNewTab(wf.NotificationLink) : await OpenNewTab(wf.WorkflowLink);
-            } else tab = await OpenNewTab(wf.link);
+            if (isGcssItem(wf)) {
+                tab = isNotification ? await OpenNewTab(wf.notificationLink) : await OpenNewTab(wf.workflowLink);
+            } else if (isGCSSMessage(wf)) {
+                tab = await OpenNewTab(wf.messageLink);
+            } else {
+                tab = await OpenNewTab(wf.link);
+            }
 
             if (tab && tab.id) {
                 console.log("tab id push to tabids: ", tab.id);
@@ -183,21 +201,33 @@ export const MyList: React.FC<MyListProps> = ({
     const CopyCountries = () => {
         let countries: string[];
         const reversed_items = [...items].reverse();
-        if (service === "GCSS") {
+        if (firstItem instanceof GcssItem) {
             if (type === "replies" && !isNotification) {
                 countries = reversed_items.map((item) => (item as GcssItem).destinationCountry);
             } else {
                 countries = reversed_items.map((item) => (item as GcssItem).originCountry);
             }
-        } else {
+        } else if (firstItem instanceof WorkflowItem) {
             if (type === "replies" && !isNotification) {
                 countries = reversed_items.map((item) => (item as WorkflowItem).replyingOperator.substring(0, 2));
             } else {
                 countries = reversed_items.map((item) => (item as WorkflowItem).requestingOperator.substring(0, 2));
             }
+        } else {
+            if (type === "replies" && !isNotification) {
+                countries = reversed_items.map((item) => (item as GCSSMessageBase).receivingCountry);
+            } else {
+                countries = reversed_items.map((item) => (item as GCSSMessageBase).sendingCountry);
+            }
         }
         const str_ids = countries.join("\n");
         void navigator.clipboard.writeText(str_ids);
+    };
+
+    const onItemClick = async (item: WorkflowItem | GcssItem | GCSSMessage) => {
+        if (isWorkflowItem(item)) await OpenNewTab(item.link);
+        else if (isGcssItem(item)) await OpenNewTab(isNotification ? item.notificationLink : item.workflowLink);
+        else await OpenNewTab(item.messageLink);
     };
 
     return items.length === 0 ? null : (
@@ -240,42 +270,40 @@ export const MyList: React.FC<MyListProps> = ({
                 <AccordionDetails>
                     {[...items].reverse().map((item, id) => {
                         let primary_string: string;
-                        if (service === "iCare") {
-                            const i = item as WorkflowItem;
+                        let secondary_string: string;
+                        if (isWorkflowItem(item)) {
+                            const i = item;
+                            secondary_string = i.trackingId;
                             if (isNotification) {
                                 const date = i.created.slice(5, 10).replace("-", "/");
                                 primary_string = `[${date}] ${i.requestingOperator.substring(0, 2)} - ${i.requestType}`;
                             } else {
                                 primary_string = `${i.trackingId.slice(-2) === "KR" ? i.replyingOperator.substring(0, 2) : i.requestingOperator.substring(0, 2)} - L${i.currentLevel} ${i.requestType}`;
                             }
-                        } else {
-                            const i = item as GcssItem;
+                        } else if (isGcssItem(item)) {
+                            secondary_string = item.itemId;
                             if (isNotification) {
-                                primary_string = `[${i.notificationCreationDate}] ${i.originCountry} - ${i.notificationReason}`;
+                                primary_string = `[${item.notificationCreationDate}] ${item.originCountry} - ${item.notificationReason}`;
                             } else {
-                                primary_string = `${i.itemId.slice(-2) === "KR" ? `${i.destinationCountry}` : `${i.originCountry}`} - ${i.workflowLevel} ${i.requestType}`;
+                                primary_string = `${item.itemId.slice(-2) === "KR" ? item.destinationCountry : item.originCountry} - ${item.workflowLevel} ${item.requestType}`;
+                            }
+                        } else {
+                            secondary_string = item.itemId;
+                            if (item instanceof GCSSNotification) {
+                                primary_string = `[${item.creationDate.split("T")[0].replace("-", "/")}] ${item.sendingCountry} - ${item.reasonLabel}`;
+                            } else {
+                                primary_string = `${item.itemId.slice(-2) === "KR" ? item.sendingCountry : item.receivingCountry} - ${item.inquiryType} ${item.requestTypeMnemonic}`;
                             }
                         }
 
                         return (
                             <Card style={{ margin: "0 0 1px" }} key={id}>
                                 <ListItem dense={true} disablePadding={true} key={id}>
-                                    <ListItemButton
-                                        onClick={async () => {
-                                            if (service === "iCare") await OpenNewTab(item.link);
-                                            else {
-                                                if (isNotification) await OpenNewTab(item.NotificationLink);
-                                                else await OpenNewTab(item.WorkflowLink);
-                                            }
-                                        }}
-                                    >
+                                    <ListItemButton onClick={() => onItemClick(item)}>
                                         <ListItemIcon>
                                             <OpenInBrowser />
                                         </ListItemIcon>
-                                        <ListItemText
-                                            primary={primary_string}
-                                            secondary={service === "iCare" ? `${item.tracking_id}` : `${item.ItemId}`}
-                                        />
+                                        <ListItemText primary={primary_string} secondary={secondary_string} />
                                     </ListItemButton>
                                 </ListItem>
                             </Card>

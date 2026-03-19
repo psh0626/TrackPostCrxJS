@@ -139,7 +139,8 @@ export class GcssAPI {
 
         const my_msgs = fetched_obj.filter(
             (item) =>
-                this.IncludesOneOf(item.requestAuthor, this.settings.GcssAuthor) &&
+                (this.settings.GcssAuthor.length === 0 ||
+                    this.IncludesOneOf(item.requestAuthor, this.settings.GcssAuthor)) &&
                 this.IncludesOneOf(item.product, this.settings.GcssServiceTypes),
         );
         console.log("My Messages: ", my_msgs);
