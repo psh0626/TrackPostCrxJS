@@ -417,6 +417,18 @@ function PopUpApp() {
             {renderOldGcssReplies()}
 
             {renderOldGcssOutboundNotifications()}
+            {(settings.current.GcssUnreadRequests || settings.current.GcssUnreadReplies) &&
+            (newGcssState.replyItems.length > 0 || newGcssState.requestItems.length > 0) ? (
+                <Divider variant="middle" sx={{ m: "15px" }}></Divider>
+            ) : null}
+            {newGcssState.replyItems.length > 0 || newGcssState.requestItems.length > 0 ? (
+                <>
+                    {renderNewGcssRequests()}
+                    {renderNewGcssInboundNotifications()}
+                    {renderNewGcssReplies()}
+                    {renderNewGcssOutboundNotifications()}
+                </>
+            ) : null}
 
             {(settings.current.GcssUnreadReplies || settings.current.GcssUnreadRequests) &&
             (settings.current.IcareUnreadReplies || settings.current.IcareUnreadRequests) ? (
@@ -430,15 +442,6 @@ function PopUpApp() {
             {renderIcareReplies()}
 
             {renderIcareOutboundNotifications()}
-
-            {(settings.current.IcareUnreadReplies || settings.current.IcareUnreadRequests) &&
-            (newGcssState.replyItems.length > 0 || newGcssState.requestItems.length > 0) ? (
-                <Divider variant="middle" sx={{ m: "15px" }}></Divider>
-            ) : null}
-            {renderNewGcssRequests()}
-            {renderNewGcssInboundNotifications()}
-            {renderNewGcssReplies()}
-            {renderNewGcssOutboundNotifications()}
         </Stack>
     );
 }

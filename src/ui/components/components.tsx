@@ -132,6 +132,7 @@ export const MyList: React.FC<MyListProps> = ({
     let isNotification = false;
 
     const [firstItem] = items;
+    if (!items || !firstItem) return null;
     if (isGcssItem(firstItem)) {
         isNotification = firstItem.messageType === "NQ";
     } else if (isGCSSMessage(firstItem)) {
