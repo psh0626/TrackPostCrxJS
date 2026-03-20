@@ -26,7 +26,7 @@ export default class NewGcssInjectUtil {
     ) {
         if (!change_to) manual = true;
         if (manual) {
-            InjectUtil.InsertReact(
+            return InjectUtil.InsertReact(
                 <FloatingHelper
                     target={original_element}
                     new_value={`${change_to} SDR`}
@@ -36,7 +36,7 @@ export default class NewGcssInjectUtil {
                 original_element,
             );
         } else {
-            InjectUtil.InsertReact(
+            return InjectUtil.InsertReact(
                 <FloatingHelper
                     target={original_element}
                     new_value={`${original_element.value} ${currency_element.value}`}

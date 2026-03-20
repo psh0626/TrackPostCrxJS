@@ -121,13 +121,15 @@ interface MyListProps {
     type?: "replies" | "requests";
     author?: string;
     serviceType?: ServiceNames;
+    key?: string;
 }
-export const MyList: React.FC<MyListProps> = ({
+export const MyList = ({
     items,
     type = "replies",
     author = "",
     serviceType = ServiceNames.EMS,
-}) => {
+    key = "",
+}: MyListProps) => {
     let service = "iCare";
     let isNotification = false;
 
@@ -301,7 +303,7 @@ export const MyList: React.FC<MyListProps> = ({
                         }
 
                         return (
-                            <Card style={{ margin: "0 0 1px" }} key={id}>
+                            <Card style={{ margin: "0 0 1px" }} key={key}>
                                 <ListItem dense={true} disablePadding={true} key={id}>
                                     <ListItemButton onClick={() => onItemClick(item)}>
                                         <ListItemIcon>

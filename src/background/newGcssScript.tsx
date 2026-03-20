@@ -44,6 +44,7 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
     });
 
     (async function Main() {
+        injectLoadingMask();
         NewGcssInjectUtil.InjectIdSearchInput();
         const paramURL = new URL(location.href.replace("/#", ""));
         console.log("location url with params:", paramURL);
@@ -106,7 +107,7 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
         return postElement;
     }
 
-    async function waitUntilRequestTypeSelected() {
+    async function waitUntilRequestTypeSelected(detectChange: boolean = false): Promise<void> {
         const requestType = await InjectUtil.TryQuerySelectFor<HTMLInputElement>(
             "input[aria-labelledby='requestType']",
         );
@@ -114,11 +115,24 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
             console.log("Request type input not found");
             return;
         }
-
         do {
             await InjectUtil.wait(100);
         } while (!requestType.value);
         console.log("Request type selected:", requestType.value);
+    }
+    async function waitUntilRequestTypeChanged(): Promise<void> {
+        const requestType = await InjectUtil.TryQuerySelectFor<HTMLInputElement>(
+            "input[aria-labelledby='requestType']",
+        );
+        if (!requestType) {
+            console.log("Request type input not found");
+            return;
+        }
+        const initialValue = requestType.value;
+        do {
+            await InjectUtil.wait(100);
+        } while (requestType.value === initialValue);
+        console.log("Request type changed to:", requestType.value);
     }
     async function InjectRequestForm(postElement: PostElement | null, requestLevel: string) {
         ShowLoadingMask();
@@ -162,7 +176,9 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
             Object.entries(elements).map(([key, promise]) => Promise.resolve(promise).then((el) => [key, el] as const)),
         );
 
-        const elementsNotFound = elementPromises.filter((p) => p.status === "rejected" || !p.value[1]);
+        const elementsNotFound = elementPromises
+            .filter((p) => p.status === "rejected" || !p.value[1])
+            .map((p) => (p.status === "rejected" ? p.reason : p.value[0]));
 
         if (elementsNotFound.length > 0) {
             console.log("elements not found:", elementsNotFound);
@@ -264,8 +280,8 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
             hideLoadingMask();
         });
     }
-    function ShowLoadingMask() {
-        const maskId = "IMIC_LOADING_MASK";
+    function injectLoadingMask() {
+        const maskId = "IMIC-LOADING-MASK";
         if (!document.getElementById(maskId)) {
             const mask = document.createElement("div");
             mask.id = maskId;
@@ -291,14 +307,17 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
             mask.innerText = "자동 입력 중";
             document.body.appendChild(mask);
         }
-        const mask = document.getElementById(maskId)!;
+        return document.getElementById(maskId)!;
+    }
+    function ShowLoadingMask() {
+        const mask = injectLoadingMask();
         mask.style.opacity = "1";
         InjectUtil.wait(5000).then(() => {
             mask.style.opacity = "0";
         });
     }
     function hideLoadingMask() {
-        const mask = document.getElementById("IMIC_LOADING_MASK");
+        const mask = injectLoadingMask();
         if (mask) {
             mask.style.opacity = "0";
         }
@@ -315,7 +334,7 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
         return document.querySelector<HTMLInputElement>(`input[name='${name}']`);
     }
     function getInput(name: string) {
-        return document.querySelector<HTMLInputElement>(`input[aria-labelledby='${name}']`);
+        return InjectUtil.TryQuerySelectFor<HTMLInputElement>(`input[aria-labelledby='${name}']`, 10, 200);
     }
     function tryGetSelect(name: string) {
         return InjectUtil.TryQuerySelectFor<HTMLDivElement>(`div[aria-labelledby='${name}']`);
@@ -340,7 +359,7 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
     async function selectAutoCompleteOption(input: HTMLInputElement, optionText: string) {
         simulateSelectClick(input);
         const option: HTMLLIElement | null = await new Promise(async (resolve) => {
-            const maxTrial = 10;
+            const maxTrial = 30;
             const waitTime = 100;
             await InjectUtil.wait(100);
             for (let i = 0; i < maxTrial; i++) {
@@ -348,14 +367,18 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
                     (el) => el.textContent === optionText,
                 );
                 if (foundOption) {
-                    console.log(`Option with text='${optionText}' found after ${i + 1} trial(s)`);
+                    console.log(
+                        `${input.getAttribute("aria-labelledby")} Option with text='${optionText}' found after ${i + 1} trial(s)`,
+                    );
                     resolve(foundOption);
                     return;
                 }
+                input.value = optionText;
+                simulateSelectClick(input);
                 await InjectUtil.wait(waitTime);
             }
             console.log(
-                `Auto-complete option with text='${optionText}' not found after waiting ${(maxTrial * waitTime) / 1000} second`,
+                `${input.getAttribute("aria-labelledby")} Auto-complete option with text='${optionText}' not found after waiting ${(maxTrial * waitTime) / 1000} second`,
             );
             resolve(null);
         });
@@ -397,11 +420,47 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
             const calcValue = this.convert(inputValue, currency, "SDR");
             return Math.ceil(calcValue).toString();
         }
-        static injectConvertedValue(input: HTMLInputElement, currency: HTMLInputElement) {
+        static async injectConvertedValue(input: HTMLInputElement, currency: HTMLInputElement) {
             const sdrValue = this.calculateSDR(input.value, currency.value);
+            const oldValue = input.value;
+            const oldCurrency = currency.value;
+            const inputLabel = input.getAttribute("aria-labelledby");
+            const currencyLabel = currency.getAttribute("aria-labelledby");
             NewGcssInjectUtil.SwitchValueForCurrency(input, currency, sdrValue);
-            input.value = sdrValue;
-            selectAutoCompleteOption(currency, "SDR");
+
+            // Retry setting value until it sticks
+            for (let i = 0; i < 5; i++) {
+                input.value = sdrValue;
+                await InjectUtil.wait(400);
+                if (input.value === sdrValue) break;
+            }
+            await selectAutoCompleteOption(currency, "SDR");
+
+            if (!document.querySelector("#IMIC-" + inputLabel?.replaceAll(".", "-"))) {
+                console.log("Tooltip element not found for input:", inputLabel);
+                await InjectUtil.wait(1200);
+                const [newInput, newCurrency] = await Promise.all([getInput(inputLabel!), getInput(currencyLabel!)]);
+                this.injectConvertedValue(newInput!, newCurrency!);
+                return;
+            }
+
+            // Handle value reversion on request type change
+            waitUntilRequestTypeChanged().then(async () => {
+                ShowLoadingMask();
+                // const valueWasReverted = input.value === oldValue;
+                // if (!valueWasReverted) return;
+
+                selectAutoCompleteOption(currency, oldCurrency);
+                if (inputLabel === "itemDetails.postagePaid") {
+                    await InjectUtil.wait(1700);
+                    console.log("Postage paid value reverted, re-injecting converted value...");
+                    const [newPostageInput, newCurrency] = await Promise.all([
+                        getInput("itemDetails.postagePaid"),
+                        getInput("itemDetails.postagePaidCurrency"),
+                    ]);
+                    this.injectConvertedValue(newPostageInput!, newCurrency!);
+                }
+            });
         }
     }
 })();

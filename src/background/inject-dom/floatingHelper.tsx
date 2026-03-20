@@ -32,6 +32,9 @@ function GetOptionValueText(select_element: HTMLSelectElement | HTMLInputElement
     return "";
 }
 
+const getName = (target: HTMLInputElement | HTMLSelectElement) => {
+    return target.getAttribute("aria-labelledby")!.replaceAll(".", "-");
+};
 const FloatingHelper = ({
     target,
     new_value,
@@ -43,7 +46,7 @@ const FloatingHelper = ({
     const [tip, set_tip] = useState<string>(new_value);
 
     const buttonClicked = () => {
-        const tooltip_element = document.getElementById(`IMIC_${getName(target)}`)! as HTMLButtonElement;
+        const tooltip_element = document.getElementById(`IMIC-${getName(target)}`)! as HTMLButtonElement;
         let value_to_keep = target.value; // keep changed value
 
         if (currency_target) {
@@ -109,11 +112,6 @@ const FloatingHelper = ({
         }
     };
 
-    const getName = (target: HTMLInputElement | HTMLSelectElement) => {
-        if (target.id) return target.id;
-        if (target.name) return target.name;
-        return target.getAttribute("aria-labelledby");
-    };
     return (
         <Tooltip
             arrow={true}
@@ -135,7 +133,7 @@ const FloatingHelper = ({
                 onClick={buttonClicked}
                 size="small"
                 color={tooltip_state === "Changed" ? "primary" : "default"}
-                id={`IMIC_${getName(target)}`}
+                id={`IMIC-${getName(target)}`}
                 sx={{ boxShadow: 0 }}
             >
                 <CachedIcon />

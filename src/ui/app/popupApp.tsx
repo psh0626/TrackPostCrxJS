@@ -49,8 +49,8 @@ function PopUpApp() {
 
     const settings = useRef<IMICSettings>(new IMICSettings());
     const textfield_ref = useRef<HTMLInputElement>(null);
-    const initialized = useRef(false);
     const tracker = new PopupTrack();
+    const idNumber = useRef(0);
 
     useEffect(() => {
         if (textfield_ref.current) {
@@ -156,7 +156,7 @@ function PopUpApp() {
     const renderList = (show: boolean, items: any[], emptyMsg: string, props: any) => {
         if (!show) return null;
         if (!items || items.length < 1) return renderEmpty(emptyMsg);
-        return <MyList {...props} items={items} />;
+        return <MyList {...props} items={items} key={`popup-list-${idNumber.current++}`} />;
     };
 
     // GCSS requests
@@ -164,7 +164,7 @@ function PopUpApp() {
         if (oldGcssState.requestItems.length < 1) return renderEmpty("GCSS 도착 회신: 모두 읽음 ✔️");
         return settings.current.GcssRequestServiceTypes.map((serv) => (
             <MyList
-                key={serv}
+                key={`popup-list-${idNumber.current++}`}
                 items={oldGcssState.requestItems.filter((el) => el.serviceType === serv)}
                 type="requests"
                 serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
@@ -178,11 +178,13 @@ function PopUpApp() {
         if (oldGcssState.replyItems.length < 1) return renderEmpty("GCSS 발송 회신: 모두 읽음 ✔️");
         if (settings.current.GcssServiceTypes.length === 1) {
             if (settings.current.GcssAuthor.length <= 1) {
-                return <MyList items={oldGcssState.replyItems} type="replies" />;
+                return (
+                    <MyList items={oldGcssState.replyItems} type="replies" key={`popup-list-${idNumber.current++}`} />
+                );
             } else {
                 return settings.current.GcssAuthor.map((user) => (
                     <MyList
-                        key={user}
+                        key={`popup-list-${idNumber.current++}`}
                         items={oldGcssState.replyItems.filter((el) =>
                             el.requestAuthor.toLowerCase().includes(user.toLowerCase()),
                         )}
@@ -196,7 +198,7 @@ function PopUpApp() {
             if (settings.current.GcssAuthor.length <= 1) {
                 return settings.current.GcssServiceTypes.map((serv) => (
                     <MyList
-                        key={serv}
+                        key={`popup-list-${idNumber.current++}`}
                         items={oldGcssState.replyItems.filter((el) => el.serviceType === serv)}
                         type="replies"
                         author=""
@@ -207,7 +209,7 @@ function PopUpApp() {
                 return settings.current.GcssServiceTypes.flatMap((serv) =>
                     settings.current.GcssAuthor.map((user) => (
                         <MyList
-                            key={`${serv}-${user}`}
+                            key={`popup-list-${idNumber.current++}`}
                             items={oldGcssState.replyItems.filter(
                                 (el) =>
                                     el.serviceType === serv &&
@@ -256,11 +258,11 @@ function PopUpApp() {
         if (!settings.current.IcareUnreadReplies) return null;
         if (icareState.replyItems.length < 1) return renderEmpty("iCare 발송 회신: 모두 읽음 ✔️");
         if (settings.current.IcareAuthor.length <= 1) {
-            return <MyList items={icareState.replyItems} type="replies" />;
+            return <MyList items={icareState.replyItems} type="replies" key={`popup-list-${idNumber.current++}`} />;
         } else {
             return settings.current.IcareAuthor.map((user) => (
                 <MyList
-                    key={user}
+                    key={`popup-list-${idNumber.current++}`}
                     items={icareState.replyItems.filter((el) => el.author.toLowerCase().includes(user.toLowerCase()))}
                     type="replies"
                     author={user}
@@ -321,11 +323,13 @@ function PopUpApp() {
         if (newGcssState.replyItems.length < 1) return renderEmpty("New GCSS 발송 회신: 모두 읽음 ✔️");
         if (settings.current.GcssServiceTypes.length === 1) {
             if (settings.current.GcssAuthor.length <= 1) {
-                return <MyList items={newGcssState.replyItems} type="replies" />;
+                return (
+                    <MyList items={newGcssState.replyItems} type="replies" key={`popup-list-${idNumber.current++}`} />
+                );
             } else {
                 return settings.current.GcssAuthor.map((user) => (
                     <MyList
-                        key={user}
+                        key={`popup-list-${idNumber.current++}`}
                         items={newGcssState.replyItems.filter((el) =>
                             el.inquiryAuthorName.toLowerCase().includes(user.toLowerCase()),
                         )}
@@ -339,7 +343,7 @@ function PopUpApp() {
             if (settings.current.GcssAuthor.length <= 1) {
                 return settings.current.GcssServiceTypes.map((serv) => (
                     <MyList
-                        key={serv}
+                        key={`popup-list-${idNumber.current++}`}
                         items={newGcssState.replyItems.filter((el) => el.product === serv)}
                         type="replies"
                         author=""
@@ -350,7 +354,7 @@ function PopUpApp() {
                 return settings.current.GcssServiceTypes.flatMap((serv) =>
                     settings.current.GcssAuthor.map((user) => (
                         <MyList
-                            key={`${serv}-${user}`}
+                            key={`popup-list-${idNumber.current++}`}
                             items={newGcssState.replyItems.filter(
                                 (el) =>
                                     el.product === serv &&
