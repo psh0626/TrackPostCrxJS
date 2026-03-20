@@ -491,7 +491,7 @@ function PopUpApp() {
             ) : null}
             {newGcssRenderOrder.map((item) => item.count > 0 && item.render())}
 
-            {renderOrder.some((item) => item.count > 0) && newGcssRenderOrder.some((item) => item.count > 0) ? (
+            {renderOrder.some((item) => item.count > 0) || newGcssRenderOrder.some((item) => item.count > 0) ? (
                 <Divider variant="middle" sx={{ m: "15px" }}></Divider>
             ) : null}
 

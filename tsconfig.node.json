@@ -1,8 +1,9 @@
 {
     "compilerOptions": {
         "composite": true,
-        "module": "esnext",
-        "moduleResolution": "node",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "types": ["node"],
         "resolveJsonModule": true,
         "allowSyntheticDefaultImports": true,
         "strict": true,

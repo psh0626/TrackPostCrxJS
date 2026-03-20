@@ -118,6 +118,7 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
         console.log("Request type selected:", requestType.value);
     }
     async function InjectRequestForm(postElement: PostElement | null, requestLevel: string) {
+        ShowLoadingMask();
         console.log("Injecting request form with post element:");
         await setSelect("itemDetails.contentType", "OTHER_VARIOUS");
         setSelect("itemDetails.itemType", "PACKET");
@@ -161,7 +162,7 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
         const elementsNotFound = elementPromises.filter((p) => p.status === "rejected" || !p.value[1]);
 
         if (elementsNotFound.length > 0) {
-            console.warn("elements not found:", elementsNotFound);
+            console.log("elements not found:", elementsNotFound);
         }
         const thisForm = Object.fromEntries(
             elementPromises.filter((p) => p.status === "fulfilled").map((p) => [p.value[0], p.value[1]] as const),
@@ -196,14 +197,17 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
                 thisForm.indemnityAmountCurrency!,
                 indemnityValue.toString(),
             );
+            thisForm.indemnityAmount.value = indemnityValue.toString();
+            selectAutoCompleteOption(thisForm.indemnityAmountCurrency!, "SDR");
         }
         if (thisForm.podRequired && thisForm.podRequired.checked === false) {
             thisForm.podRequired.parentElement?.click();
         }
-
-        if (requestLevel !== "L1Q") return;
-
-        if (postElement) {
+        if (requestLevel !== "L1Q") {
+            InjectUtil.wait(500).then(async () => {
+                document.querySelector(".overflow-auto")?.scrollTo({ behavior: "smooth", top: 2480 });
+            });
+        } else if (postElement) {
             if (thisForm.dateOfPosting && !thisForm.dateOfPosting.value) {
                 const date = postElement.ApplicationDate;
                 const year = date.substring(0, 4);
@@ -241,18 +245,62 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
             if (thisForm.senderTelephone) {
                 NewGcssInjectUtil.SwitchValue(thisForm.senderTelephone, postElement.SenderPhone);
             }
+            const callCenterSelect = await tryGetSelect("messageRouting.receivingCallCenterUpuCode");
+            if (callCenterSelect) {
+                InjectUtil.wait(500).then(async () => {
+                    document.querySelector(".overflow-auto")?.scrollTo({ behavior: "smooth", top: 200 });
+                    if (callCenterSelect.textContent === "Select Destination Call Center") {
+                        await InjectUtil.wait(500);
+                        simulateSelectClick(callCenterSelect);
+                    }
+                });
+            }
         }
-        const callCenterSelect = await tryGetSelect("messageRouting.receivingCallCenterUpuCode");
-        if (callCenterSelect) {
-            InjectUtil.wait(500).then(async () => {
-                document.querySelector(".overflow-auto")?.scrollTo({ behavior: "smooth", top: 200 });
-                if (callCenterSelect.textContent === "Select Destination Call Center") {
-                    await InjectUtil.wait(500);
-                    simulateSelectClick(callCenterSelect);
-                }
-            });
+
+        InjectUtil.wait(1500).then(() => {
+            hideLoadingMask();
+        });
+    }
+    function ShowLoadingMask() {
+        const maskId = "IMIC_LOADING_MASK";
+        if (!document.getElementById(maskId)) {
+            const mask = document.createElement("div");
+            mask.id = maskId;
+            mask.style.cssText = `
+                display: flex;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(255, 255, 255, 0.8);
+                backdrop-filter: blur(5px);
+                z-index: 9999;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 2rem;
+                font-weight: 900;
+                transition: opacity 0.3s ease;
+                pointer-events: none;
+            `;
+            mask.style.opacity = "0";
+            mask.innerText = "자동 입력 중";
+            document.body.appendChild(mask);
+        }
+        const mask = document.getElementById(maskId)!;
+        mask.style.opacity = "1";
+        InjectUtil.wait(5000).then(() => {
+            mask.style.opacity = "0";
+        });
+    }
+    function hideLoadingMask() {
+        const mask = document.getElementById("IMIC_LOADING_MASK");
+        if (mask) {
+            mask.style.opacity = "0";
         }
     }
+
     function fillBlankInputs(inputs: (HTMLInputElement | null)[]) {
         inputs.forEach((input) => {
             if (input && !input.value) {
@@ -272,8 +320,8 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
     function simulateSelectClick(select: HTMLDivElement) {
         select.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     }
-    async function setSelect(name: string, value: string) {
-        const select = await tryGetSelect(name);
+    async function setSelect(name: string | HTMLInputElement, value: string) {
+        const select = name instanceof HTMLInputElement ? name : await tryGetSelect(name);
         if (!select) {
             console.log(`Select element with aria-labelledby='${name}' not found`);
             return;
@@ -285,6 +333,33 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
             return;
         }
         liValue.click();
+    }
+    async function selectAutoCompleteOption(input: HTMLInputElement, optionText: string) {
+        simulateSelectClick(input);
+        const option: HTMLLIElement | null = await new Promise(async (resolve) => {
+            const maxTrial = 10;
+            const waitTime = 100;
+            await InjectUtil.wait(100);
+            for (let i = 0; i < maxTrial; i++) {
+                const foundOption = Array.from(document.querySelectorAll("li")).find(
+                    (el) => el.textContent === optionText,
+                );
+                if (foundOption) {
+                    console.log(`Option with text='${optionText}' found after ${i + 1} trial(s)`);
+                    resolve(foundOption);
+                    return;
+                }
+                await InjectUtil.wait(waitTime);
+            }
+            console.log(
+                `Auto-complete option with text='${optionText}' not found after waiting ${(maxTrial * waitTime) / 1000} second`,
+            );
+            resolve(null);
+        });
+        if (option) {
+            option.click();
+            return;
+        }
     }
 
     function findPostElement(item_id: string): Promise<PostElement> {
@@ -322,6 +397,8 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
         static injectConvertedValue(input: HTMLInputElement, currency: HTMLInputElement) {
             const sdrValue = this.calculateSDR(input.value, currency.value);
             NewGcssInjectUtil.SwitchValueForCurrency(input, currency, sdrValue);
+            input.value = sdrValue;
+            selectAutoCompleteOption(currency, "SDR");
         }
     }
 })();

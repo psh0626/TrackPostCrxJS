@@ -193,7 +193,7 @@ class InjectUtil {
             }
             await this.wait(waitTime);
         }
-        console.warn(`Element with selector "${selector}" not found after ${maxTries} tries.`);
+        console.log(`Element with selector "${selector}" not found after ${maxTries} tries.`);
         return null;
     }
 }

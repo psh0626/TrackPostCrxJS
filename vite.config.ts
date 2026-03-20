@@ -1,21 +1,19 @@
 import { crx, ManifestV3Export } from "@crxjs/vite-plugin";
+import babel from "@rolldown/plugin-babel";
+import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-//@ts-ignore
-import viteReact from "@vitejs/plugin-react";
 import manifest from "./manifest.json";
+
 const ReactCompilerConfig = {
     /* ... */
 };
+
 // https://vitejs.dev/config/
 export default defineConfig(() => {
     return {
         plugins: [
-            viteReact({
-                babel: {
-                    plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
-                },
-            }),
-            ,
+            viteReact(),
+            babel({ presets: [reactCompilerPreset()] }),
             crx({ manifest: manifest as unknown as ManifestV3Export }),
         ],
         build: {

@@ -25,7 +25,9 @@
         "xml2js": "^0.6.2"
     },
     "devDependencies": {
+        "@babel/core": "^7.29.0",
         "@crxjs/vite-plugin": "^2.4.0",
+        "@rolldown/plugin-babel": "^0.2.2",
         "@types/chrome": "^0.1.38",
         "@types/react": "^19.2.14",
         "@types/react-dom": "^19.2.3",
@@ -33,6 +35,7 @@
         "@typescript-eslint/eslint-plugin": "^8.57.1",
         "@typescript-eslint/parser": "^8.57.1",
         "@vitejs/plugin-react": "^6.0.1",
+        "babel-plugin-react-compiler": "^1.0.0",
         "eslint": "^9.39.1",
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-compiler": "^19.1.0-rc.2",
