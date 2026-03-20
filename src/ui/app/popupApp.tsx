@@ -377,6 +377,72 @@ function PopUpApp() {
                 service: "GCSS",
             },
         );
+    const oldGcssRenderOrder = [
+        {
+            key: "oldGcssReplies",
+            count: oldGcssState.replyItems.length,
+            render: renderOldGcssReplies,
+        },
+        {
+            key: "oldGcssRequests",
+            count: oldGcssState.requestItems.length,
+            render: renderOldGcssRequests,
+        },
+        {
+            key: "oldGcssInboundNotifications",
+            count: oldGcssState.notifInItems.length,
+            render: renderOldGcssInboundNotifications,
+        },
+        {
+            key: "oldGcssOutboundNotifications",
+            count: oldGcssState.notifOutItems.length,
+            render: renderOldGcssOutboundNotifications,
+        },
+    ];
+    const newGcssRenderOrder = [
+        {
+            key: "newGcssReplies",
+            count: newGcssState.replyItems.length,
+            render: renderNewGcssReplies,
+        },
+        {
+            key: "newGcssRequests",
+            count: newGcssState.requestItems.length,
+            render: renderNewGcssRequests,
+        },
+        {
+            key: "newGcssInboundNotifications",
+            count: newGcssState.notifInItems.length,
+            render: renderNewGcssInboundNotifications,
+        },
+        {
+            key: "newGcssOutboundNotifications",
+            count: newGcssState.notifOutItems.length,
+            render: renderNewGcssOutboundNotifications,
+        },
+    ];
+    const icareRenderOrder = [
+        {
+            key: "icareReplies",
+            count: icareState.replyItems.length,
+            render: renderIcareReplies,
+        },
+        {
+            key: "icareRequests",
+            count: icareState.requestItems.length,
+            render: renderIcareRequests,
+        },
+        {
+            key: "icareInboundNotifications",
+            count: icareState.notifInItems.length,
+            render: renderIcareInboundNotifications,
+        },
+        {
+            key: "icareOutboundNotifications",
+            count: icareState.notifOutItems.length,
+            render: renderIcareOutboundNotifications,
+        },
+    ];
 
     return (
         <Stack spacing={0} margin={6} marginTop={0} width="300px">
@@ -410,24 +476,15 @@ function PopUpApp() {
             />
 
             <Divider style={{ margin: "15px 0" }} />
-            {renderOldGcssRequests()}
 
-            {renderOldGcssInboundNotifications()}
+            {oldGcssRenderOrder.sort((a, b) => b.count - a.count).map((item) => item.render())}
 
-            {renderOldGcssReplies()}
-
-            {renderOldGcssOutboundNotifications()}
             {(settings.current.GcssUnreadRequests || settings.current.GcssUnreadReplies) &&
             (newGcssState.replyItems.length > 0 || newGcssState.requestItems.length > 0) ? (
                 <Divider variant="middle" sx={{ m: "15px" }}></Divider>
             ) : null}
             {newGcssState.replyItems.length > 0 || newGcssState.requestItems.length > 0 ? (
-                <>
-                    {renderNewGcssRequests()}
-                    {renderNewGcssInboundNotifications()}
-                    {renderNewGcssReplies()}
-                    {renderNewGcssOutboundNotifications()}
-                </>
+                <>{newGcssRenderOrder.sort((a, b) => b.count - a.count).map((item) => item.render())}</>
             ) : null}
 
             {(settings.current.GcssUnreadReplies || settings.current.GcssUnreadRequests) &&
@@ -435,13 +492,7 @@ function PopUpApp() {
                 <Divider variant="middle" sx={{ m: "15px" }}></Divider>
             ) : null}
 
-            {renderIcareRequests()}
-
-            {renderIcareInboundNotifications()}
-
-            {renderIcareReplies()}
-
-            {renderIcareOutboundNotifications()}
+            {icareRenderOrder.sort((a, b) => b.count - a.count).map((item) => item.render())}
         </Stack>
     );
 }
