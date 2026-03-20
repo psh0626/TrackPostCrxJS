@@ -21,11 +21,12 @@ import { GcssItem, isGcssItem, isWorkflowItem, WorkflowItem } from "../../backgr
 import { ServiceNames } from "../../background/pending-replies/gcssReplies";
 import {
     GCSSMessage,
-    GCSSMessageBase,
     GCSSNotification,
     isGCSSMessage,
     isGCSSNotification,
 } from "../../background/pending-replies/newGcssWrapper";
+import { wait } from "../../background/inject-dom/newGcssSumUtil";
+import { requestFetch } from "../../background/serviceworker";
 
 export const CountryInput = (prop: { text: string; state: string[]; onChange: (countries: string[]) => void }) => {
     const [rawValue, setRawValue] = useState("");
@@ -161,6 +162,9 @@ export const MyList = ({
     };
 
     const OpenAll = async () => {
+        wait(1000 * 8).then(() => {
+            requestFetch();
+        });
         // const reversed_items = [...items].reverse();
         const tab_promises = items.map(async (wf) => {
             let tab: chrome.tabs.Tab;
@@ -193,44 +197,36 @@ export const MyList = ({
     };
 
     const CopyIDs = () => {
-        let ids: string[];
         const reversed_items = [...items].reverse();
-        if (service === "GCSS") {
-            ids = reversed_items.map((item) => (item as GcssItem).itemId);
-        } else {
-            ids = reversed_items.map((item) => (item as WorkflowItem).trackingId);
-        }
+        const ids = reversed_items.map((item) =>
+            isGcssItem(item) ? item.itemId : isGCSSMessage(item) ? item.itemId : item.trackingId,
+        );
         const str_ids = ids.join("\n");
         void navigator.clipboard.writeText(str_ids);
     };
 
     const CopyCountries = () => {
-        let countries: string[];
         const reversed_items = [...items].reverse();
-        if (firstItem instanceof GcssItem) {
-            if (type === "replies" && !isNotification) {
-                countries = reversed_items.map((item) => (item as GcssItem).destinationCountry);
+        const countries = reversed_items.map((item) => {
+            if (isGcssItem(item)) {
+                return type === "replies" && !isNotification ? item.destinationCountry : item.originCountry;
+            } else if (isWorkflowItem(item)) {
+                return type === "replies" && !isNotification
+                    ? item.replyingOperator.substring(0, 2)
+                    : item.requestingOperator.substring(0, 2);
             } else {
-                countries = reversed_items.map((item) => (item as GcssItem).originCountry);
+                return type === "replies" && !isNotification ? item.sendingCountry : item.receivingCountry;
             }
-        } else if (firstItem instanceof WorkflowItem) {
-            if (type === "replies" && !isNotification) {
-                countries = reversed_items.map((item) => (item as WorkflowItem).replyingOperator.substring(0, 2));
-            } else {
-                countries = reversed_items.map((item) => (item as WorkflowItem).requestingOperator.substring(0, 2));
-            }
-        } else {
-            if (type === "replies" && !isNotification) {
-                countries = reversed_items.map((item) => (item as GCSSMessageBase).receivingCountry);
-            } else {
-                countries = reversed_items.map((item) => (item as GCSSMessageBase).sendingCountry);
-            }
-        }
+        });
+
         const str_ids = countries.join("\n");
         void navigator.clipboard.writeText(str_ids);
     };
 
     const onItemClick = async (item: WorkflowItem | GcssItem | GCSSMessage) => {
+        wait(1000 * 8).then(() => {
+            requestFetch();
+        });
         if (isWorkflowItem(item)) await OpenNewTab(item.link);
         else if (isGcssItem(item)) await OpenNewTab(isNotification ? item.notificationLink : item.workflowLink);
         else await OpenNewTab(item.messageLink);

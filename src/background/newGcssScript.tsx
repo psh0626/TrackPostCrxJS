@@ -49,7 +49,6 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
         const paramURL = new URL(location.href.replace("/#", ""));
         console.log("location url with params:", paramURL);
 
-        if (settings.GcssUnreadReplies || settings.GcssUnreadRequests) GcssWorkflowService.fetchWorkflows();
         injectBasedOnURL(paramURL);
     })();
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { Verified } from "@mui/icons-material";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -147,6 +148,7 @@ function PopUpApp() {
     const renderEmpty = (msg: string) => (
         <Stack alignItems="center">
             <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
+                <Verified fontSize="small" color="info" sx={{ verticalAlign: "middle", mr: 1 }} />
                 {msg}
             </Typography>
         </Stack>
@@ -161,7 +163,7 @@ function PopUpApp() {
 
     // GCSS requests
     const renderOldGcssRequests = () => {
-        if (oldGcssState.requestItems.length < 1) return renderEmpty("GCSS 도착 회신: 모두 읽음 ✔️");
+        if (oldGcssState.requestItems.length < 1) return renderEmpty("GCSS 도착 회신");
         return settings.current.GcssRequestServiceTypes.map((serv) => (
             <MyList
                 key={`popup-list-${idNumber.current++}`}
@@ -175,7 +177,7 @@ function PopUpApp() {
     // GCSS replies
     const renderOldGcssReplies = () => {
         if (!settings.current.GcssUnreadReplies) return null;
-        if (oldGcssState.replyItems.length < 1) return renderEmpty("GCSS 발송 회신: 모두 읽음 ✔️");
+        if (oldGcssState.replyItems.length < 1) return renderEmpty("GCSS 발송 회신");
         if (settings.current.GcssServiceTypes.length === 1) {
             if (settings.current.GcssAuthor.length <= 1) {
                 return (
@@ -230,7 +232,7 @@ function PopUpApp() {
         renderList(
             settings.current.GcssUnreadRequests && settings.current.GcssUnreadNotificationInbound,
             oldGcssState.notifInItems,
-            "GCSS 도착 통지: 모두 읽음 ✔️",
+            "GCSS 도착 통지",
             {
                 type: "requests",
                 service: "GCSS",
@@ -242,7 +244,7 @@ function PopUpApp() {
         renderList(
             settings.current.GcssUnreadReplies && settings.current.GcssUnreadNotificationOutbound,
             oldGcssState.notifOutItems,
-            "GCSS 발송 통지: 모두 읽음 ✔️",
+            "GCSS 발송 통지",
             {
                 type: "replies",
                 service: "GCSS",
@@ -250,13 +252,13 @@ function PopUpApp() {
         );
 
     const renderIcareRequests = () =>
-        renderList(settings.current.IcareUnreadRequests, icareState.requestItems, "iCare 도착 문의: 모두 읽음 ✔️", {
+        renderList(settings.current.IcareUnreadRequests, icareState.requestItems, "iCare 도착 문의", {
             type: "requests",
             service: "iCare",
         });
     const renderIcareReplies = () => {
         if (!settings.current.IcareUnreadReplies) return null;
-        if (icareState.replyItems.length < 1) return renderEmpty("iCare 발송 회신: 모두 읽음 ✔️");
+        if (icareState.replyItems.length < 1) return renderEmpty("iCare 발송 회신");
         if (settings.current.IcareAuthor.length <= 1) {
             return <MyList items={icareState.replyItems} type="replies" key={`popup-list-${idNumber.current++}`} />;
         } else {
@@ -275,7 +277,7 @@ function PopUpApp() {
         renderList(
             settings.current.IcareUnreadRequests && settings.current.IcareUnreadNotificationInbound,
             icareState.notifInItems,
-            "iCare 도착 통지: 모두 읽음 ✔️",
+            "iCare 도착 통지",
             {
                 type: "requests",
                 service: "iCare",
@@ -287,7 +289,7 @@ function PopUpApp() {
         renderList(
             settings.current.IcareUnreadReplies && settings.current.IcareUnreadNotificationOutbound,
             icareState.notifOutItems,
-            "iCare 발송 통지: 모두 읽음 ✔️",
+            "iCare 발송 통지",
             {
                 type: "replies",
                 service: "iCare",
@@ -295,7 +297,7 @@ function PopUpApp() {
         );
 
     const renderNewGcssRequests = () => {
-        if (newGcssState.requestItems.length < 1) return renderEmpty("New GCSS 도착 회신: 모두 읽음 ✔️");
+        if (newGcssState.requestItems.length < 1) return renderEmpty("New GCSS 도착 회신");
         return settings.current.GcssRequestServiceTypes.map((serv) => (
             <MyList
                 key={serv}
@@ -305,7 +307,7 @@ function PopUpApp() {
             />
         ));
     };
-    renderList(settings.current.GcssUnreadRequests, newGcssState.requestItems, "New GCSS 도착 회신: 모두 읽음 ✔️", {
+    renderList(settings.current.GcssUnreadRequests, newGcssState.requestItems, "New GCSS 도착 회신", {
         type: "requests",
         service: "GCSS",
         children: settings.current.GcssRequestServiceTypes.map((serv) => (
@@ -320,7 +322,7 @@ function PopUpApp() {
 
     const renderNewGcssReplies = () => {
         if (!settings.current.GcssUnreadReplies) return null;
-        if (newGcssState.replyItems.length < 1) return renderEmpty("New GCSS 발송 회신: 모두 읽음 ✔️");
+        if (newGcssState.replyItems.length < 1) return renderEmpty("New GCSS 발송 회신");
         if (settings.current.GcssServiceTypes.length === 1) {
             if (settings.current.GcssAuthor.length <= 1) {
                 return (
@@ -373,7 +375,7 @@ function PopUpApp() {
         renderList(
             settings.current.GcssUnreadRequests && settings.current.GcssUnreadNotificationInbound,
             newGcssState.notifInItems,
-            "New GCSS 도착 통지: 모두 읽음 ✔️",
+            "New GCSS 도착 통지",
             {
                 type: "requests",
                 service: "GCSS",
@@ -383,7 +385,7 @@ function PopUpApp() {
         renderList(
             settings.current.GcssUnreadReplies && settings.current.GcssUnreadNotificationOutbound,
             newGcssState.notifOutItems,
-            "New GCSS 발송 통지: 모두 읽음 ✔️",
+            "New GCSS 발송 통지",
             {
                 type: "replies",
                 service: "GCSS",
@@ -486,17 +488,21 @@ function PopUpApp() {
             />
 
             <Divider style={{ margin: "15px 0" }} />
+            <div style={{minHeight: "30px"}}>
+                {renderOrder.map((item) => item.count > 0 && item.render())}
 
-            {renderOrder.map((item) => item.count > 0 && item.render())}
-
-            {(settings.current.GcssUnreadRequests || settings.current.GcssUnreadReplies) &&
-            (newGcssState.replyItems.length > 0 || newGcssState.requestItems.length > 0) ? (
-                <Divider variant="middle" sx={{ m: "15px" }}></Divider>
-            ) : null}
-            {newGcssRenderOrder.map((item) => item.count > 0 && item.render())}
-
-            {renderOrder.some((item) => item.count > 0) || newGcssRenderOrder.some((item) => item.count > 0) ? (
-                <Divider variant="middle" sx={{ m: "15px" }}></Divider>
+                {renderOrder.some((item) => item.count > 0) &&
+                (newGcssState.replyItems.length > 0 || newGcssState.requestItems.length > 0) ? (
+                    <Divider variant="middle" sx={{ m: "15px" }}></Divider>
+                ) : null}
+                {newGcssRenderOrder.map((item) => item.count > 0 && item.render())}
+            </div>
+            {renderOrder.some((item) => item.count < 1) || newGcssRenderOrder.some((item) => item.count < 1) ? (
+                <Divider variant="middle" sx={{ mt: "15px", mb: "7px" }}>
+                    <Typography variant="caption" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
+                        모두 읽음
+                    </Typography>
+                </Divider>
             ) : null}
 
             {renderOrder.map((item) => item.count < 1 && item.render())}

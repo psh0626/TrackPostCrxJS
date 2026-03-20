@@ -79,52 +79,48 @@ async function APICalls(count: number, final = false) {
             await createNotification(true);
         }
     }
-    const work_tabs = await chrome.tabs.query({
-        url: ["https://icare.post/*", "https://gcss.ipc.be/*", "https://gcss-uat.ipc.be/*"],
-        status: "complete",
-    });
-    if (!work_tabs) {
+    const [icareTab, oldGcssTab, newGcssTab] = await requestFetch();
+
+    if (!icareTab && !oldGcssTab && !newGcssTab) {
+        if (final) {
+            await chrome.action.setBadgeText({ text: "?" });
+        } else {
+            setTimeout(async () => {
+                console.log("Global timer could not find icare or gcss tab. Retrying in 2 seconds..");
+                await APICalls(count, true);
+            }, "2".toSeconds());
+        }
         return;
     }
-    console.log("WORK TABS: ", work_tabs);
-    if (Array.isArray(work_tabs)) {
-        const icare_tab = work_tabs.filter((item: chrome.tabs.Tab) =>
-            item.url!.includes("icare.post"),
-        )[0] as chrome.tabs.Tab;
-        const old_gcss_tab = work_tabs.filter((item: chrome.tabs.Tab) =>
-            item.url!.includes("gcss.ipc.be"),
-        )[0] as chrome.tabs.Tab;
-        const new_gcss_tab = work_tabs.filter((item: chrome.tabs.Tab) =>
-            item.url!.includes("gcss-uat.ipc.be"),
-        )[0] as chrome.tabs.Tab;
-
-        if (!icare_tab && !(old_gcss_tab || !new_gcss_tab)) {
-            if (final) {
-                await chrome.action.setBadgeText({ text: "?" });
-            } else {
-                setTimeout(async () => {
-                    console.log("Global timer could not find icare or gcss tab. Retrying in 2 seconds..");
-                    await APICalls(count, true);
-                }, "2".toSeconds());
-            }
-            return;
-        }
-
-        if (icare_tab) {
-            await chrome.tabs.sendMessage(icare_tab.id!, new MSG(COMMANDS.ICARE_UNREAD_REPLIES));
-            console.log(new Date().toLocaleTimeString(), "icare ticked");
-        }
-        if (old_gcss_tab) {
-            await chrome.tabs.sendMessage(old_gcss_tab.id!, new MSG(COMMANDS.GCSS_UNREAD_REPLIES));
-            console.log(new Date().toLocaleTimeString(), "old gcss ticked");
-        }
-        if (new_gcss_tab) {
-            await chrome.tabs.sendMessage(new_gcss_tab.id!, new MSG(COMMANDS.GCSS_UNREAD_REPLIES));
-            console.log(new Date().toLocaleTimeString(), "new gcss ticked");
-        }
-    }
 }
+export async function requestFetch(): Promise<
+    [chrome.tabs.Tab | undefined, chrome.tabs.Tab | undefined, chrome.tabs.Tab | undefined]
+> {
+    const work_tabs = await chrome.tabs.query({
+        url: ["https://icare.post/*", "https://gcss.ipc.be/*", "https://gcss-uat.ipc.be/*"],
+    });
+    if (!work_tabs) {
+        return [undefined, undefined, undefined];
+    }
+    console.log("WORK TABS: ", work_tabs);
+    const [icare_tab] = work_tabs.filter((item: chrome.tabs.Tab) => item.url!.includes("icare.post"));
+    const [old_gcss_tab] = work_tabs.filter((item: chrome.tabs.Tab) => item.url!.includes("gcss.ipc.be"));
+    const [new_gcss_tab] = work_tabs.filter((item: chrome.tabs.Tab) => item.url!.includes("gcss-uat.ipc.be"));
 
+    if (icare_tab) {
+        await chrome.tabs.sendMessage(icare_tab.id!, new MSG(COMMANDS.ICARE_UNREAD_REPLIES));
+        console.log(new Date().toLocaleTimeString(), "icare ticked");
+    }
+    if (old_gcss_tab) {
+        await chrome.tabs.sendMessage(old_gcss_tab.id!, new MSG(COMMANDS.GCSS_UNREAD_REPLIES));
+        console.log(new Date().toLocaleTimeString(), "old gcss ticked");
+    }
+    if (new_gcss_tab) {
+        await chrome.tabs.sendMessage(new_gcss_tab.id!, new MSG(COMMANDS.GCSS_UNREAD_REPLIES));
+        console.log(new Date().toLocaleTimeString(), "new gcss ticked");
+    }
+    return [icare_tab, old_gcss_tab, new_gcss_tab];
+}
 let isTime = true;
 chrome.webRequest.onCompleted.addListener(
     (details) => {

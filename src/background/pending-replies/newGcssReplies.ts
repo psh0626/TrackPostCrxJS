@@ -63,8 +63,7 @@ export class GcssWorkflowService {
                 .filterUnread()
                 .mapToGcssWorkflow();
 
-            if (filteredWorkflows.length > 0)
-                messages.push(this.notifyMessageHub(COMMANDS.NEW_GCSS_UNREAD_REQUESTS, filteredWorkflows));
+            messages.push(this.notifyMessageHub(COMMANDS.NEW_GCSS_UNREAD_REQUESTS, filteredWorkflows));
         }
 
         if (this.settings.GcssUnreadReplies) {
@@ -81,8 +80,7 @@ export class GcssWorkflowService {
                 .filterUnread()
                 .mapToGcssWorkflow();
 
-            if (filteredWorkflows.length > 0)
-                messages.push(this.notifyMessageHub(COMMANDS.NEW_GCSS_UNREAD_REPLIES, filteredWorkflows));
+            messages.push(this.notifyMessageHub(COMMANDS.NEW_GCSS_UNREAD_REPLIES, filteredWorkflows));
         }
 
         if (this.settings.GcssUnreadNotificationInbound || this.settings.GcssUnreadNotificationOutbound) {
