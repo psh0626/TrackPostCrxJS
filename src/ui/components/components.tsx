@@ -128,16 +128,19 @@ export const MyList: React.FC<MyListProps> = ({
     author = "",
     serviceType = ServiceNames.EMS,
 }) => {
-    const service = isWorkflowItem(items[0]) ? "iCare" : "GCSS";
+    let service = "iCare";
     let isNotification = false;
 
     const [firstItem] = items;
     if (!items || !firstItem) return null;
     if (isGcssItem(firstItem)) {
+        service = "GCSS";
         isNotification = firstItem.messageType === "NQ";
     } else if (isGCSSMessage(firstItem)) {
+        service = "New GCSS";
         isNotification = isGCSSNotification(firstItem);
     } else {
+        service = "iCare";
         isNotification = firstItem.isNotification;
     }
 

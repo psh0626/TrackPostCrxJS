@@ -66,12 +66,12 @@ function mapToNotificationItem(item: WorkflowItem | GcssItem | GCSSMessage): chr
         // New GCSS format
         if (isGCSSNotification(item)) {
             return {
-                title: `GCSS NQ ${isOutbound ? "발송" : "도착"}`,
+                title: `N-GCSS NQ ${isOutbound ? "발송" : "도착"}`,
                 message: `${item.itemId} ${isOutbound ? "(" + item.sendingCountry + ")" : ""}`,
             };
         }
         return {
-            title: `GCSS ${item.inquiryType} ${isOutbound ? "발송" : "도착"}`,
+            title: `N-GCSS ${item.inquiryType} ${isOutbound ? "발송" : "도착"}`,
             message: `${item.itemId} ${isOutbound ? "(" + item.sendingCountry + ")" : ""}`,
         };
     } else {

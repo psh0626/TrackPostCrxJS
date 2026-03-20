@@ -295,7 +295,7 @@ function PopUpApp() {
         );
 
     const renderNewGcssRequests = () =>
-        renderList(settings.current.GcssUnreadRequests, newGcssState.requestItems, "GCSS 도착 회신: 모두 읽음 ✔️", {
+        renderList(settings.current.GcssUnreadRequests, newGcssState.requestItems, "New GCSS 도착 회신: 모두 읽음 ✔️", {
             type: "requests",
             service: "GCSS",
             children: settings.current.GcssRequestServiceTypes.map((serv) => (
@@ -361,7 +361,7 @@ function PopUpApp() {
         renderList(
             settings.current.GcssUnreadRequests && settings.current.GcssUnreadNotificationInbound,
             newGcssState.notifInItems,
-            "GCSS 도착 통지: 모두 읽음 ✔️",
+            "New GCSS 도착 통지: 모두 읽음 ✔️",
             {
                 type: "requests",
                 service: "GCSS",
@@ -371,13 +371,13 @@ function PopUpApp() {
         renderList(
             settings.current.GcssUnreadReplies && settings.current.GcssUnreadNotificationOutbound,
             newGcssState.notifOutItems,
-            "GCSS 발송 통지: 모두 읽음 ✔️",
+            "New GCSS 발송 통지: 모두 읽음 ✔️",
             {
                 type: "replies",
                 service: "GCSS",
             },
         );
-    const oldGcssRenderOrder = [
+    const renderOrder = [
         {
             key: "oldGcssReplies",
             count: oldGcssState.replyItems.length,
@@ -397,6 +397,26 @@ function PopUpApp() {
             key: "oldGcssOutboundNotifications",
             count: oldGcssState.notifOutItems.length,
             render: renderOldGcssOutboundNotifications,
+        },
+        {
+            key: "icareReplies",
+            count: icareState.replyItems.length,
+            render: renderIcareReplies,
+        },
+        {
+            key: "icareRequests",
+            count: icareState.requestItems.length,
+            render: renderIcareRequests,
+        },
+        {
+            key: "icareInboundNotifications",
+            count: icareState.notifInItems.length,
+            render: renderIcareInboundNotifications,
+        },
+        {
+            key: "icareOutboundNotifications",
+            count: icareState.notifOutItems.length,
+            render: renderIcareOutboundNotifications,
         },
     ];
     const newGcssRenderOrder = [
@@ -419,28 +439,6 @@ function PopUpApp() {
             key: "newGcssOutboundNotifications",
             count: newGcssState.notifOutItems.length,
             render: renderNewGcssOutboundNotifications,
-        },
-    ];
-    const icareRenderOrder = [
-        {
-            key: "icareReplies",
-            count: icareState.replyItems.length,
-            render: renderIcareReplies,
-        },
-        {
-            key: "icareRequests",
-            count: icareState.requestItems.length,
-            render: renderIcareRequests,
-        },
-        {
-            key: "icareInboundNotifications",
-            count: icareState.notifInItems.length,
-            render: renderIcareInboundNotifications,
-        },
-        {
-            key: "icareOutboundNotifications",
-            count: icareState.notifOutItems.length,
-            render: renderIcareOutboundNotifications,
         },
     ];
 
@@ -477,22 +475,19 @@ function PopUpApp() {
 
             <Divider style={{ margin: "15px 0" }} />
 
-            {oldGcssRenderOrder.sort((a, b) => b.count - a.count).map((item) => item.render())}
+            {renderOrder.map((item) => item.count > 0 && item.render())}
 
             {(settings.current.GcssUnreadRequests || settings.current.GcssUnreadReplies) &&
             (newGcssState.replyItems.length > 0 || newGcssState.requestItems.length > 0) ? (
                 <Divider variant="middle" sx={{ m: "15px" }}></Divider>
             ) : null}
-            {newGcssState.replyItems.length > 0 || newGcssState.requestItems.length > 0 ? (
-                <>{newGcssRenderOrder.sort((a, b) => b.count - a.count).map((item) => item.render())}</>
-            ) : null}
+            {newGcssRenderOrder.map((item) => item.count > 0 && item.render())}
 
-            {(settings.current.GcssUnreadReplies || settings.current.GcssUnreadRequests) &&
-            (settings.current.IcareUnreadReplies || settings.current.IcareUnreadRequests) ? (
+            {renderOrder.some((item) => item.count > 0) && newGcssRenderOrder.some((item) => item.count > 0) ? (
                 <Divider variant="middle" sx={{ m: "15px" }}></Divider>
             ) : null}
 
-            {icareRenderOrder.sort((a, b) => b.count - a.count).map((item) => item.render())}
+            {renderOrder.map((item) => item.count < 1 && item.render())}
         </Stack>
     );
 }
