@@ -3,6 +3,7 @@ import { COMMANDS, MSG, sendRequest } from "../lib/Message";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./inject-dom/injectUtil";
 import NewGcssInjectUtil from "./inject-dom/newGcssInjectUtil";
+import newGcssInsertAuthorColumn from "./inject-dom/newGcssSumUtil";
 import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
 
 (async () => {
@@ -24,7 +25,7 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
 
         if (settings.GcssUnreadReplies || settings.GcssUnreadRequests) GcssWorkflowService.fetchWorkflows();
         NewGcssInjectUtil.InjectIdSearchInput();
-        await injectBasedOnURL(paramURL);
+        injectBasedOnURL(paramURL);
     });
 
     chrome.runtime.onMessage.addListener((message: MSG) => {
@@ -48,14 +49,14 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
         console.log("location url with params:", paramURL);
 
         if (settings.GcssUnreadReplies || settings.GcssUnreadRequests) GcssWorkflowService.fetchWorkflows();
-        await injectBasedOnURL(paramURL);
+        injectBasedOnURL(paramURL);
     })();
 
     async function injectBasedOnURL(url: URL) {
         if (isInjecting) return;
         isInjecting = true;
-        const [isRequesting, requestLevel] = checkURLIfRequesting(url);
-        if (isRequesting) {
+        const [isRequestingPage, requestLevel] = checkURLIfRequesting(url);
+        if (isRequestingPage) {
             const itemId = url.pathname.replace("/items/", "");
             let promises = await Promise.allSettled([fetchPostElement(itemId), waitUntilRequestTypeSelected()]);
 
@@ -71,6 +72,8 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
             }
 
             await InjectRequestForm(postElement, requestLevel!);
+        } else if (url.pathname.includes("/update-messages/")) {
+            await newGcssInsertAuthorColumn(url);
         }
         isInjecting = false;
     }
