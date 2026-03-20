@@ -160,19 +160,17 @@ function PopUpApp() {
     };
 
     // GCSS requests
-    const renderOldGcssRequests = () =>
-        renderList(settings.current.GcssUnreadRequests, oldGcssState.requestItems, "GCSS 도착 회신: 모두 읽음 ✔️", {
-            type: "requests",
-            service: "GCSS",
-            children: settings.current.GcssRequestServiceTypes.map((serv) => (
-                <MyList
-                    key={serv}
-                    items={oldGcssState.requestItems.filter((el) => el.serviceType === serv)}
-                    type="requests"
-                    serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
-                />
-            )),
-        });
+    const renderOldGcssRequests = () => {
+        if (oldGcssState.requestItems.length < 1) return renderEmpty("GCSS 도착 회신: 모두 읽음 ✔️");
+        return settings.current.GcssRequestServiceTypes.map((serv) => (
+            <MyList
+                key={serv}
+                items={oldGcssState.requestItems.filter((el) => el.serviceType === serv)}
+                type="requests"
+                serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
+            />
+        ));
+    };
 
     // GCSS replies
     const renderOldGcssReplies = () => {
@@ -294,19 +292,29 @@ function PopUpApp() {
             },
         );
 
-    const renderNewGcssRequests = () =>
-        renderList(settings.current.GcssUnreadRequests, newGcssState.requestItems, "New GCSS 도착 회신: 모두 읽음 ✔️", {
-            type: "requests",
-            service: "GCSS",
-            children: settings.current.GcssRequestServiceTypes.map((serv) => (
-                <MyList
-                    key={serv}
-                    items={newGcssState.requestItems.filter((el) => el.product === serv)}
-                    type="requests"
-                    serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
-                />
-            )),
-        });
+    const renderNewGcssRequests = () => {
+        if (newGcssState.requestItems.length < 1) return renderEmpty("New GCSS 도착 회신: 모두 읽음 ✔️");
+        return settings.current.GcssRequestServiceTypes.map((serv) => (
+            <MyList
+                key={serv}
+                items={newGcssState.requestItems.filter((el) => el.product === serv)}
+                type="requests"
+                serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
+            />
+        ));
+    };
+    renderList(settings.current.GcssUnreadRequests, newGcssState.requestItems, "New GCSS 도착 회신: 모두 읽음 ✔️", {
+        type: "requests",
+        service: "GCSS",
+        children: settings.current.GcssRequestServiceTypes.map((serv) => (
+            <MyList
+                key={serv}
+                items={newGcssState.requestItems.filter((el) => el.product === serv)}
+                type="requests"
+                serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
+            />
+        )),
+    });
 
     const renderNewGcssReplies = () => {
         if (!settings.current.GcssUnreadReplies) return null;
@@ -379,14 +387,14 @@ function PopUpApp() {
         );
     const renderOrder = [
         {
-            key: "oldGcssReplies",
-            count: oldGcssState.replyItems.length,
-            render: renderOldGcssReplies,
-        },
-        {
             key: "oldGcssRequests",
             count: oldGcssState.requestItems.length,
             render: renderOldGcssRequests,
+        },
+        {
+            key: "oldGcssReplies",
+            count: oldGcssState.replyItems.length,
+            render: renderOldGcssReplies,
         },
         {
             key: "oldGcssInboundNotifications",
@@ -399,14 +407,14 @@ function PopUpApp() {
             render: renderOldGcssOutboundNotifications,
         },
         {
-            key: "icareReplies",
-            count: icareState.replyItems.length,
-            render: renderIcareReplies,
-        },
-        {
             key: "icareRequests",
             count: icareState.requestItems.length,
             render: renderIcareRequests,
+        },
+        {
+            key: "icareReplies",
+            count: icareState.replyItems.length,
+            render: renderIcareReplies,
         },
         {
             key: "icareInboundNotifications",
@@ -421,14 +429,14 @@ function PopUpApp() {
     ];
     const newGcssRenderOrder = [
         {
-            key: "newGcssReplies",
-            count: newGcssState.replyItems.length,
-            render: renderNewGcssReplies,
-        },
-        {
             key: "newGcssRequests",
             count: newGcssState.requestItems.length,
             render: renderNewGcssRequests,
+        },
+        {
+            key: "newGcssReplies",
+            count: newGcssState.replyItems.length,
+            render: renderNewGcssReplies,
         },
         {
             key: "newGcssInboundNotifications",
