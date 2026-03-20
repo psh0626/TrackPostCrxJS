@@ -30,7 +30,7 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
 
     chrome.runtime.onMessage.addListener((message: MSG) => {
         switch (message.Command) {
-            case COMMANDS.GCSS_UNREAD_REPLIES:
+            case COMMANDS.FETCH_REQUEST:
                 GcssWorkflowService.fetchWorkflows();
                 break;
             case COMMANDS.SETTINGS_CHANGED:

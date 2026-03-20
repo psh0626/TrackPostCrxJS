@@ -25,7 +25,7 @@ void (async () => {
 
     chrome.runtime.onMessage.addListener((message: MSG) => {
         switch (message.Command) {
-            case COMMANDS.ICARE_UNREAD_REPLIES:
+            case COMMANDS.FETCH_REQUEST:
                 console.log("IcareAPI2 fetching unread replies by tick");
                 void IcareAPI2.FetchUnreadReplies(csrfToken);
                 break;

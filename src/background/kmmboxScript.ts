@@ -1,5 +1,6 @@
 import { COMMANDS, MSG } from "../lib/Message";
 import "../lib/timespanExtension";
+import { time } from "../lib/timespanExtension";
 
 void (() => {
     let isFetching = false;
@@ -11,7 +12,7 @@ void (() => {
         setTimeout(() => {
             folderId = getFolderId();
             console.log("New Folder ID: ", folderId);
-        }, "5".toSeconds());
+        }, time(5).toSeconds());
     }
 
     const elmCount = getUnreadCountByElement2();
@@ -24,7 +25,7 @@ void (() => {
             updateTitle(unreadCount);
             console.log("[LazyInterval] item fetched", document.title);
         })();
-    }, "3".toMinutes());
+    }, time(3).toMinutes());
 
     function setLazyInterval(callback: () => void, delay: number, immediate: boolean = false) {
         if (immediate) {

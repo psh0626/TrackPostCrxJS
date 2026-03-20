@@ -1,7 +1,9 @@
+import { requestFetch } from "../lib/findTabs";
 import { COMMANDS, MSG } from "../lib/Message";
 import createNotification, { getStorageItems } from "../lib/Notification";
 import PopupTrack from "../lib/PopupTrack";
 import "../lib/timespanExtension";
+import { time } from "../lib/timespanExtension";
 import ProcessMessage from "./message-hub/MessageHub";
 import { GcssItem, WorkflowItem } from "./pending-replies/dataWrapper";
 import { ServiceTypes } from "./pending-replies/gcssReplies";
@@ -21,13 +23,16 @@ main();
 
 function main() {
     let count = 0;
-    const GLOBAL_INTERVAL = "30".toSeconds();
-    const MAIL_TAB_INTERVAL = "20".toMinutes();
+    const GLOBAL_INTERVAL = time(30).toSeconds();
+    const MAIL_TAB_INTERVAL = time(20).toMinutes();
 
     setInterval(() => {
         void APICalls(count++);
     }, GLOBAL_INTERVAL);
-    console.log(new Date().toLocaleTimeString() + " Global Timer has been started. Interval: ", GLOBAL_INTERVAL);
+    console.log(
+        new Date().toLocaleTimeString() + " Global Timer has been started. Interval: ",
+        time(GLOBAL_INTERVAL).toSecondsString(),
+    );
 
     const mailTabFunc = async () => {
         const [ext_mail_tab] = await chrome.tabs.query({
@@ -49,7 +54,7 @@ function main() {
     }, MAIL_TAB_INTERVAL);
     console.log(
         new Date().toLocaleTimeString() + " Mail tab reloading timer has been started. Interval: ",
-        MAIL_TAB_INTERVAL,
+        time(MAIL_TAB_INTERVAL).toMinutesString(),
     );
 }
 async function APICalls(count: number, final = false) {
@@ -88,38 +93,10 @@ async function APICalls(count: number, final = false) {
             setTimeout(async () => {
                 console.log("Global timer could not find icare or gcss tab. Retrying in 2 seconds..");
                 await APICalls(count, true);
-            }, "2".toSeconds());
+            }, time("2").toSeconds());
         }
         return;
     }
-}
-export async function requestFetch(): Promise<
-    [chrome.tabs.Tab | undefined, chrome.tabs.Tab | undefined, chrome.tabs.Tab | undefined]
-> {
-    const work_tabs = await chrome.tabs.query({
-        url: ["https://icare.post/*", "https://gcss.ipc.be/*", "https://gcss-uat.ipc.be/*"],
-    });
-    if (!work_tabs) {
-        return [undefined, undefined, undefined];
-    }
-    console.log("WORK TABS: ", work_tabs);
-    const [icare_tab] = work_tabs.filter((item: chrome.tabs.Tab) => item.url!.includes("icare.post"));
-    const [old_gcss_tab] = work_tabs.filter((item: chrome.tabs.Tab) => item.url!.includes("gcss.ipc.be"));
-    const [new_gcss_tab] = work_tabs.filter((item: chrome.tabs.Tab) => item.url!.includes("gcss-uat.ipc.be"));
-
-    if (icare_tab) {
-        await chrome.tabs.sendMessage(icare_tab.id!, new MSG(COMMANDS.ICARE_UNREAD_REPLIES));
-        console.log(new Date().toLocaleTimeString(), "icare ticked");
-    }
-    if (old_gcss_tab) {
-        await chrome.tabs.sendMessage(old_gcss_tab.id!, new MSG(COMMANDS.GCSS_UNREAD_REPLIES));
-        console.log(new Date().toLocaleTimeString(), "old gcss ticked");
-    }
-    if (new_gcss_tab) {
-        await chrome.tabs.sendMessage(new_gcss_tab.id!, new MSG(COMMANDS.GCSS_UNREAD_REPLIES));
-        console.log(new Date().toLocaleTimeString(), "new gcss ticked");
-    }
-    return [icare_tab, old_gcss_tab, new_gcss_tab];
 }
 let isTime = true;
 chrome.webRequest.onCompleted.addListener(
@@ -151,7 +128,7 @@ chrome.webRequest.onCompleted.addListener(
                 setTimeout(() => {
                     isTime = true;
                     console.log("Cooltime is over. Messages can be sent to content script now.");
-                }, 1000);
+                }, time("1").toSeconds());
             })();
         }
     },

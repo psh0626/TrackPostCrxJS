@@ -1,27 +1,34 @@
-// Adding extension methods to the String prototype
-export {};
-
-declare global {
-    interface String {
-        toMilliseconds(): number;
-        toSeconds(): number;
-        toMinutes(): number;
-        toHours(): number;
+export function time(ms: string | number): Mil {
+    return new Mil(ms);
+}
+export class Mil {
+    private _timeMs = 0;
+    constructor(ms: string | number) {
+        if (typeof ms === "string") {
+            this._timeMs = parseFloat(ms);
+        } else {
+            this._timeMs = ms;
+        }
+    }
+    toNumber(): number {
+        return this._timeMs;
+    }
+    toSeconds(): number {
+        return this._timeMs * 1000;
+    }
+    toMinutes(): number {
+        return this._timeMs * 60 * 1000;
+    }
+    toHours(): number {
+        return this._timeMs * 60 * 60 * 1000;
+    }
+    toSecondsString(): string {
+        return this._timeMs / 1000 + " seconds";
+    }
+    toMinutesString(): string {
+        return this._timeMs / (60 * 1000) + " minutes";
+    }
+    toHoursString(): string {
+        return this._timeMs / (60 * 60 * 1000) + " hours";
     }
 }
-
-String.prototype.toMilliseconds = function (): number {
-    return parseFloat(this.toString());
-};
-
-String.prototype.toSeconds = function (): number {
-    return parseFloat(this.toString()) * 1000;
-};
-
-String.prototype.toMinutes = function (): number {
-    return parseFloat(this.toString()) * 60 * 1000;
-};
-
-String.prototype.toHours = function (): number {
-    return parseFloat(this.toString()) * 60 * 60 * 1000;
-};

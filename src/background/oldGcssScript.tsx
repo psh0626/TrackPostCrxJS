@@ -14,7 +14,7 @@ import { GcssAPI } from "./pending-replies/gcssReplies";
 
     chrome.runtime.onMessage.addListener((message: MSG) => {
         switch (message.Command) {
-            case COMMANDS.GCSS_UNREAD_REPLIES:
+            case COMMANDS.FETCH_REQUEST:
                 void GcssAPI.FetchReplies();
                 break;
             case COMMANDS.SETTINGS_CHANGED:

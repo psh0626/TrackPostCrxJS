@@ -17,6 +17,7 @@ import {
 import { styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import React, { useEffect, useState } from "react";
+import { wait } from "../../background/inject-dom/newGcssSumUtil";
 import { GcssItem, isGcssItem, isWorkflowItem, WorkflowItem } from "../../background/pending-replies/dataWrapper";
 import { ServiceNames } from "../../background/pending-replies/gcssReplies";
 import {
@@ -25,8 +26,7 @@ import {
     isGCSSMessage,
     isGCSSNotification,
 } from "../../background/pending-replies/newGcssWrapper";
-import { wait } from "../../background/inject-dom/newGcssSumUtil";
-import { requestFetch } from "../../background/serviceworker";
+import { requestFetch } from "../../lib/findTabs";
 
 export const CountryInput = (prop: { text: string; state: string[]; onChange: (countries: string[]) => void }) => {
     const [rawValue, setRawValue] = useState("");
@@ -163,6 +163,7 @@ export const MyList = ({
 
     const OpenAll = async () => {
         wait(1000 * 8).then(() => {
+            console.log("Requesting fetch after opening all tabs");
             requestFetch();
         });
         // const reversed_items = [...items].reverse();
@@ -225,6 +226,7 @@ export const MyList = ({
 
     const onItemClick = async (item: WorkflowItem | GcssItem | GCSSMessage) => {
         wait(1000 * 8).then(() => {
+            console.log("Requesting fetch after clicking item");
             requestFetch();
         });
         if (isWorkflowItem(item)) await OpenNewTab(item.link);
