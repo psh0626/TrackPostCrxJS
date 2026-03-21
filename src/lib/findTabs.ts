@@ -1,47 +1,93 @@
 import { COMMANDS, MSG } from "./Message";
 
-export function getAllTabs() {
-    return chrome.tabs.query({
-        url: ["https://icare.post/*", "https://gcss.ipc.be/*", "https://gcss-uat.ipc.be/*"],
-    });
+const SERVICES = {
+    iCare: {
+        queryPattern: "https://icare.post/*",
+        hostMatch: "icare.post",
+    },
+    oldGcss: {
+        queryPattern: "https://gcss.ipc.be/*",
+        hostMatch: "gcss.ipc.be",
+    },
+    newGcss: {
+        queryPattern: "https://gcss-uat.ipc.be/*",
+        hostMatch: "gcss-uat.ipc.be",
+    },
+} as const;
+
+type ServiceKey = keyof typeof SERVICES;
+
+function groupTabsByService(tabs: chrome.tabs.Tab[]): Record<ServiceKey, chrome.tabs.Tab[]> {
+    return {
+        iCare: tabs.filter((tab) => tab.url?.includes(SERVICES.iCare.hostMatch)),
+        oldGcss: tabs.filter((tab) => tab.url?.includes(SERVICES.oldGcss.hostMatch)),
+        newGcss: tabs.filter((tab) => tab.url?.includes(SERVICES.newGcss.hostMatch)),
+    };
 }
-export async function findActive(tabs: chrome.tabs.Tab[]) {
+
+export async function getAllServiceTabs(shouldAwaken: boolean) {
+    const allTabs = await chrome.tabs.query({
+        url: Object.values(SERVICES).map((service) => service.queryPattern),
+    });
+
+    console.log("WORK TABS: ", allTabs);
+
+    if (shouldAwaken) {
+        const groupedTabs = groupTabsByService(allTabs);
+        await Promise.all(Object.values(groupedTabs).map((tabs) => findActive(tabs)));
+    }
+
+    return allTabs;
+}
+
+function getBestAvailableTab(tabs: chrome.tabs.Tab[]): chrome.tabs.Tab | undefined {
     if (!tabs || tabs.length === 0) {
-        return null;
+        return undefined;
+    }
+    return tabs.find((tab) => tab.frozen === false && tab.discarded === false) ?? tabs[0];
+}
+
+export async function findActive(tabs: chrome.tabs.Tab[]) {
+    const activeTab = getBestAvailableTab(tabs);
+
+    if (!activeTab) return undefined;
+
+    if (activeTab.frozen === false && activeTab.discarded === false) return activeTab;
+
+    console.log("No active tab found, reloading first tab: ", activeTab);
+    if (activeTab.id) chrome.tabs.reload(activeTab.id);
+    return activeTab;
+}
+
+export async function findFirstTabsForEachService() {
+    const workTabs = await getAllServiceTabs(false);
+
+    if (!workTabs || workTabs.length === 0) {
+        return workTabs;
     }
 
-    const activeTab = tabs.find((tab) => tab.frozen === false && tab.discarded === false);
+    const groupedTabs = groupTabsByService(workTabs);
 
-    if (activeTab) {
-        return activeTab;
-    }
+    const findActiveTabs = Object.values(groupedTabs).map((tabs) => findActive(tabs));
+    const activeTabs = await Promise.all(findActiveTabs);
 
-    chrome.tabs.reload(tabs[0].id!);
-    return tabs[0];
+    return activeTabs.map((tab) => tab).filter((tab): tab is chrome.tabs.Tab => tab !== undefined);
 }
 
 export async function requestFetch() {
-    const workTabs = await getAllTabs();
+    const tabs = await findFirstTabsForEachService();
 
-    if (!workTabs) {
-        return [undefined, undefined, undefined];
+    if (!tabs || tabs.length === 0) {
+        console.log("No tabs to request fetch");
+        return;
     }
-    console.log("WORK TABS: ", workTabs);
 
-    const iCareTabs = workTabs.filter((tab) => tab.url!.includes("icare.post"));
-    const oldGcssTabs = workTabs.filter((tab) => tab.url!.includes("gcss.ipc.be"));
-    const newGcssTabs = workTabs.filter((tab) => tab.url!.includes("gcss-uat.ipc.be"));
-
-    const findActiveTabs = [findActive(iCareTabs), findActive(oldGcssTabs), findActive(newGcssTabs)];
-
-    const activeTabs = await Promise.all(findActiveTabs);
-
-    activeTabs.forEach((tab) => {
+    tabs.forEach((tab) => {
         if (tab && tab.id) {
-            console.log("Active tab found and requesting fetch: ", tab);
+            console.log("Requesting fetch to tab ", tab);
             chrome.tabs.sendMessage(tab.id, new MSG(COMMANDS.FETCH_REQUEST));
         }
     });
 
-    return activeTabs;
+    return tabs;
 }

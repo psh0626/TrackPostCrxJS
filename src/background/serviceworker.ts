@@ -84,9 +84,8 @@ async function APICalls(count: number, final = false) {
             await createNotification(true);
         }
     }
-    const [icareTab, oldGcssTab, newGcssTab] = await requestFetch();
-
-    if (!icareTab && !oldGcssTab && !newGcssTab) {
+    const activeTabs = await requestFetch();
+    if (!activeTabs || activeTabs.length === 0) {
         if (final) {
             await chrome.action.setBadgeText({ text: "?" });
         } else {

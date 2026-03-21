@@ -1,5 +1,5 @@
 import { ServiceTypes } from "../background/pending-replies/gcssReplies";
-import { getAllTabs, requestFetch } from "./findTabs";
+import { getAllServiceTabs, requestFetch } from "./findTabs";
 import { COMMANDS, MSG, sendRequest } from "./Message";
 export class PersonalRemark {
     Section: string;
@@ -36,15 +36,15 @@ export class IMICSettings {
     GcssServiceTypes: ServiceTypes[] = [ServiceTypes.EMS];
     static SavingFinished: NodeJS.Timeout | null = null;
     private async notifyTabs() {
-        const work_tabs = await getAllTabs();
+        const work_tabs = await getAllServiceTabs(true);
 
         if (!work_tabs || work_tabs.length === 0) {
             return;
         }
+        console.log("Notifying tabs of settings change: ", work_tabs);
 
         work_tabs.forEach(async (tab) => {
             if (tab && tab.id) {
-                console.log("Notifying tab ", tab.id, " about settings change");
                 await chrome.tabs.sendMessage(tab.id, new MSG(COMMANDS.SETTINGS_CHANGED));
             }
         });
