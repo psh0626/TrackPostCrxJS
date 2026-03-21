@@ -147,8 +147,8 @@ function PopUpApp() {
 
     // Helper for empty state
     const renderEmpty = (msg: string) => (
-        <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
-            <CheckCircle fontSize="small" color="info" sx={{ verticalAlign: "middle", mr: 1 }} />
+        <Typography width="120px" variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
+            <CheckCircle fontSize="small" color="info" sx={{ verticalAlign: "middle", mr: 0.5 }} />
             {msg}
         </Typography>
     );
@@ -162,6 +162,7 @@ function PopUpApp() {
 
     // GCSS requests
     const renderOldGcssRequests = () => {
+        if (!settings.current.GcssUnreadRequests) return null;
         if (oldGcssState.requestItems.length < 1) return renderEmpty("GCSS 도착 문의");
         return settings.current.GcssRequestServiceTypes.map((serv) => (
             <MyList
@@ -296,6 +297,7 @@ function PopUpApp() {
         );
 
     const renderNewGcssRequests = () => {
+        if (!settings.current.GcssUnreadRequests) return null;
         if (newGcssState.requestItems.length < 1) return renderEmpty("New GCSS 도착 문의");
         return settings.current.GcssRequestServiceTypes.map((serv) => (
             <MyList
@@ -306,18 +308,6 @@ function PopUpApp() {
             />
         ));
     };
-    renderList(settings.current.GcssUnreadRequests, newGcssState.requestItems, "New GCSS 도착 문의", {
-        type: "requests",
-        service: "GCSS",
-        children: settings.current.GcssRequestServiceTypes.map((serv) => (
-            <MyList
-                key={serv}
-                items={newGcssState.requestItems.filter((el) => el.product === serv)}
-                type="requests"
-                serviceType={ServiceNames[serv as keyof typeof ServiceNames]}
-            />
-        )),
-    });
 
     const renderNewGcssReplies = () => {
         if (!settings.current.GcssUnreadReplies) return null;
@@ -513,13 +503,14 @@ function PopUpApp() {
                     </Typography>
                 </Divider>
             ) : null}
-
-            <Grid container rowSpacing={0.5} columnSpacing={2} paddingX={2.7} justifyContent="start">
-                {renderOrder.map((item, idx) => {
-                    if (item.count > 0) return null;
-                    return item.render();
-                })}
-            </Grid>
+            <Stack direction="row" justifyContent="center">
+                <Grid container width="256px" rowSpacing={0.5} columnSpacing={2} justifyContent="start">
+                    {renderOrder.map((item, idx) => {
+                        if (item.count > 0) return null;
+                        return item.render();
+                    })}
+                </Grid>
+            </Stack>
         </Stack>
     );
 }
