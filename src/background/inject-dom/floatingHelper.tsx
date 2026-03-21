@@ -33,7 +33,8 @@ function GetOptionValueText(select_element: HTMLSelectElement | HTMLInputElement
 }
 
 const getName = (target: HTMLInputElement | HTMLSelectElement) => {
-    return target.getAttribute("aria-labelledby")!.replaceAll(".", "-");
+    if (target.id) return target.id;
+    return target!.getAttribute("aria-labelledby")!.replaceAll(".", "-");
 };
 const FloatingHelper = ({
     target,
