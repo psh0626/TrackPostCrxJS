@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Verified } from "@mui/icons-material";
+import { CheckCircle } from "@mui/icons-material";
+import { Grid } from "@mui/material";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -146,12 +147,10 @@ function PopUpApp() {
 
     // Helper for empty state
     const renderEmpty = (msg: string) => (
-        <Stack alignItems="center">
-            <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
-                <Verified fontSize="small" color="info" sx={{ verticalAlign: "middle", mr: 1 }} />
-                {msg}
-            </Typography>
-        </Stack>
+        <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
+            <CheckCircle fontSize="small" color="info" sx={{ verticalAlign: "middle", mr: 1 }} />
+            {msg}
+        </Typography>
     );
 
     // Generic list renderer
@@ -163,7 +162,7 @@ function PopUpApp() {
 
     // GCSS requests
     const renderOldGcssRequests = () => {
-        if (oldGcssState.requestItems.length < 1) return renderEmpty("GCSS 도착 회신");
+        if (oldGcssState.requestItems.length < 1) return renderEmpty("GCSS 도착 문의");
         return settings.current.GcssRequestServiceTypes.map((serv) => (
             <MyList
                 key={`popup-list-${idNumber.current++}`}
@@ -297,7 +296,7 @@ function PopUpApp() {
         );
 
     const renderNewGcssRequests = () => {
-        if (newGcssState.requestItems.length < 1) return renderEmpty("New GCSS 도착 회신");
+        if (newGcssState.requestItems.length < 1) return renderEmpty("New GCSS 도착 문의");
         return settings.current.GcssRequestServiceTypes.map((serv) => (
             <MyList
                 key={serv}
@@ -307,7 +306,7 @@ function PopUpApp() {
             />
         ));
     };
-    renderList(settings.current.GcssUnreadRequests, newGcssState.requestItems, "New GCSS 도착 회신", {
+    renderList(settings.current.GcssUnreadRequests, newGcssState.requestItems, "New GCSS 도착 문의", {
         type: "requests",
         service: "GCSS",
         children: settings.current.GcssRequestServiceTypes.map((serv) => (
@@ -488,24 +487,39 @@ function PopUpApp() {
             />
 
             <Divider style={{ margin: "15px 0" }} />
-            <div style={{minHeight: "30px"}}>
-                {renderOrder.map((item) => item.count > 0 && item.render())}
+            {renderOrder.every((el) => el.count < 1) && newGcssRenderOrder.every((el) => el.count < 1) && (
+                <Stack
+                    width="100%"
+                    justifyContent={"center"}
+                    alignItems={"center"}
+                    sx={{ minHeight: "35px", textAlign: "center" }}
+                >
+                    <Typography variant="caption" color="textDisabled" sx={{ userSelect: "none", fontWeight: "500" }}>
+                        새로 온 메시지가 여기에 표시됩니다.
+                    </Typography>
+                </Stack>
+            )}
+            {renderOrder.map((item) => item.count > 0 && item.render())}
 
-                {renderOrder.some((item) => item.count > 0) &&
-                (newGcssState.replyItems.length > 0 || newGcssState.requestItems.length > 0) ? (
-                    <Divider variant="middle" sx={{ m: "15px" }}></Divider>
-                ) : null}
-                {newGcssRenderOrder.map((item) => item.count > 0 && item.render())}
-            </div>
+            {renderOrder.some((item) => item.count > 0) &&
+            (newGcssState.replyItems.length > 0 || newGcssState.requestItems.length > 0) ? (
+                <Divider variant="middle" sx={{ m: "15px" }}></Divider>
+            ) : null}
+            {newGcssRenderOrder.map((item) => item.count > 0 && item.render())}
             {renderOrder.some((item) => item.count < 1) || newGcssRenderOrder.some((item) => item.count < 1) ? (
-                <Divider variant="middle" sx={{ mt: "15px", mb: "7px" }}>
+                <Divider variant="middle" sx={{ mt: "12px", mb: "7px" }}>
                     <Typography variant="caption" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
                         모두 읽음
                     </Typography>
                 </Divider>
             ) : null}
 
-            {renderOrder.map((item) => item.count < 1 && item.render())}
+            <Grid container rowSpacing={0.5} columnSpacing={2} paddingX={2.7} justifyContent="start">
+                {renderOrder.map((item, idx) => {
+                    if (item.count > 0) return null;
+                    return item.render();
+                })}
+            </Grid>
         </Stack>
     );
 }
