@@ -201,7 +201,7 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
         };
         const excludeConditions = [
             {
-                condition: () => ["EMS", "UPU"].includes(formInfo.serviceType ?? ""),
+                condition: () => !["REG", "EXPRES"].includes(formInfo.serviceType ?? "NONEXISTENTNONEXISTENT"),
                 elements: ["itemType", "destinationPostcode"] as const,
             },
             {
@@ -266,6 +266,22 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
             {
                 condition: () => formInfo.requestType?.includes("DISPUTE"),
                 elements: ["itemType", "destinationPostcode"] as const,
+            },
+            {
+                condition: () => formInfo.requestType?.includes("ADVICE"), // only for EXPRES and REG in L1Q
+                elements: [
+                    "contentType",
+                    "physicalDescription",
+                    "contents",
+                    "itemWeight",
+                    "itemValue",
+                    "itemValueCurrency",
+                    "postagePaid",
+                    "postagePaidCurrency",
+                    "indemnityAmount",
+                    "indemnityAmountCurrency",
+                    "podRequired",
+                ] as const,
             },
         ];
 
