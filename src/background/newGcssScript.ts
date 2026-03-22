@@ -25,6 +25,7 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
         const paramURL = new URL(url.href.replace("/#", ""));
         console.log("url with params:", paramURL);
 
+        // TODO: Limit fetching workflows by the interval of time; maybe 5 seconds or so.
         if (settings.GcssUnreadReplies || settings.GcssUnreadRequests) GcssWorkflowService.fetchWorkflows();
         NewGcssInjectUtil.InjectIdSearchInput();
         injectBasedOnURL(paramURL);
@@ -156,6 +157,8 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
         return form;
     }
     async function InjectRequestForm(postElement: PostElement | null, prefillData: GcssPrefillObject | null) {
+        // TODO: Refactor this function into smaller pieces, and optimize the element finding logic by grouping elements that are shown/hidden together based on conditions, instead of checking each element's condition separately
+
         console.log("[InjectRequestForm] Injecting request form with post element:", postElement);
         console.log("[InjectRequestForm] Injecting request form with prefill data:", prefillData);
 
