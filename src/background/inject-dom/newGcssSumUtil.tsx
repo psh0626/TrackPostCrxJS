@@ -1,7 +1,9 @@
+import { GCSS_API_BASE_URL } from "../pending-replies/newGcssWrapper";
+
 // Global map to store authors as they are retrieved
 const authorCellMap: Record<string, HTMLElement[] | undefined> = {};
 const fetchedItemsAuthors: Record<string, string> = {};
-const baseUrl = "https://gcss-uat.ipc.be/ui-gtw/api";
+const baseUrl = GCSS_API_BASE_URL;
 let isInserting = false;
 
 export async function wait(ms: number): Promise<void> {

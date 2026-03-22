@@ -2,6 +2,7 @@ import { IMICSettings } from "../lib/IMICSettings";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./inject-dom/injectUtil";
 import NewGcssInjectUtil, { FormElements, ResolvedFormElements } from "./inject-dom/newGcssInjectUtil";
+import GcssLoadingMask from "./inject-dom/newGcssLoadingMask";
 import newGcssInsertAuthorColumn from "./inject-dom/newGcssSumUtil";
 import { CMD, MSG } from "./message-hub/Message";
 import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
@@ -45,7 +46,7 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
     });
 
     (async function Main() {
-        injectLoadingMask();
+        GcssLoadingMask.injectMask();
         NewGcssInjectUtil.InjectIdSearchInput();
         const paramURL = new URL(location.href.replace("/#", ""));
         console.log("location url with params:", paramURL);
@@ -58,7 +59,7 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
         isInjecting = true;
         const [isRequestingPage, requestLevel] = checkURLIfRequesting(url);
         if (isRequestingPage) {
-            const itemId = url.pathname.replace("/items/", "");
+            const itemId = url.pathname.replace("/items/", "").split("/")[0];
 
             let promises = await Promise.allSettled([
                 fetchPostElement(itemId),
@@ -161,7 +162,7 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
         const perfMarks: PerformanceMark[] = [];
         perfMarks.push(performance.mark("Start Injecting"));
 
-        ShowLoadingMask();
+        GcssLoadingMask.showLoadingMask();
 
         const formInfo = getCurrentRequestInfo();
         console.log("[InjectRequestForm] Current form info:", formInfo);
@@ -261,6 +262,10 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
             {
                 condition: () => formInfo.requestType?.includes("DELAYED"),
                 elements: ["physicalDescription", "podRequired", "senderTelephone", "senderEmail"] as const,
+            },
+            {
+                condition: () => formInfo.requestType?.includes("DISPUTE"),
+                elements: ["itemType", "destinationPostcode"] as const,
             },
         ];
 
@@ -385,7 +390,7 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
         }
         perfMarks.push(performance.mark("Finished Injecting"));
         InjectUtil.wait(1000).then(() => {
-            hideLoadingMask();
+            GcssLoadingMask.hideLoadingMask();
             perfMarks.push(performance.mark("End Loading Mask"));
             const perfMeasures = perfMarks.map((currentMark, idx, marks) => {
                 if (idx === 0) return null;
@@ -405,7 +410,7 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
             );
         });
         if (await waitUntilRequestTypeChanged()) {
-            ShowLoadingMask();
+            GcssLoadingMask.showLoadingMask();
             console.log("Request type changed, reinjecting form with new request type conditions");
             // if (thisForm.itemValue?.value === prefillData?.itemValue) {
             //     console.log("Value reverted due to request type change, reinjecting converted values");
@@ -419,48 +424,6 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
             // console.log("Monitor response received after request type change:", monitorResponse);
             await InjectUtil.wait(1500);
             await InjectRequestForm(postElement, prefillData);
-        }
-    }
-    function injectLoadingMask() {
-        const maskId = "IMIC-LOADING-MASK";
-        if (!document.getElementById(maskId)) {
-            const mask = document.createElement("div");
-            mask.id = maskId;
-            mask.style.cssText = `
-                display: flex;
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(255, 255, 255, 0.8);
-                backdrop-filter: blur(5px);
-                z-index: 9999;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                font-size: 2rem;
-                font-weight: 900;
-                transition: opacity 0.3s ease;
-                pointer-events: none;
-            `;
-            mask.style.opacity = "0";
-            mask.innerText = "자동 입력 중";
-            document.body.appendChild(mask);
-        }
-        return document.getElementById(maskId)!;
-    }
-    function ShowLoadingMask() {
-        const mask = injectLoadingMask();
-        mask.style.opacity = "1";
-        // InjectUtil.wait(5000).then(() => {
-        //     mask.style.opacity = "0";
-        // });
-    }
-    function hideLoadingMask() {
-        const mask = injectLoadingMask();
-        if (mask) {
-            mask.style.opacity = "0";
         }
     }
 
