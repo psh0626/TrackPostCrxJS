@@ -1,6 +1,6 @@
-import { COMMANDS, MSG } from "../lib/Message";
 import "../lib/timespanExtension";
 import { time } from "../lib/timespanExtension";
+import { CMD, MSG } from "./message-hub/Message";
 
 void (() => {
     let isFetching = false;
@@ -100,7 +100,7 @@ void (() => {
     }
     function executeWindowScript(folderId: string, count: number) {
         chrome.runtime.sendMessage(
-            new MSG(COMMANDS.KMMBOX_REFRESH, { fId: folderId, count: count, lastCount: getCurrentNumber() }),
+            new MSG(CMD.KMMBOX_REFRESH, { fId: folderId, count: count, lastCount: getCurrentNumber() }),
         );
     }
     function refreshUI(count: number) {
@@ -174,7 +174,7 @@ void (() => {
     }
 
     chrome.runtime.onMessage.addListener((message: MSG, sender, sendResponse) => {
-        if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
+        if (message.Command === CMD.WEB_REQUEST_COMPLETE) {
             if (isFetching) {
                 console.log("Request already in progress, ignoring message");
                 return;

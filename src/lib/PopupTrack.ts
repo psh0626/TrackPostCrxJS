@@ -1,4 +1,4 @@
-import { COMMANDS, MSG } from "./Message";
+import { CMD, MSG } from "../background/message-hub/Message";
 
 export default class PopupTrack {
     ItemId: string = "";
@@ -15,6 +15,6 @@ export default class PopupTrack {
         this.PassToBackground();
     }
     private PassToBackground() {
-        return chrome.runtime.sendMessage(new MSG(COMMANDS.POPUP_TRACK_SET, this));
+        return chrome.runtime.sendMessage(new MSG(CMD.POPUP_TRACK_SET, this));
     }
 }

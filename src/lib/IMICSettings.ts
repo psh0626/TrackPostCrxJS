@@ -1,6 +1,6 @@
+import { CMD, MSG, sendRequest } from "../background/message-hub/Message";
 import { ServiceTypes } from "../background/pending-replies/gcssReplies";
 import { getAllServiceTabs, requestFetch } from "./findTabs";
-import { COMMANDS, MSG, sendRequest } from "./Message";
 export class PersonalRemark {
     Section: string;
     Id: number;
@@ -45,7 +45,7 @@ export class IMICSettings {
 
         work_tabs.forEach(async (tab) => {
             if (tab && tab.id) {
-                await chrome.tabs.sendMessage(tab.id, new MSG(COMMANDS.SETTINGS_CHANGED));
+                await chrome.tabs.sendMessage(tab.id, new MSG(CMD.SETTINGS_CHANGED));
             }
         });
 
@@ -75,10 +75,10 @@ export class IMICSettings {
     }
 
     async requestSave() {
-        await sendRequest(new MSG(COMMANDS.SAVE_OPTIONS, this));
+        await sendRequest(new MSG(CMD.SAVE_OPTIONS, this));
     }
 
     async requestLoad() {
-        Object.assign(this, await sendRequest<IMICSettings>(new MSG(COMMANDS.LOAD_OPTIONS)));
+        Object.assign(this, await sendRequest<IMICSettings>(new MSG(CMD.LOAD_OPTIONS)));
     }
 }

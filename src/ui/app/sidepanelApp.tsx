@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { COMMANDS, MSG, sendRequest } from "../../lib/Message";
+import { CMD, MSG, sendRequest } from "../../background/message-hub/Message";
 import PopupTrack from "../../lib/PopupTrack";
 import { PostAPI, PostElement } from "../../lib/PostUtil";
 
@@ -47,7 +47,7 @@ function SidePanelApp() {
     };
 
     const check_popup = async () => {
-        const popup = await sendRequest<PopupTrack>(new MSG(COMMANDS.SIDEPANEL_TRACK_REQUEST));
+        const popup = await sendRequest<PopupTrack>(new MSG(CMD.SIDEPANEL_TRACK_REQUEST));
         console.log("response received: ", popup);
         return popup;
     };

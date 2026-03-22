@@ -58,7 +58,7 @@
         },
         {
             "matches": ["https://gcss-uat.ipc.be/*"],
-            "js": ["src/background/newGcssScript.tsx"],
+            "js": ["src/background/newGcssScript.ts"],
             "run_at": "document_idle"
         },
         {

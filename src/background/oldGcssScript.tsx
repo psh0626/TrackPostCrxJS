@@ -1,8 +1,8 @@
 import { IMICSettings } from "../lib/IMICSettings";
-import { COMMANDS, MSG, sendRequest } from "../lib/Message";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./inject-dom/injectUtil";
 import OldGcssInjectUtil from "./inject-dom/oldGcssInjectUtil";
+import { CMD, MSG, sendRequest } from "./message-hub/Message";
 import { GcssAPI } from "./pending-replies/gcssReplies";
 
 (async () => {
@@ -14,10 +14,10 @@ import { GcssAPI } from "./pending-replies/gcssReplies";
 
     chrome.runtime.onMessage.addListener((message: MSG) => {
         switch (message.Command) {
-            case COMMANDS.FETCH_REQUEST:
+            case CMD.FETCH_REQUEST:
                 void GcssAPI.FetchReplies();
                 break;
-            case COMMANDS.SETTINGS_CHANGED:
+            case CMD.SETTINGS_CHANGED:
                 void (async () => {
                     await settings.requestLoad();
                     GcssAPI.settings = settings;
@@ -122,7 +122,7 @@ import { GcssAPI } from "./pending-replies/gcssReplies";
     }
 
     async function findPostElement(item_id: string): Promise<PostElement> {
-        return await sendRequest<PostElement>(new MSG(COMMANDS.FETCH_POST_ELEMENT, item_id));
+        return await sendRequest<PostElement>(new MSG(CMD.FETCH_POST_ELEMENT, item_id));
     }
     function getExchangeRate(currency_value: string) {
         let rate = 1500; // USD

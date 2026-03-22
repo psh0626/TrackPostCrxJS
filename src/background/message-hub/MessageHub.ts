@@ -1,7 +1,8 @@
-import { COMMANDS, MSG } from "../../lib/Message";
 import createNotification from "../../lib/Notification";
 import { PostAPI } from "../../lib/PostUtil";
+import { GcssPrefillInquiryResponse } from "../pending-replies/newGcssWrapper";
 import { PopupTracker } from "../serviceworker";
+import { CMD, MSG } from "./Message";
 
 declare global {
     interface Window {
@@ -32,7 +33,7 @@ export default function ProcessMessage(
         GCSS: boolean;
     };
     switch (Message.Command) {
-        case COMMANDS.FETCH_POST_ELEMENT:
+        case CMD.FETCH_POST_ELEMENT:
             void (async () => {
                 if (!Message.Param) {
                     console.log(`item id is undefined`);
@@ -45,12 +46,12 @@ export default function ProcessMessage(
             })();
             return true; // true makes connection a bit longer;
 
-        case COMMANDS.ICARE_UNREAD_REQUESTS:
-        case COMMANDS.ICARE_UNREAD_REPLIES:
-        case COMMANDS.GCSS_UNREAD_REQUESTS:
-        case COMMANDS.GCSS_UNREAD_REPLIES:
-        case COMMANDS.NEW_GCSS_UNREAD_REQUESTS:
-        case COMMANDS.NEW_GCSS_UNREAD_REPLIES:
+        case CMD.ICARE_UNREAD_REQUESTS:
+        case CMD.ICARE_UNREAD_REPLIES:
+        case CMD.GCSS_UNREAD_REQUESTS:
+        case CMD.GCSS_UNREAD_REPLIES:
+        case CMD.NEW_GCSS_UNREAD_REQUESTS:
+        case CMD.NEW_GCSS_UNREAD_REPLIES:
             if (["?ICARE", "?GCSS"].includes(Message.Param)) {
                 void (async () => {
                     const err_msg = Message.Param.replace("?", "") as keyof FetchError;
@@ -66,10 +67,7 @@ export default function ProcessMessage(
                 const err: FetchError | undefined = (await chrome.storage.session.get("FETCH_ERROR"))
                     .FETCH_ERROR as FetchError;
 
-                if (
-                    Message.Command === COMMANDS.ICARE_UNREAD_REPLIES ||
-                    Message.Command === COMMANDS.ICARE_UNREAD_REQUESTS
-                ) {
+                if (Message.Command === CMD.ICARE_UNREAD_REPLIES || Message.Command === CMD.ICARE_UNREAD_REQUESTS) {
                     if (err) err.ICARE = false;
                     await chrome.storage.session.set({ FETCH_ERROR: err });
                 } else {
@@ -83,12 +81,12 @@ export default function ProcessMessage(
             })();
             return;
 
-        case COMMANDS.GCSS_UNREAD_NOTIF_INBOUND:
-        case COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND:
-        case COMMANDS.NEW_GCSS_UNREAD_NOTIF_INBOUND:
-        case COMMANDS.NEW_GCSS_UNREAD_NOTIF_OUTBOUND:
-        case COMMANDS.ICARE_UNREAD_NOTIF_INBOUND:
-        case COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND:
+        case CMD.GCSS_UNREAD_NOTIF_INBOUND:
+        case CMD.GCSS_UNREAD_NOTIF_OUTBOUND:
+        case CMD.NEW_GCSS_UNREAD_NOTIF_INBOUND:
+        case CMD.NEW_GCSS_UNREAD_NOTIF_OUTBOUND:
+        case CMD.ICARE_UNREAD_NOTIF_INBOUND:
+        case CMD.ICARE_UNREAD_NOTIF_OUTBOUND:
             void (async () => {
                 const session_store: { [key: string]: any[] } = {};
                 session_store[Message.Command] = Message.Param;
@@ -96,15 +94,14 @@ export default function ProcessMessage(
                 await createNotification(false);
             })();
             return;
-
-        case COMMANDS.POPUP_TRACK_SET:
+        case CMD.POPUP_TRACK_SET:
             Object.assign(PopupTracker, Message.Param);
             void (async () => {
                 await chrome.storage.session.set({ PopupTrack: PopupTracker });
                 console.log("popup set msg received: ", PopupTracker);
             })();
             return;
-        case COMMANDS.SIDEPANEL_TRACK_REQUEST:
+        case CMD.SIDEPANEL_TRACK_REQUEST:
             void (async () => {
                 const dict = await chrome.storage.session.get("PopupTrack");
                 console.log("RESPONSE SENDING: ", dict.PopupTrack);
@@ -112,12 +109,12 @@ export default function ProcessMessage(
             })();
             return true;
 
-        case COMMANDS.SAVE_ICARE_USER_ID:
+        case CMD.SAVE_ICARE_USER_ID:
             void chrome.storage.sync.set({ IcareUserId: Message.Param }).then(() => {
                 console.log("Icare User ID Saved: ", { IcareUserId: Message.Param });
             });
             return;
-        case COMMANDS.LOAD_ICARE_USER_ID:
+        case CMD.LOAD_ICARE_USER_ID:
             void (async () => {
                 const dict = await chrome.storage.sync.get("IcareUserId");
                 console.log("sending response for user id: ", dict.IcareUserId);
@@ -125,19 +122,19 @@ export default function ProcessMessage(
             })();
             return true;
 
-        case COMMANDS.SAVE_OPTIONS:
+        case CMD.SAVE_OPTIONS:
             void (async () => {
                 await chrome.storage.local.set({ IMICSettings: Message.Param });
             })();
             return false;
-        case COMMANDS.LOAD_OPTIONS:
+        case CMD.LOAD_OPTIONS:
             void (async () => {
                 const dict = await chrome.storage.local.get("IMICSettings");
                 console.log("sending response for IMIC Settings: ", dict.IMICSettings);
                 SendResponse(dict.IMICSettings);
             })();
             return true;
-        case COMMANDS.KMMBOX_REFRESH:
+        case CMD.KMMBOX_REFRESH:
             chrome.scripting.executeScript({
                 injectImmediately: true,
                 target: { tabId: sender.tab!.id! },

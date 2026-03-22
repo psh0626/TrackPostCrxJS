@@ -178,7 +178,7 @@ export class GcssArray<T extends IGCSSBase> extends Array<T> {
     }
     filterServiceTypes(serviceTypes: string[]): GcssArray<IGCSSWorkflow> {
         const filtered = this.filter((item) => GcssArray.includesOneOf(item.product, serviceTypes));
-        console.log("Filtered by service types", filtered);
+        console.log("[GcssWorkflowService] Filtered by service types", filtered);
         return new GcssArray(filtered) as unknown as GcssArray<IGCSSWorkflow>;
     }
     filterAuthor(authorNames: string[]): GcssArray<IGCSSWorkflow> {
@@ -186,33 +186,33 @@ export class GcssArray<T extends IGCSSBase> extends Array<T> {
         const filtered = this.filter((item) =>
             GcssArray.includesOneOf((item as unknown as IGCSSWorkflow).inquiryAuthorName, authorNames),
         );
-        console.log("Filtered by authors", filtered);
+        console.log("[GcssWorkflowService] Filtered by authors", filtered);
         return new GcssArray(filtered) as unknown as GcssArray<IGCSSWorkflow>;
     }
     filterUnread(): GcssArray<T> {
         const filtered = this.filter((item) => item.readStatus !== "READ");
-        console.log("Filtered by unread status", filtered);
+        console.log("[GcssWorkflowService] Filtered by unread status", filtered);
         return new GcssArray(filtered);
     }
     filterInbound(): GcssArray<T> {
         const filtered = this.filter((item) => item.itemId.slice(-2) !== "KR");
-        console.log("Filtered by inbound notifications", filtered);
+        console.log("[GcssWorkflowService] Filtered by inbound notifications", filtered);
         return new GcssArray(filtered);
     }
     filterOutbound(): GcssArray<T> {
         const filtered = this.filter((item) => item.itemId.slice(-2) === "KR");
-        console.log("Filtered by outbound notifications", filtered);
+        console.log("[GcssWorkflowService] Filtered by outbound notifications", filtered);
         return new GcssArray(filtered);
     }
     filterOutboundByCountries(countries: string[]): GcssArray<T> {
         const filtered = this.filter((item) => GcssArray.includesOneOf(item.sendingCountry, countries));
-        console.log("Filtered by outbound notification countries", filtered);
+        console.log("[GcssWorkflowService] Filtered by outbound notification countries", filtered);
         return new GcssArray(filtered);
     }
 
     filterOutboundExcludeCountries(countries: string[]): GcssArray<T> {
         const filtered = this.filter((item) => !GcssArray.includesOneOf(item.sendingCountry, countries));
-        console.log("Filtered by outbound notification excluded countries", filtered);
+        console.log("[GcssWorkflowService] Filtered by outbound notification excluded countries", filtered);
         return new GcssArray(filtered);
     }
     mapToGcssWorkflow(): GcssArray<GCSSWorkflow> {
@@ -229,4 +229,23 @@ export class GcssArray<T extends IGCSSBase> extends Array<T> {
         ) as GCSSNotification[];
         return new GcssArray(mapped);
     }
+}
+export type GcssPrefillDataGroup = "ITEM_DETAILS" | "SENDER_DETAILS" | "ADDRESSEE_DETAILS";
+
+export interface GcssPrefillData {
+    dataGroup: GcssPrefillDataGroup;
+    name: string;
+    value: string | number | null;
+}
+
+export interface GcssPrefillInquiryResponse {
+    prefillInquiryId: string | null;
+    itemOriginCountry: string;
+    itemDestinationCountry: string;
+    receivingCallCenter: string | null;
+    receivingPartner: string;
+    inquirer: string | null;
+    requestType: string | null;
+    manualDespatchInfo: string | null;
+    prefillData: GcssPrefillData[];
 }

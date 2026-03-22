@@ -1,8 +1,8 @@
 import { IMICSettings } from "../lib/IMICSettings";
-import { COMMANDS, MSG, sendRequest } from "../lib/Message";
 import { PostElement } from "../lib/PostUtil";
 import IcareInjectUtil from "./inject-dom/icareInjectUtil";
 import InjectUtil from "./inject-dom/injectUtil";
+import { CMD, MSG, sendRequest } from "./message-hub/Message";
 import { IcareAPI2 } from "./pending-replies/icareReplies";
 
 void (async () => {
@@ -25,11 +25,11 @@ void (async () => {
 
     chrome.runtime.onMessage.addListener((message: MSG) => {
         switch (message.Command) {
-            case COMMANDS.FETCH_REQUEST:
+            case CMD.FETCH_REQUEST:
                 console.log("IcareAPI2 fetching unread replies by tick");
                 void IcareAPI2.FetchUnreadReplies(csrfToken);
                 break;
-            case COMMANDS.SETTINGS_CHANGED:
+            case CMD.SETTINGS_CHANGED:
                 void (async () => {
                     await settings.requestLoad();
                     IcareAPI2.settings = settings;
@@ -69,7 +69,7 @@ void (async () => {
 
             port.onMessage.addListener(async (message: MSG) => {
                 console.log("message received: ", message);
-                if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
+                if (message.Command === CMD.WEB_REQUEST_COMPLETE) {
                     IcareInjectUtil.InjectPersonalRemarks();
                     console.log(post_element);
                     if (!post_element.ItemTracked) {
@@ -103,7 +103,7 @@ void (async () => {
             const port = chrome.runtime.connect();
             port.onMessage.addListener((message: MSG) => {
                 console.log("message received: ", message);
-                if (message.Command === COMMANDS.WEB_REQUEST_COMPLETE) {
+                if (message.Command === CMD.WEB_REQUEST_COMPLETE) {
                     IcareInjectUtil.InjectPersonalRemarks(remark_type);
                     // port.disconnect();
                 }
@@ -181,6 +181,6 @@ void (async () => {
     }
 
     async function FindPostElement(item_id: string): Promise<PostElement> {
-        return await sendRequest<PostElement>(new MSG(COMMANDS.FETCH_POST_ELEMENT, item_id));
+        return await sendRequest<PostElement>(new MSG(CMD.FETCH_POST_ELEMENT, item_id));
     }
 })();

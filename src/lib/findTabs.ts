@@ -1,4 +1,4 @@
-import { COMMANDS, MSG } from "./Message";
+import { CMD, MSG } from "../background/message-hub/Message";
 
 const SERVICES = {
     iCare: {
@@ -85,7 +85,7 @@ export async function requestFetch() {
     tabs.forEach((tab) => {
         if (tab && tab.id) {
             console.log("Requesting fetch to tab ", tab);
-            chrome.tabs.sendMessage(tab.id, new MSG(COMMANDS.FETCH_REQUEST));
+            chrome.tabs.sendMessage(tab.id, new MSG(CMD.FETCH_REQUEST));
         }
     });
 

@@ -1,3 +1,4 @@
+import { CMD } from "../background/message-hub/Message";
 import { GcssItem, isGcssItem, isWorkflowItem, WorkflowItem } from "../background/pending-replies/dataWrapper";
 import {
     GCSSMessage,
@@ -7,7 +8,6 @@ import {
     isGCSSNotification,
 } from "../background/pending-replies/newGcssWrapper";
 import { IMICSettings } from "./IMICSettings";
-import { COMMANDS } from "./Message";
 
 async function checkFetchError() {
     type FetchError = {
@@ -96,45 +96,45 @@ export default async function createNotification(force_update = false) {
 
     // Define storage items to fetch
     const icareItems: StorageItem[] = [
-        { key: COMMANDS.ICARE_UNREAD_REPLIES, setting: settings.IcareUnreadReplies, items: [] },
-        { key: COMMANDS.ICARE_UNREAD_REQUESTS, setting: settings.IcareUnreadRequests, items: [] },
+        { key: CMD.ICARE_UNREAD_REPLIES, setting: settings.IcareUnreadReplies, items: [] },
+        { key: CMD.ICARE_UNREAD_REQUESTS, setting: settings.IcareUnreadRequests, items: [] },
         {
-            key: COMMANDS.ICARE_UNREAD_NOTIF_INBOUND,
+            key: CMD.ICARE_UNREAD_NOTIF_INBOUND,
             setting: settings.IcareUnreadNotificationInbound,
             items: [],
         },
         {
-            key: COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND,
+            key: CMD.ICARE_UNREAD_NOTIF_OUTBOUND,
             setting: settings.IcareUnreadNotificationOutbound,
             items: [],
         },
     ];
 
     const gcssItems: StorageItem[] = [
-        { key: COMMANDS.GCSS_UNREAD_REPLIES, setting: settings.GcssUnreadReplies, items: [] },
-        { key: COMMANDS.GCSS_UNREAD_REQUESTS, setting: settings.GcssUnreadRequests, items: [] },
+        { key: CMD.GCSS_UNREAD_REPLIES, setting: settings.GcssUnreadReplies, items: [] },
+        { key: CMD.GCSS_UNREAD_REQUESTS, setting: settings.GcssUnreadRequests, items: [] },
         {
-            key: COMMANDS.GCSS_UNREAD_NOTIF_INBOUND,
+            key: CMD.GCSS_UNREAD_NOTIF_INBOUND,
             setting: settings.GcssUnreadNotificationInbound,
             items: [],
         },
         {
-            key: COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND,
+            key: CMD.GCSS_UNREAD_NOTIF_OUTBOUND,
             setting: settings.GcssUnreadNotificationOutbound,
             items: [],
         },
     ];
 
     const newGcssItems: StorageItem[] = [
-        { key: COMMANDS.NEW_GCSS_UNREAD_REPLIES, setting: settings.GcssUnreadReplies, items: [] },
-        { key: COMMANDS.NEW_GCSS_UNREAD_REQUESTS, setting: settings.GcssUnreadRequests, items: [] },
+        { key: CMD.NEW_GCSS_UNREAD_REPLIES, setting: settings.GcssUnreadReplies, items: [] },
+        { key: CMD.NEW_GCSS_UNREAD_REQUESTS, setting: settings.GcssUnreadRequests, items: [] },
         {
-            key: COMMANDS.NEW_GCSS_UNREAD_NOTIF_INBOUND,
+            key: CMD.NEW_GCSS_UNREAD_NOTIF_INBOUND,
             setting: settings.GcssUnreadNotificationInbound,
             items: [],
         },
         {
-            key: COMMANDS.NEW_GCSS_UNREAD_NOTIF_OUTBOUND,
+            key: CMD.NEW_GCSS_UNREAD_NOTIF_OUTBOUND,
             setting: settings.GcssUnreadNotificationOutbound,
             items: [],
         },
@@ -181,14 +181,14 @@ export default async function createNotification(force_update = false) {
     };
 
     if (!force_update) {
-        void chrome.notifications.create(String(COMMANDS.ICARE_UNREAD_REPLIES), options);
+        void chrome.notifications.create(String(CMD.ICARE_UNREAD_REPLIES), options);
         return;
     }
 
-    chrome.notifications.clear(String(COMMANDS.ICARE_UNREAD_REPLIES), () => {
+    chrome.notifications.clear(String(CMD.ICARE_UNREAD_REPLIES), () => {
         // ensure we call the overload that accepts (notificationId: string, options: NotificationCreateOptions)
         // and satisfy TypeScript by asserting the options shape
-        void chrome.notifications.create(String(COMMANDS.ICARE_UNREAD_REPLIES), options);
+        void chrome.notifications.create(String(CMD.ICARE_UNREAD_REPLIES), options);
     });
     return true;
 }

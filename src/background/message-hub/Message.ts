@@ -1,4 +1,4 @@
-export enum COMMANDS {
+export enum CMD {
     NULL = "NULL",
     FETCH_POST_ELEMENT = "FETCH_POST_ELEMENT",
     FETCH_REQUEST = "FETCH_REQUEST",
@@ -26,12 +26,20 @@ export enum COMMANDS {
 }
 
 export class MSG {
-    public Command: COMMANDS;
-    public Param: any = null;
+    public readonly Command: CMD;
+    public readonly Param: any = null;
 
-    constructor(command: COMMANDS, param?: any) {
+    constructor(command: CMD, param?: any) {
         this.Command = command;
         this.Param = param;
+    }
+    getResponse<T>(): Promise<T>;
+    getResponse(): Promise<any> {
+        return new Promise((resolve) => {
+            chrome.runtime.sendMessage(this, (response) => {
+                resolve(response);
+            });
+        });
     }
 }
 export async function sendRequest<T>(message: MSG, param?: any): Promise<T>;

@@ -1,5 +1,5 @@
 import { IMICSettings } from "../../lib/IMICSettings";
-import { COMMANDS, MSG } from "../../lib/Message";
+import { CMD, MSG } from "../message-hub/Message";
 import { GcssArray, IGCSSNotification, IGCSSWorkflow } from "./newGcssWrapper";
 
 type WorkflowView = "TODOS" | "REQUEST_SENT" | "REPLY_SENT" | "REPLY_RECEIVED";
@@ -56,20 +56,23 @@ export class GcssWorkflowService {
         if (this.settings.GcssUnreadRequests) {
             const workflows = await this.client.getMessages(workflow("TODOS"));
 
-            console.log("Filtering TODOS workflows with settings", this.settings.GcssRequestServiceTypes);
+            console.log(
+                "[GcssWorkflowService] Filtering TODOS workflows with settings",
+                this.settings.GcssRequestServiceTypes,
+            );
 
             const filteredWorkflows = workflows
                 .filterServiceTypes(this.settings.GcssRequestServiceTypes)
                 .filterUnread()
                 .mapToGcssWorkflow();
 
-            messages.push(this.notifyMessageHub(COMMANDS.NEW_GCSS_UNREAD_REQUESTS, filteredWorkflows));
+            messages.push(this.notifyMessageHub(CMD.NEW_GCSS_UNREAD_REQUESTS, filteredWorkflows));
         }
 
         if (this.settings.GcssUnreadReplies) {
             const workflows = await this.client.getMessages(workflow("REPLY_RECEIVED"));
             console.log(
-                "Filtering REPLY_RECEIVED workflows with settings",
+                "[GcssWorkflowService] Filtering REPLY_RECEIVED workflows with settings",
                 this.settings.GcssAuthor,
                 this.settings.GcssServiceTypes,
             );
@@ -80,7 +83,7 @@ export class GcssWorkflowService {
                 .filterUnread()
                 .mapToGcssWorkflow();
 
-            messages.push(this.notifyMessageHub(COMMANDS.NEW_GCSS_UNREAD_REPLIES, filteredWorkflows));
+            messages.push(this.notifyMessageHub(CMD.NEW_GCSS_UNREAD_REPLIES, filteredWorkflows));
         }
 
         if (this.settings.GcssUnreadNotificationInbound || this.settings.GcssUnreadNotificationOutbound) {
@@ -88,7 +91,7 @@ export class GcssWorkflowService {
 
             if (this.settings.GcssUnreadNotificationInbound) {
                 const inbound = notifications.filterInbound().mapToGcssNotification();
-                messages.push(this.notifyMessageHub(COMMANDS.NEW_GCSS_UNREAD_NOTIF_INBOUND, inbound));
+                messages.push(this.notifyMessageHub(CMD.NEW_GCSS_UNREAD_NOTIF_INBOUND, inbound));
             }
             if (this.settings.GcssUnreadNotificationOutbound) {
                 const outbound = notifications
@@ -96,7 +99,7 @@ export class GcssWorkflowService {
                     .filterOutboundByCountries(this.settings.GcssOutboundNotificationCountries)
                     .filterOutboundExcludeCountries(this.settings.GcssOutboundNotificationExcludedCountries)
                     .mapToGcssNotification();
-                messages.push(this.notifyMessageHub(COMMANDS.NEW_GCSS_UNREAD_NOTIF_OUTBOUND, outbound));
+                messages.push(this.notifyMessageHub(CMD.NEW_GCSS_UNREAD_NOTIF_OUTBOUND, outbound));
             }
         }
 
@@ -104,7 +107,7 @@ export class GcssWorkflowService {
             await Promise.all(messages);
         }
     }
-    private static async notifyMessageHub(messageType: COMMANDS, workflows: IGCSSWorkflow[] | IGCSSNotification[]) {
+    private static async notifyMessageHub(messageType: CMD, workflows: IGCSSWorkflow[] | IGCSSNotification[]) {
         return chrome.runtime.sendMessage(new MSG(messageType, workflows));
     }
 }

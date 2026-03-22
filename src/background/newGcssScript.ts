@@ -1,10 +1,11 @@
 import { IMICSettings } from "../lib/IMICSettings";
-import { COMMANDS, MSG, sendRequest } from "../lib/Message";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./inject-dom/injectUtil";
 import NewGcssInjectUtil from "./inject-dom/newGcssInjectUtil";
 import newGcssInsertAuthorColumn from "./inject-dom/newGcssSumUtil";
+import { CMD, MSG } from "./message-hub/Message";
 import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
+import { GcssPrefillInquiryResponse } from "./pending-replies/newGcssWrapper";
 
 (async () => {
     console.log("Content script loaded at: " + document.readyState);
@@ -30,10 +31,10 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
 
     chrome.runtime.onMessage.addListener((message: MSG) => {
         switch (message.Command) {
-            case COMMANDS.FETCH_REQUEST:
+            case CMD.FETCH_REQUEST:
                 GcssWorkflowService.fetchWorkflows();
                 break;
-            case COMMANDS.SETTINGS_CHANGED:
+            case CMD.SETTINGS_CHANGED:
                 void (async () => {
                     await settings.requestLoad();
                     GcssWorkflowService.settings = settings;
@@ -71,7 +72,7 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
                 console.error("Failed to fetch post element for item ID:", itemId);
             }
 
-            await InjectRequestForm(postElement, requestLevel!);
+            await InjectRequestForm(postElement);
         } else if (url.pathname.includes("/update-messages/")) {
             await newGcssInsertAuthorColumn(url);
         }
@@ -119,79 +120,192 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
         } while (!requestType.value);
         console.log("Request type selected:", requestType.value);
     }
-    async function waitUntilRequestTypeChanged(): Promise<void> {
+    async function waitUntilRequestTypeChanged(): Promise<boolean> {
         const requestType = await InjectUtil.TryQuerySelectFor<HTMLInputElement>(
             "input[aria-labelledby='requestType']",
         );
         if (!requestType) {
             console.log("Request type input not found");
-            return;
+            return false;
         }
         const initialValue = requestType.value;
         do {
             await InjectUtil.wait(100);
         } while (requestType.value === initialValue);
         console.log("Request type changed to:", requestType.value);
+        return Promise.resolve(true);
     }
-    async function InjectRequestForm(postElement: PostElement | null, requestLevel: string) {
+    function getCurrentRequestInfo() {
+        const url = new URL(location.href.replace("/#", ""));
+        const form = {
+            itemId: url.pathname.split("/items/")[1]?.split("/")[0] || null,
+            level: url.searchParams.get("form"),
+            serviceType: url.searchParams.get("qualifiedProduct"),
+            requestType: url.searchParams.get("requestType"),
+        };
+        return form;
+    }
+    async function InjectRequestForm(postElement: PostElement | null) {
+        const perfMarks: PerformanceMark[] = [];
+        perfMarks.push(performance.mark("Start Injecting"));
+
         ShowLoadingMask();
-        console.log("Injecting request form with post element:");
-        await setSelect("itemDetails.contentType", "OTHER_VARIOUS");
-        setSelect("itemDetails.itemType", "PACKET");
+
+        console.log("[InjectRequestForm] Injecting request form with post element:", postElement);
+        const formInfo = getCurrentRequestInfo();
+        console.log("[InjectRequestForm] Current form info:", formInfo);
+        const prefillResponse = await new MSG(
+            CMD.NEW_GCSS_PREFILL,
+            formInfo.itemId,
+        ).getResponse<GcssPrefillInquiryResponse>();
+
+        await getInput("itemOriginCountry", 50, 100); // Wait for form to load by checking the presence of a key input
+        perfMarks.push(performance.mark("Original Content Loaded"));
 
         const elements = {
-            itemDestinationCountry: getInput("itemDestinationCountry"),
+            itemDestinationCountry: () => getInput("itemDestinationCountry"),
+            contentType: () => getInput("itemDetails.contentType"),
+            itemType: () => getInput("itemDetails.itemType"),
 
-            physicalDescription: getInput("itemDetails.physicalDescription"),
-            dateOfPosting: getInput("itemDetails.dateOfPosting"),
-            destinationPostcode: getInput("itemDetails.destinationPostcode"),
+            physicalDescription: () => getInput("itemDetails.physicalDescription"),
+            dateOfPosting: () => getInput("itemDetails.dateOfPosting"),
+            destinationPostcode: () => getInput("itemDetails.destinationPostcode"),
 
-            contents: getInput("itemDetails.contents"),
-            itemWeight: getInput("itemDetails.itemWeight"),
-            itemValue: getInput("itemDetails.itemValue"),
-            itemValueCurrency: getInput("itemDetails.itemValueCurrency"),
-            postagePaid: getInput("itemDetails.postagePaid"),
-            postagePaidCurrency: getInput("itemDetails.postagePaidCurrency"),
-            indemnityAmount: getInput("itemDetails.indemnityAmount"),
-            indemnityAmountCurrency: getInput("itemDetails.indemnityAmountCurrency"),
-            podRequired: getInputByName("itemDetails.podRequired"),
+            contents: () => getInput("itemDetails.contents"),
+            itemWeight: () => getInput("itemDetails.itemWeight"),
+            itemValue: () => getInput("itemDetails.itemValue"),
+            itemValueCurrency: () => getInput("itemDetails.itemValueCurrency"),
+            postagePaid: () => getInput("itemDetails.postagePaid"),
+            postagePaidCurrency: () => getInput("itemDetails.postagePaidCurrency"),
+            indemnityAmount: () => getInput("itemDetails.indemnityAmount"),
+            indemnityAmountCurrency: () => getInput("itemDetails.indemnityAmountCurrency"),
+            podRequired: () => getInputByName("itemDetails.podRequired"),
 
-            addresseeName: getInput("addresseeDetails.addresseeName"),
-            addresseeStreet: getInput("addresseeDetails.addresseeStreet"),
-            addresesePostcode: getInput("addresseeDetails.addresseePostcode"),
-            addresseeCity: getInput("addresseeDetails.addresseeCity"),
-            addresseeTelephone: getInput("addresseeDetails.addresseeTelephone"),
-            addresseeEmail: getInput("addresseeDetails.addresseeEmail"),
+            addresseeName: () => getInput("addresseeDetails.addresseeName"),
+            addresseeStreet: () => getInput("addresseeDetails.addresseeStreet"),
+            addresseePostcode: () => getInput("addresseeDetails.addresseePostcode"),
+            addresseeCity: () => getInput("addresseeDetails.addresseeCity"),
+            addresseeTelephone: () => getInput("addresseeDetails.addresseeTelephone"),
+            addresseeEmail: () => getInput("addresseeDetails.addresseeEmail"),
 
-            senderName: getInput("senderDetails.senderName"),
-            senderStreet: getInput("senderDetails.senderStreet"),
-            senderPostcode: getInput("senderDetails.senderPostcode"),
-            senderCity: getInput("senderDetails.senderCity"),
-            senderTelephone: getInput("senderDetails.senderTelephone"),
-            senderEmail: getInput("senderDetails.senderEmail"),
+            senderName: () => getInput("senderDetails.senderName"),
+            senderStreet: () => getInput("senderDetails.senderStreet"),
+            senderPostcode: () => getInput("senderDetails.senderPostcode"),
+            senderCity: () => getInput("senderDetails.senderCity"),
+            senderTelephone: () => getInput("senderDetails.senderTelephone"),
+            senderEmail: () => getInput("senderDetails.senderEmail"),
         };
+        const excludeConditions = [
+            {
+                condition: () => ["EMS", "UPU"].includes(formInfo.serviceType ?? ""),
+                elements: ["itemType", "destinationPostcode"] as const,
+            },
+            {
+                condition: () => formInfo.requestType?.includes("COD"),
+                elements: ["contentType"] as const,
+            },
+            {
+                condition: () =>
+                    formInfo.level === "L1Q" && ["COD", "RETURN"].some((type) => formInfo.requestType?.includes(type)),
+                elements: [
+                    "physicalDescription",
+                    "contents",
+                    "itemWeight",
+                    "itemValue",
+                    "itemValueCurrency",
+                    "postagePaid",
+                    "postagePaidCurrency",
+                    "indemnityAmount",
+                    "indemnityAmountCurrency",
+                    "podRequired",
+                ] as const,
+            },
+            {
+                condition: () =>
+                    formInfo.level === "L1Q" &&
+                    ["UPDATE", "CUSTOMS", "MISSENT", "CHANGE", "DELAYED"].some((type) =>
+                        formInfo.requestType?.includes(type),
+                    ),
+                elements: ["indemnityAmount", "indemnityAmountCurrency"] as const,
+            },
+            {
+                condition: () => formInfo.level === "L1Q" && formInfo.requestType?.includes("RETURN"),
+                elements: ["senderTelephone", "senderEmail"] as const,
+            },
+            {
+                condition: () => formInfo.level === "L1Q" && formInfo.requestType?.includes("WPOD"),
+                elements: [
+                    "itemValue",
+                    "itemValueCurrency",
+                    "postagePaid",
+                    "postagePaidCurrency",
+                    "indemnityAmount",
+                    "indemnityAmountCurrency",
+                    "podRequired",
+                ] as const,
+            },
+            {
+                condition: () => ["CHANGE", "DELAYED"].some((type) => formInfo.requestType?.includes(type)),
+                elements: [
+                    "contentType",
+                    "contents",
+                    "itemValue",
+                    "itemValueCurrency",
+                    "postagePaid",
+                    "postagePaidCurrency",
+                ] as const,
+            },
+            {
+                condition: () => formInfo.requestType?.includes("DELAYED"),
+                elements: ["physicalDescription", "podRequired", "senderTelephone", "senderEmail"] as const,
+            },
+        ];
 
+        const elementsToExclude = excludeConditions
+            .filter(({ condition }) => condition())
+            .flatMap(({ elements: elems }) => elems);
+
+        console.log("[InjectRequestForm] Exclude conditions for elements in", formInfo.requestType, elementsToExclude);
+        const finalElements = Object.entries(elements).filter(([key]) => !elementsToExclude.includes(key as any));
+
+        perfMarks.push(performance.mark("Start Finding Elements"));
         const elementPromises = await Promise.allSettled(
-            Object.entries(elements).map(([key, promise]) => Promise.resolve(promise).then((el) => [key, el] as const)),
+            finalElements.map(async ([key, promise]) => {
+                const perfStart = performance.now();
+                const el = await promise();
+                const perfDuration = performance.now() - perfStart;
+                if (perfDuration > 1000) {
+                    console.log(`[InjectRequestForm] Finding "${key}" took ${perfDuration.toFixed(2)}ms`);
+                }
+                return [key, el] as const;
+            }),
         );
+
+        const elementsFulfilled = elementPromises
+            .filter((p) => p.status === "fulfilled")
+            .map((p) => [p.value[0], p.value[1]] as const);
+        console.log("[InjectRequestForm] Element promises fulfilled", elementsFulfilled);
 
         const elementsNotFound = elementPromises
             .filter((p) => p.status === "rejected" || !p.value[1])
-            .map((p) => (p.status === "rejected" ? p.reason : p.value[0]));
+            .map((p) => (p.status === "rejected" ? p.reason : p.value[0]))
+            .filter((p) => !elementsToExclude.includes(p));
 
         if (elementsNotFound.length > 0) {
-            console.log("elements not found:", elementsNotFound);
+            console.log("[InjectRequestForm] Current form info:", formInfo);
+            console.log("[InjectRequestForm] Elements not found:", elementsNotFound);
         }
-        const thisForm = Object.fromEntries(
-            elementPromises.filter((p) => p.status === "fulfilled").map((p) => [p.value[0], p.value[1]] as const),
-        ) as { [K in keyof typeof elements]: HTMLInputElement | null };
+
+        const thisForm = Object.fromEntries(elementsFulfilled) as { [K in keyof typeof elements]?: HTMLInputElement };
+
+        perfMarks.push(performance.mark("End Finding Elements"));
 
         fillBlankInputs([
             thisForm.physicalDescription,
             thisForm.destinationPostcode,
             thisForm.addresseeName,
             thisForm.addresseeStreet,
-            thisForm.addresesePostcode,
+            thisForm.addresseePostcode,
             thisForm.addresseeCity,
             thisForm.senderName,
             thisForm.senderStreet,
@@ -199,13 +313,31 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
             thisForm.senderCity,
         ]);
 
+        if (thisForm.contentType) await setSelect("itemDetails.contentType", "OTHER_VARIOUS");
+
+        if (thisForm.itemType) await setSelect("itemDetails.itemType", "PACKET");
+
         if (thisForm.itemWeight && !thisForm.itemWeight.value) {
             thisForm.itemWeight.value = "0.00";
         }
+        const oldValues = {
+            itemValue: thisForm.itemValue?.value,
+            postagePaid: thisForm.postagePaid?.value,
+            itemValueCurrency: thisForm.itemValueCurrency?.value,
+            postagePaidCurrency: thisForm.postagePaidCurrency?.value,
+        };
+        // TODO: 걍 fetch로 초기값 가져와서 설정할 것, 그리고 아래거 분리해서 await해야함 indemnity때매
         if (thisForm.itemValue && thisForm.itemValueCurrency?.value !== "SDR") {
+            oldValues.itemValue = thisForm.itemValue.value;
+            oldValues.itemValueCurrency = thisForm.itemValueCurrency!.value;
             ExchangeRateUtil.injectConvertedValue(thisForm.itemValue, thisForm.itemValueCurrency!);
         }
+        if (thisForm.postagePaid && parseFloat(thisForm.postagePaid.value) > 1000) {
+            selectAutoCompleteOption(thisForm.postagePaidCurrency!, "KRW");
+        }
         if (thisForm.postagePaid && thisForm.postagePaidCurrency?.value !== "SDR") {
+            oldValues.postagePaid = thisForm.postagePaid.value;
+            oldValues.postagePaidCurrency = thisForm.postagePaidCurrency!.value;
             ExchangeRateUtil.injectConvertedValue(thisForm.postagePaid, thisForm.postagePaidCurrency!);
         }
         if (thisForm.indemnityAmount && !thisForm.indemnityAmount.value) {
@@ -221,7 +353,8 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
         if (thisForm.podRequired && thisForm.podRequired.checked === false) {
             thisForm.podRequired.parentElement?.click();
         }
-        if (requestLevel !== "L1Q") {
+
+        if (formInfo.level !== "L1Q") {
             InjectUtil.wait(500).then(async () => {
                 document.querySelector(".overflow-auto")?.scrollTo({ behavior: "smooth", top: 2480 });
             });
@@ -251,8 +384,8 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
             if (thisForm.addresseeTelephone) {
                 NewGcssInjectUtil.SwitchValue(thisForm.addresseeTelephone, postElement.AddresseePhone);
             }
-            if (thisForm.addresesePostcode) {
-                NewGcssInjectUtil.SwitchValue(thisForm.addresesePostcode, postElement.AddresseeZipcode);
+            if (thisForm.addresseePostcode) {
+                NewGcssInjectUtil.SwitchValue(thisForm.addresseePostcode, postElement.AddresseeZipcode);
             }
             if (thisForm.senderName) {
                 NewGcssInjectUtil.SwitchValue(thisForm.senderName, postElement.SenderName);
@@ -274,10 +407,41 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
                 });
             }
         }
-
-        InjectUtil.wait(1500).then(() => {
+        perfMarks.push(performance.mark("Finished Injecting"));
+        InjectUtil.wait(1000).then(() => {
             hideLoadingMask();
+            perfMarks.push(performance.mark("End Loading Mask"));
+            const perfMeasures = perfMarks.map((currentMark, idx, marks) => {
+                if (idx === 0) return null;
+                return performance.measure(
+                    `Time from '${marks[idx - 1]?.name || "start"}' to '${currentMark.name}'`,
+                    marks[idx - 1]?.name || marks[0].name,
+                    currentMark.name,
+                );
+            });
+            perfMeasures.forEach((measure) => {
+                if (measure) {
+                    console.log(`[InjectRequestForm] ${measure.name}: ${measure.duration.toFixed(2)}ms`);
+                }
+            });
+            console.log(
+                `[InjectRequestForm] Total injection time: ${(performance.now() - perfMarks[0].startTime).toFixed(2)}ms`,
+            );
         });
+        if (await waitUntilRequestTypeChanged()) {
+            ShowLoadingMask();
+            console.log("Request type changed, reinjecting form with new request type conditions");
+            if (thisForm.itemValue?.value === oldValues.itemValue) {
+                console.log("Value reverted due to request type change, reinjecting converted values");
+                selectAutoCompleteOption(thisForm.itemValueCurrency!, oldValues.itemValueCurrency || "USD");
+            }
+            if (thisForm.postagePaid?.value === oldValues.postagePaid) {
+                console.log("Value reverted due to request type change, reinjecting converted values");
+                selectAutoCompleteOption(thisForm.postagePaidCurrency!, oldValues.postagePaidCurrency || "KRW");
+            }
+            await InjectUtil.wait(1800);
+            await InjectRequestForm(postElement);
+        }
     }
     function injectLoadingMask() {
         const maskId = "IMIC-LOADING-MASK";
@@ -322,18 +486,22 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
         }
     }
 
-    function fillBlankInputs(inputs: (HTMLInputElement | null)[]) {
-        inputs.forEach((input) => {
-            if (input && !input.value) {
-                input.value = "-";
-            }
-        });
+    function fillBlankInputs(inputs: (HTMLInputElement | null | undefined)[] | HTMLInputElement | null | undefined) {
+        if (Array.isArray(inputs)) {
+            inputs.forEach((input) => {
+                if (input && !input.value) {
+                    input.value = "-";
+                }
+            });
+        } else if (inputs && !inputs.value) {
+            inputs.value = "-";
+        }
     }
     function getInputByName(name: string) {
-        return document.querySelector<HTMLInputElement>(`input[name='${name}']`);
+        return InjectUtil.TryQuerySelectFor<HTMLInputElement>(`input[name='${name}']`);
     }
-    function getInput(name: string) {
-        return InjectUtil.TryQuerySelectFor<HTMLInputElement>(`input[aria-labelledby='${name}']`, 10, 200);
+    function getInput(name: string, maxTries: number = 10, waitTime: number = 200) {
+        return InjectUtil.TryQuerySelectFor<HTMLInputElement>(`input[aria-labelledby='${name}']`, maxTries, waitTime);
     }
     function tryGetSelect(name: string) {
         return InjectUtil.TryQuerySelectFor<HTMLDivElement>(`div[aria-labelledby='${name}']`);
@@ -367,7 +535,7 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
                 );
                 if (foundOption) {
                     console.log(
-                        `${input.getAttribute("aria-labelledby")} Option with text='${optionText}' found after ${i + 1} trial(s)`,
+                        `[selectAutoCompleteOption] ${input.getAttribute("aria-labelledby")} Option with text='${optionText}' found after ${i + 1} trial(s)`,
                     );
                     resolve(foundOption);
                     return;
@@ -377,7 +545,7 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
                 await InjectUtil.wait(waitTime);
             }
             console.log(
-                `${input.getAttribute("aria-labelledby")} Auto-complete option with text='${optionText}' not found after waiting ${(maxTrial * waitTime) / 1000} second`,
+                `[selectAutoCompleteOption] ${input.getAttribute("aria-labelledby")} Auto-complete option with text='${optionText}' not found after waiting ${(maxTrial * waitTime) / 1000} seconds`,
             );
             resolve(null);
         });
@@ -388,7 +556,7 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
     }
 
     function findPostElement(item_id: string): Promise<PostElement> {
-        return sendRequest<PostElement>(new MSG(COMMANDS.FETCH_POST_ELEMENT, item_id));
+        return new MSG(CMD.FETCH_POST_ELEMENT, item_id).getResponse<PostElement>();
     }
     class ExchangeRateUtil {
         private static rates: { [key: string]: number } = {
@@ -420,6 +588,10 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
             return Math.ceil(calcValue).toString();
         }
         static async injectConvertedValue(input: HTMLInputElement, currency: HTMLInputElement) {
+            if (!input || !currency) {
+                console.log("Input or currency element not found, cannot inject converted value.");
+                return;
+            }
             const sdrValue = this.calculateSDR(input.value, currency.value);
             const oldValue = input.value;
             const oldCurrency = currency.value;
@@ -433,33 +605,34 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
                 await InjectUtil.wait(400);
                 if (input.value === sdrValue) break;
             }
-            await selectAutoCompleteOption(currency, "SDR");
 
             if (!document.querySelector("#IMIC-" + inputLabel?.replaceAll(".", "-"))) {
-                console.log("Tooltip element not found for input:", inputLabel);
+                console.log("[injectConvertedValue] Tooltip element not found for input:", inputLabel);
                 await InjectUtil.wait(1200);
                 const [newInput, newCurrency] = await Promise.all([getInput(inputLabel!), getInput(currencyLabel!)]);
                 this.injectConvertedValue(newInput!, newCurrency!);
                 return;
             }
 
-            // Handle value reversion on request type change
-            waitUntilRequestTypeChanged().then(async () => {
-                ShowLoadingMask();
-                // const valueWasReverted = input.value === oldValue;
-                // if (!valueWasReverted) return;
+            await selectAutoCompleteOption(currency, "SDR");
 
-                selectAutoCompleteOption(currency, oldCurrency);
-                if (inputLabel === "itemDetails.postagePaid") {
-                    await InjectUtil.wait(1700);
-                    console.log("Postage paid value reverted, re-injecting converted value...");
-                    const [newPostageInput, newCurrency] = await Promise.all([
-                        getInput("itemDetails.postagePaid"),
-                        getInput("itemDetails.postagePaidCurrency"),
-                    ]);
-                    this.injectConvertedValue(newPostageInput!, newCurrency!);
-                }
-            });
+            // Handle value reversion on request type change
+            // waitUntilRequestTypeChanged().then(async () => {
+            //     ShowLoadingMask();
+            //     // const valueWasReverted = input.value === oldValue;
+            //     // if (!valueWasReverted) return;
+
+            //     selectAutoCompleteOption(currency, oldCurrency);
+            //     if (inputLabel === "itemDetails.postagePaid") {
+            //         await InjectUtil.wait(1700);
+            //         console.log("Postage paid value reverted, re-injecting converted value...");
+            //         const [newPostageInput, newCurrency] = await Promise.all([
+            //             getInput("itemDetails.postagePaid"),
+            //             getInput("itemDetails.postagePaidCurrency"),
+            //         ]);
+            //         this.injectConvertedValue(newPostageInput!, newCurrency!);
+            //     }
+            // });
         }
     }
 })();

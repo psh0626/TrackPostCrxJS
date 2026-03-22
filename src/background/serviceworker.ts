@@ -1,12 +1,13 @@
 import { requestFetch } from "../lib/findTabs";
-import { COMMANDS, MSG } from "../lib/Message";
 import createNotification, { getStorageItems } from "../lib/Notification";
 import PopupTrack from "../lib/PopupTrack";
 import "../lib/timespanExtension";
 import { time } from "../lib/timespanExtension";
+import { CMD, MSG } from "./message-hub/Message";
 import ProcessMessage from "./message-hub/MessageHub";
 import { GcssItem, WorkflowItem } from "./pending-replies/dataWrapper";
 import { ServiceTypes } from "./pending-replies/gcssReplies";
+import { GcssPrefillInquiryResponse } from "./pending-replies/newGcssWrapper";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
 void chrome.action.setBadgeBackgroundColor({ color: "#424242" });
@@ -62,15 +63,15 @@ async function APICalls(count: number, final = false) {
     console.log(`${today.toLocaleTimeString("ko-KR")}: Ticking Global Timer: `, count, " times");
     if (count % 6 === 0) {
         const services = [
-            COMMANDS.GCSS_UNREAD_REPLIES,
-            COMMANDS.GCSS_UNREAD_REQUESTS,
-            COMMANDS.ICARE_UNREAD_REPLIES,
-            COMMANDS.ICARE_UNREAD_REQUESTS,
+            CMD.GCSS_UNREAD_REPLIES,
+            CMD.GCSS_UNREAD_REQUESTS,
+            CMD.ICARE_UNREAD_REPLIES,
+            CMD.ICARE_UNREAD_REQUESTS,
         ];
         let hasImportantUnread = false;
         for (const e of services) {
             let itemList = await getStorageItems<GcssItem | WorkflowItem>(e);
-            if (e === COMMANDS.GCSS_UNREAD_REQUESTS && itemList.length > 0) {
+            if (e === CMD.GCSS_UNREAD_REQUESTS && itemList.length > 0) {
                 itemList = itemList.filter((i) => (i as GcssItem).serviceType === ServiceTypes.EMS);
             }
             if (itemList.length > 0) {
@@ -120,7 +121,7 @@ chrome.webRequest.onCompleted.addListener(
                     return;
                 }
                 mailTabs.forEach((tab) => {
-                    chrome.tabs.sendMessage(tab.id!, new MSG(COMMANDS.WEB_REQUEST_COMPLETE));
+                    chrome.tabs.sendMessage(tab.id!, new MSG(CMD.WEB_REQUEST_COMPLETE));
                     console.log("Message Sent to content script in: ", tab);
                 });
                 isTime = false;
@@ -157,7 +158,7 @@ chrome.webRequest.onCompleted.addListener(
                             console.log("Message port is not open. Unable to send a message to the content script");
                             return;
                         }
-                        MsgPort[details.tabId].postMessage(new MSG(COMMANDS.WEB_REQUEST_COMPLETE));
+                        MsgPort[details.tabId].postMessage(new MSG(CMD.WEB_REQUEST_COMPLETE));
                         console.log("Message Sent to content script in: ", tab.title);
                         return true;
                     }
@@ -175,7 +176,7 @@ chrome.webRequest.onCompleted.addListener(
                         console.log("Message port is not open. Unable to send a message to the content script");
                         return;
                     }
-                    MsgPort[details.tabId].postMessage(new MSG(COMMANDS.WEB_REQUEST_COMPLETE));
+                    MsgPort[details.tabId].postMessage(new MSG(CMD.WEB_REQUEST_COMPLETE));
                     console.log("Message Sent to content script in: ", tab.title);
                     return true;
                 })();
@@ -251,13 +252,13 @@ chrome.runtime.onConnect.addListener((port) => {
 chrome.runtime.onMessage.addListener(ProcessMessage);
 
 chrome.notifications.onClicked.addListener((id) => {
-    if (id === COMMANDS.ICARE_UNREAD_REPLIES) {
+    if (id === CMD.ICARE_UNREAD_REPLIES) {
         chrome.notifications.clear(id);
     }
 });
 
 chrome.notifications.onButtonClicked.addListener((noti_id) => {
-    if (noti_id === COMMANDS.ICARE_UNREAD_REPLIES) {
+    if (noti_id === CMD.ICARE_UNREAD_REPLIES) {
         chrome.tabs.getCurrent((tab) => {
             if (tab) chrome.windows.update(tab.windowId, { focused: true }, () => chrome.action.openPopup());
         });

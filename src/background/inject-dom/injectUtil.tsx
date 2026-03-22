@@ -181,20 +181,50 @@ class InjectUtil {
     static async wait(ms: number): Promise<void> {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
+    static async waitUntil<T>(
+        condition: () => T | null,
+        maxTries: number = 50,
+        waitTime: number = 100,
+    ): Promise<T | null> {
+        for (let i = 0; i < maxTries; i++) {
+            const result = await Promise.resolve(condition()).catch((e) => {
+                console.warn("[waitUntil] Error occured", e);
+                return null;
+            });
+            if (result) {
+                return result;
+            }
+            await this.wait(waitTime);
+        }
+        // console.log(
+        //     `[waitUntil] Condition not met after ${maxTries} tries.\n`,
+        //     new Error().stack
+        //         ?.split("\n")
+        //         .map((line) => line.trim())
+        //         .slice(3)
+        //         .join("\n")
+        //         .replaceAll("(", "\n("),
+        // );
+        return null;
+    }
     static async TryQuerySelectFor<T>(
         selector: string,
         maxTries: number = 50,
         waitTime: number = 100,
     ): Promise<T | null> {
-        for (let i = 0; i < maxTries; i++) {
-            const element = document.querySelector(selector) as T | null;
-            if (element) {
-                return element;
-            }
-            await this.wait(waitTime);
+        const query = await this.waitUntil(() => document.querySelector(selector) as T | null, maxTries, waitTime);
+        if (query === null) {
+            console.log(
+                `[TryQuerySelectFor] Element with selector "${selector}" not found after ${maxTries} tries.`,
+                // new Error().stack
+                //     ?.split("\n")
+                //     .map((line) => line.trim())
+                //     .slice(1)
+                //     .join("\n")
+                //     .replaceAll("(", "\n("),
+            );
         }
-        console.log(`Element with selector "${selector}" not found after ${maxTries} tries.`);
-        return null;
+        return query;
     }
 }
 

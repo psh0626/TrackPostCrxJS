@@ -5,11 +5,11 @@ import { Grid } from "@mui/material";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { CMD } from "../../background/message-hub/Message";
 import { GcssItem, WorkflowItem } from "../../background/pending-replies/dataWrapper";
 import { ServiceNames, ServiceTypes } from "../../background/pending-replies/gcssReplies";
 import { GCSSNotification, GCSSWorkflow } from "../../background/pending-replies/newGcssWrapper";
 import { IMICSettings } from "../../lib/IMICSettings";
-import { COMMANDS } from "../../lib/Message";
 import PopupTrack from "../../lib/PopupTrack";
 import { MyList, StyledTextField } from "../components/components";
 class iCareState {
@@ -30,7 +30,7 @@ class NewGcssState {
     notifInItems: GCSSNotification[] = [];
     notifOutItems: GCSSNotification[] = [];
 }
-async function loadSessionData<T>(key: COMMANDS): Promise<T[]> {
+async function loadSessionData<T>(key: CMD): Promise<T[]> {
     const data = await chrome.storage.session.get(key).then((result) => result[key]);
     if (!data) {
         console.log(`No data found in session storage for key: ${key}`);
@@ -76,44 +76,42 @@ function PopUpApp() {
             const nextNewGcssState = new NewGcssState();
 
             if (thisSettings.IcareUnreadReplies) {
-                nextIcareState.replyItems = await loadSessionData<WorkflowItem>(COMMANDS.ICARE_UNREAD_REPLIES);
+                nextIcareState.replyItems = await loadSessionData<WorkflowItem>(CMD.ICARE_UNREAD_REPLIES);
             }
 
             if (thisSettings.IcareUnreadRequests) {
-                nextIcareState.requestItems = await loadSessionData<WorkflowItem>(COMMANDS.ICARE_UNREAD_REQUESTS);
+                nextIcareState.requestItems = await loadSessionData<WorkflowItem>(CMD.ICARE_UNREAD_REQUESTS);
             }
 
             if (thisSettings.GcssUnreadReplies) {
-                nextOldGcssState.replyItems = await loadSessionData<GcssItem>(COMMANDS.GCSS_UNREAD_REPLIES);
-                nextNewGcssState.replyItems = await loadSessionData<GCSSWorkflow>(COMMANDS.NEW_GCSS_UNREAD_REPLIES);
+                nextOldGcssState.replyItems = await loadSessionData<GcssItem>(CMD.GCSS_UNREAD_REPLIES);
+                nextNewGcssState.replyItems = await loadSessionData<GCSSWorkflow>(CMD.NEW_GCSS_UNREAD_REPLIES);
             }
 
             if (thisSettings.GcssUnreadRequests) {
-                nextOldGcssState.requestItems = await loadSessionData<GcssItem>(COMMANDS.GCSS_UNREAD_REQUESTS);
-                nextNewGcssState.requestItems = await loadSessionData<GCSSWorkflow>(COMMANDS.NEW_GCSS_UNREAD_REQUESTS);
+                nextOldGcssState.requestItems = await loadSessionData<GcssItem>(CMD.GCSS_UNREAD_REQUESTS);
+                nextNewGcssState.requestItems = await loadSessionData<GCSSWorkflow>(CMD.NEW_GCSS_UNREAD_REQUESTS);
             }
 
             if (thisSettings.IcareUnreadNotificationInbound) {
-                nextIcareState.notifInItems = await loadSessionData<WorkflowItem>(COMMANDS.ICARE_UNREAD_NOTIF_INBOUND);
+                nextIcareState.notifInItems = await loadSessionData<WorkflowItem>(CMD.ICARE_UNREAD_NOTIF_INBOUND);
             }
 
             if (thisSettings.IcareUnreadNotificationOutbound) {
-                nextIcareState.notifOutItems = await loadSessionData<WorkflowItem>(
-                    COMMANDS.ICARE_UNREAD_NOTIF_OUTBOUND,
-                );
+                nextIcareState.notifOutItems = await loadSessionData<WorkflowItem>(CMD.ICARE_UNREAD_NOTIF_OUTBOUND);
             }
 
             if (thisSettings.GcssUnreadNotificationInbound) {
-                nextOldGcssState.notifInItems = await loadSessionData<GcssItem>(COMMANDS.GCSS_UNREAD_NOTIF_INBOUND);
+                nextOldGcssState.notifInItems = await loadSessionData<GcssItem>(CMD.GCSS_UNREAD_NOTIF_INBOUND);
                 nextNewGcssState.notifInItems = await loadSessionData<GCSSNotification>(
-                    COMMANDS.NEW_GCSS_UNREAD_NOTIF_INBOUND,
+                    CMD.NEW_GCSS_UNREAD_NOTIF_INBOUND,
                 );
             }
 
             if (thisSettings.GcssUnreadNotificationOutbound) {
-                nextOldGcssState.notifOutItems = await loadSessionData<GcssItem>(COMMANDS.GCSS_UNREAD_NOTIF_OUTBOUND);
+                nextOldGcssState.notifOutItems = await loadSessionData<GcssItem>(CMD.GCSS_UNREAD_NOTIF_OUTBOUND);
                 nextNewGcssState.notifOutItems = await loadSessionData<GCSSNotification>(
-                    COMMANDS.NEW_GCSS_UNREAD_NOTIF_OUTBOUND,
+                    CMD.NEW_GCSS_UNREAD_NOTIF_OUTBOUND,
                 );
             }
 
