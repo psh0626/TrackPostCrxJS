@@ -1,4 +1,5 @@
 import { IMICSettings } from "../../lib/IMICSettings";
+import { time } from "../../lib/timespanExtension";
 import { CMD, MSG } from "../message-hub/Message";
 import {
     GCSS_API_BASE_URL,
@@ -70,8 +71,40 @@ class GcssClient {
 }
 export class GcssWorkflowService {
     private static client = new GcssClient();
+    private static limiter = {
+        timeout: null as number | null,
+        startTime: null as Date | null,
+        interval: time(10).toSeconds(),
+        startTimer() {
+            this.startTime = new Date();
+            if (this.timeout) {
+                clearTimeout(this.timeout);
+            }
+            this.timeout = window.setTimeout(() => {
+                console.log("[GcssWorkflowService] Fetching workflows is now allowed again.");
+                this.timeout = null;
+                this.startTime = null;
+            }, this.interval);
+        },
+        getTimeLeft() {
+            if (!this.timeout || !this.startTime) return 0;
+            const elapsed = new Date().getTime() - this.startTime.getTime();
+            return Math.max(0, this.interval - elapsed);
+        },
+        isActive() {
+            if (!this.timeout || !this.startTime) return false;
+            return this.getTimeLeft() > 0;
+        },
+    };
     static settings = new IMICSettings();
     static async fetchWorkflows() {
+        if (this.limiter.isActive()) {
+            console.log(
+                `[GcssWorkflowService] fetchWorkflows was called, but limiter is active. Time left: ${this.limiter.getTimeLeft()} ms`,
+            );
+            return;
+        }
+
         const messages = [];
         if (this.settings.GcssUnreadRequests) {
             const workflows = await this.client.getMessages(workflow("TODOS"));
@@ -125,6 +158,7 @@ export class GcssWorkflowService {
 
         if (messages.length > 0) {
             await Promise.all(messages);
+            this.limiter.startTimer();
         }
     }
     static async fetchPrefillData(itemId: string): Promise<GcssPrefillObject | null> {

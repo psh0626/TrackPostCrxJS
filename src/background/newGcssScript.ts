@@ -25,7 +25,6 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
         const paramURL = new URL(url.href.replace("/#", ""));
         console.log("url with params:", paramURL);
 
-        // TODO: Limit fetching workflows by the interval of time; maybe 5 seconds or so.
         if (settings.GcssUnreadReplies || settings.GcssUnreadRequests) GcssWorkflowService.fetchWorkflows();
         NewGcssInjectUtil.InjectIdSearchInput();
         injectBasedOnURL(paramURL);
@@ -56,6 +55,10 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
     })();
 
     async function injectBasedOnURL(url: URL) {
+        if (!url.searchParams.has("form")) {
+            console.log("[injectBasedOnURL] Left form page, resetting injection lock");
+            isInjecting = false;
+        }
         if (isInjecting) return;
         isInjecting = true;
         const [isRequestingPage, requestLevel] = checkURLIfRequesting(url);
@@ -70,10 +73,15 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
 
             if (promises.some((p) => p.status === "rejected")) {
                 console.error("One or more promises were rejected:", promises);
+                isInjecting = false;
                 return;
             }
 
-            const postElement = promises[0].status === "fulfilled" ? promises[0].value : await fetchPostElement(itemId);
+            const postElement =
+                promises[0].status === "fulfilled" && promises[0].value?.ItemTracked
+                    ? promises[0].value
+                    : await fetchPostElement(itemId);
+
             const prefillData =
                 promises[1].status === "fulfilled"
                     ? promises[1].value
@@ -81,9 +89,18 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
 
             if (!postElement || !prefillData) {
                 console.error("Failed to fetch post element or prefill data for item ID:", itemId);
+                isInjecting = false;
+                return;
             }
 
-            await InjectRequestForm(postElement, prefillData);
+            await injectRequestForm(postElement, prefillData);
+            if (await waitUntilRequestTypeChanged()) {
+                GcssLoadingMask.showLoadingMask();
+                console.log("Request type changed, reinjecting form with new request type conditions");
+
+                await InjectUtil.wait(1500);
+                await injectRequestForm(postElement, prefillData);
+            }
         } else if (url.pathname.includes("/update-messages/")) {
             await newGcssInsertAuthorColumn(url);
         }
@@ -156,24 +173,12 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
         };
         return form;
     }
-    async function InjectRequestForm(postElement: PostElement | null, prefillData: GcssPrefillObject | null) {
-        // TODO: Refactor this function into smaller pieces, and optimize the element finding logic by grouping elements that are shown/hidden together based on conditions, instead of checking each element's condition separately
+    type CurrentRequestInfo = ReturnType<typeof getCurrentRequestInfo>;
+    type RequestFormElementKey = keyof FormElements;
+    type RequestFormValues = Partial<ResolvedFormElements>;
 
-        console.log("[InjectRequestForm] Injecting request form with post element:", postElement);
-        console.log("[InjectRequestForm] Injecting request form with prefill data:", prefillData);
-
-        const perfMarks: PerformanceMark[] = [];
-        perfMarks.push(performance.mark("Start Injecting"));
-
-        GcssLoadingMask.showLoadingMask();
-
-        const formInfo = getCurrentRequestInfo();
-        console.log("[InjectRequestForm] Current form info:", formInfo);
-
-        await getInput("itemOriginCountry", 50, 100); // Wait for form to load by checking the presence of a key input
-        perfMarks.push(performance.mark("Original Content Loaded"));
-
-        const elements: FormElements = {
+    function createRequestFormElements(): FormElements {
+        return {
             itemDestinationCountry: () => getInput("itemDestinationCountry"),
             contentType: () => getInput("itemDetails.contentType"),
             itemType: () => getInput("itemDetails.itemType"),
@@ -202,22 +207,30 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
             senderTelephone: () => getInput("senderDetails.senderTelephone"),
             senderEmail: () => getInput("senderDetails.senderEmail"),
         };
-        const excludeConditions = [
+    }
+
+    function includesAny(str: string | null, substrings: string[] | string) {
+        if (!str) return false;
+        if (!Array.isArray(substrings)) {
+            substrings = [substrings];
+        }
+        return substrings.some((substring) => str.includes(substring));
+    }
+
+    function getExcludedRequestFormElements(formInfo: CurrentRequestInfo): RequestFormElementKey[] {
+        const excludeGroups: { condition: boolean; elements: RequestFormElementKey[] }[] = [
             {
-                condition: () => !["REG", "EXPRES"].includes(formInfo.serviceType ?? "NONEXISTENTNONEXISTENT"),
-                elements: ["itemType", "destinationPostcode"] as const,
+                condition: !includesAny(formInfo.serviceType, ["REG", "EXPRES"]),
+                elements: ["itemType", "destinationPostcode"],
             },
             {
-                condition: () => formInfo.requestType?.includes("COD"),
-                elements: ["contentType"] as const,
+                condition: includesAny(formInfo.requestType, "COD"),
+                elements: ["contentType"],
             },
             {
-                condition: () =>
-                    formInfo.level === "L1Q" && ["COD", "RETURN"].some((type) => formInfo.requestType?.includes(type)),
+                condition:
+                    formInfo.level === "L1Q" && includesAny(formInfo.requestType, ["WPOD", "COD", "RETURN", "ADVICE"]),
                 elements: [
-                    "physicalDescription",
-                    "contents",
-                    "itemWeight",
                     "itemValue",
                     "itemValueCurrency",
                     "postagePaid",
@@ -225,34 +238,24 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
                     "indemnityAmount",
                     "indemnityAmountCurrency",
                     "podRequired",
-                ] as const,
+                ],
             },
             {
-                condition: () =>
+                condition: formInfo.level === "L1Q" && includesAny(formInfo.requestType, ["COD", "RETURN"]),
+                elements: ["physicalDescription", "contents", "itemWeight"],
+            },
+            {
+                condition:
                     formInfo.level === "L1Q" &&
-                    ["UPDATE", "CUSTOMS", "MISSENT", "CHANGE", "DELAYED"].some((type) =>
-                        formInfo.requestType?.includes(type),
-                    ),
-                elements: ["indemnityAmount", "indemnityAmountCurrency"] as const,
+                    includesAny(formInfo.requestType, ["UPDATE", "CUSTOMS", "MISSENT", "CHANGE", "DELAYED"]),
+                elements: ["indemnityAmount", "indemnityAmountCurrency"],
             },
             {
-                condition: () => formInfo.level === "L1Q" && formInfo.requestType?.includes("RETURN"),
-                elements: ["contentType", "senderTelephone", "senderEmail"] as const,
+                condition: formInfo.level === "L1Q" && includesAny(formInfo.requestType, "RETURN"),
+                elements: ["contentType", "senderTelephone", "senderEmail"],
             },
             {
-                condition: () => formInfo.level === "L1Q" && formInfo.requestType?.includes("WPOD"),
-                elements: [
-                    "itemValue",
-                    "itemValueCurrency",
-                    "postagePaid",
-                    "postagePaidCurrency",
-                    "indemnityAmount",
-                    "indemnityAmountCurrency",
-                    "podRequired",
-                ] as const,
-            },
-            {
-                condition: () => ["CHANGE", "DELAYED"].some((type) => formInfo.requestType?.includes(type)),
+                condition: includesAny(formInfo.requestType, ["CHANGE", "DELAYED"]),
                 elements: [
                     "contentType",
                     "contents",
@@ -260,154 +263,179 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
                     "itemValueCurrency",
                     "postagePaid",
                     "postagePaidCurrency",
-                ] as const,
+                ],
             },
             {
-                condition: () => formInfo.requestType?.includes("DELAYED"),
-                elements: ["physicalDescription", "podRequired", "senderTelephone", "senderEmail"] as const,
+                condition: includesAny(formInfo.requestType, "DELAYED"),
+                elements: ["physicalDescription", "podRequired", "senderTelephone", "senderEmail"],
             },
             {
-                condition: () => formInfo.requestType?.includes("DISPUTE"),
-                elements: ["itemType", "destinationPostcode"] as const,
+                condition: includesAny(formInfo.requestType, "DISPUTE"),
+                elements: ["itemType", "destinationPostcode"],
             },
             {
-                condition: () => formInfo.requestType?.includes("ADVICE"), // only for EXPRES and REG in L1Q
-                elements: [
-                    "contentType",
-                    "physicalDescription",
-                    "contents",
-                    "itemWeight",
-                    "itemValue",
-                    "itemValueCurrency",
-                    "postagePaid",
-                    "postagePaidCurrency",
-                    "indemnityAmount",
-                    "indemnityAmountCurrency",
-                    "podRequired",
-                ] as const,
+                condition: includesAny(formInfo.requestType, "ADVICE"),
+                elements: ["contentType", "physicalDescription", "contents", "itemWeight"],
             },
         ];
 
-        const elementsToExclude = excludeConditions
-            .filter(({ condition }) => condition())
-            .flatMap(({ elements: elems }) => elems);
+        const excludedElements = new Set<RequestFormElementKey>();
+        excludeGroups
+            .filter(({ condition: shouldExclude }) => shouldExclude)
+            .forEach(({ elements }) => {
+                elements.forEach((elementKey) => excludedElements.add(elementKey));
+            });
 
-        console.log("[InjectRequestForm] Exclude conditions for elements in", formInfo.requestType, elementsToExclude);
-        const finalElements = Object.entries(elements).filter(([key]) => !elementsToExclude.includes(key as any));
+        return Array.from(excludedElements);
+    }
 
-        perfMarks.push(performance.mark("Start Finding Elements"));
+    async function resolveRequestFormElements(formInfo: CurrentRequestInfo) {
+        const elements = createRequestFormElements();
+        const excludedElements = getExcludedRequestFormElements(formInfo);
+        const excludedElementSet = new Set(excludedElements);
+        const activeElements = Object.entries(elements).filter(
+            ([key]) => !excludedElementSet.has(key as RequestFormElementKey),
+        ) as [RequestFormElementKey, NonNullable<FormElements[RequestFormElementKey]>][];
+
+        console.log("[InjectRequestForm] Exclude conditions for elements in", formInfo.requestType, excludedElements);
+
         const elementPromises = await Promise.allSettled(
-            finalElements.map(async ([key, promise]) => {
+            activeElements.map(async ([key, resolveElement]) => {
                 const perfStart = performance.now();
-                const el = await promise();
+                const element = await resolveElement();
                 const perfDuration = performance.now() - perfStart;
                 if (perfDuration > 1000) {
                     console.log(`[InjectRequestForm] Finding "${key}" took ${perfDuration.toFixed(2)}ms`);
                 }
-                return [key, el] as const;
+                return [key, element] as const;
             }),
         );
 
-        const elementsFulfilled = elementPromises
-            .filter((p) => p.status === "fulfilled")
-            .map((p) => [p.value[0], p.value[1]] as const);
-        console.log("[InjectRequestForm] Element promises fulfilled", elementsFulfilled);
+        const fulfilledElements = elementPromises
+            .filter((result) => result.status === "fulfilled")
+            .map((result) => [result.value[0], result.value[1]] as const);
+        const missingElements = activeElements
+            .filter((_, index) => {
+                const result = elementPromises[index];
+                return result.status === "rejected" || !result.value[1];
+            })
+            .map(([key]) => key);
 
-        const elementsNotFound = elementPromises
-            .filter((p) => p.status === "rejected" || !p.value[1])
-            .map((p) => (p.status === "rejected" ? p.reason : p.value[0]))
-            .filter((p) => !elementsToExclude.includes(p));
+        console.log("[InjectRequestForm] Element promises fulfilled", fulfilledElements);
 
-        if (elementsNotFound.length > 0) {
+        if (missingElements.length > 0) {
             console.log("[InjectRequestForm] Current form info:", formInfo);
-            console.log("[InjectRequestForm] Elements not found:", elementsNotFound);
+            console.log("[InjectRequestForm] Elements not found:", missingElements);
         }
 
-        const thisForm = Object.fromEntries(elementsFulfilled) as { [K in keyof typeof elements]?: HTMLInputElement };
+        return {
+            excludedElements,
+            formValues: Object.fromEntries(fulfilledElements) as RequestFormValues,
+            missingElements,
+        };
+    }
 
-        perfMarks.push(performance.mark("End Finding Elements"));
+    function fillBlankInputs(inputs: (HTMLInputElement | null | undefined)[] | HTMLInputElement | null | undefined) {
+        if (Array.isArray(inputs)) {
+            inputs.forEach((input) => {
+                if (input && !input.value) {
+                    input.value = "-";
+                }
+            });
+        } else if (inputs && !inputs.value) {
+            inputs.value = "-";
+        }
+    }
 
+    async function applyRequestFormDefaults(formValues: RequestFormValues) {
         fillBlankInputs([
-            thisForm.physicalDescription,
-            thisForm.destinationPostcode,
-            thisForm.addresseeName,
-            thisForm.addresseeStreet,
-            thisForm.addresseePostcode,
-            thisForm.addresseeCity,
-            thisForm.senderName,
-            thisForm.senderStreet,
-            thisForm.senderPostcode,
-            thisForm.senderCity,
+            formValues.physicalDescription,
+            formValues.destinationPostcode,
+            formValues.addresseeName,
+            formValues.addresseeStreet,
+            formValues.addresseePostcode,
+            formValues.addresseeCity,
+            formValues.senderName,
+            formValues.senderStreet,
+            formValues.senderPostcode,
+            formValues.senderCity,
         ]);
 
-        if (thisForm.contentType) await setSelect("itemDetails.contentType", "OTHER_VARIOUS");
+        if (formValues.contentType) await setSelect("itemDetails.contentType", "OTHER_VARIOUS");
+        if (formValues.itemType) await setSelect("itemDetails.itemType", "PACKET");
 
-        if (thisForm.itemType) await setSelect("itemDetails.itemType", "PACKET");
-
-        if (thisForm.itemWeight && !thisForm.itemWeight.value) {
-            thisForm.itemWeight.value = "0.00";
+        if (formValues.itemWeight && !formValues.itemWeight.value) {
+            formValues.itemWeight.value = "0.00";
         }
 
-        if (thisForm.podRequired && thisForm.podRequired.checked === false) {
-            thisForm.podRequired.parentElement?.click();
+        if (formValues.podRequired && formValues.podRequired.checked === false) {
+            formValues.podRequired.parentElement?.click();
         }
+    }
 
-        await injectValueInputs(thisForm, prefillData || {});
+    function applyPostElementValue(pairs: Array<[HTMLInputElement | null | undefined, string]>) {
+        pairs.forEach(([input, value]) => {
+            if (input) {
+                NewGcssInjectUtil.SwitchValue(input, value);
+            }
+        });
+    }
 
+    async function applyPostElementFormValues(
+        formInfo: CurrentRequestInfo,
+        formValues: RequestFormValues,
+        postElement: PostElement | null,
+    ) {
         if (formInfo.level !== "L1Q") {
             InjectUtil.wait(500).then(async () => {
                 document.querySelector(".overflow-auto")?.scrollTo({ behavior: "smooth", top: 2480 });
             });
-        } else if (postElement) {
-            if (thisForm.dateOfPosting && !thisForm.dateOfPosting.value) {
-                const date = postElement.ApplicationDate;
-                const year = date.substring(0, 4);
-                const month = date.substring(4, 6);
-                const day = date.substring(6, 8);
-                thisForm.dateOfPosting.value = `${year}-${month}-${day}`;
-            }
-            if (thisForm.itemDestinationCountry && !thisForm.itemDestinationCountry.value) {
-                NewGcssInjectUtil.SwitchValue(thisForm.itemDestinationCountry, postElement.Destination);
-            }
-            if (thisForm.destinationPostcode && thisForm.destinationPostcode.value === "-") {
-                NewGcssInjectUtil.SwitchValue(thisForm.destinationPostcode, postElement.AddresseeZipcode);
-            }
-            if (thisForm.contents) {
-                NewGcssInjectUtil.SwitchValue(thisForm.contents, postElement.Contents);
-            }
-            if (thisForm.addresseeName) {
-                NewGcssInjectUtil.SwitchValue(thisForm.addresseeName, postElement.AddresseeName);
-            }
-            if (thisForm.addresseeStreet) {
-                NewGcssInjectUtil.SwitchValue(thisForm.addresseeStreet, postElement.AddresseeAddress);
-            }
-            if (thisForm.addresseeTelephone) {
-                NewGcssInjectUtil.SwitchValue(thisForm.addresseeTelephone, postElement.AddresseePhone);
-            }
-            if (thisForm.addresseePostcode) {
-                NewGcssInjectUtil.SwitchValue(thisForm.addresseePostcode, postElement.AddresseeZipcode);
-            }
-            if (thisForm.senderName) {
-                NewGcssInjectUtil.SwitchValue(thisForm.senderName, postElement.SenderName);
-            }
-            if (thisForm.senderStreet) {
-                NewGcssInjectUtil.SwitchValue(thisForm.senderStreet, postElement.SenderAddress);
-            }
-            if (thisForm.senderTelephone) {
-                NewGcssInjectUtil.SwitchValue(thisForm.senderTelephone, postElement.SenderPhone);
-            }
-            const callCenterSelect = await tryGetSelect("messageRouting.receivingCallCenterUpuCode");
-            if (callCenterSelect) {
-                InjectUtil.wait(500).then(async () => {
-                    document.querySelector(".overflow-auto")?.scrollTo({ behavior: "smooth", top: 200 });
-                    if (callCenterSelect.textContent === "Select Destination Call Center") {
-                        await InjectUtil.wait(500);
-                        simulateSelectClick(callCenterSelect);
-                    }
-                });
-            }
+            return;
         }
-        perfMarks.push(performance.mark("Finished Injecting"));
+
+        if (!postElement) {
+            return;
+        }
+
+        if (formValues.dateOfPosting && !formValues.dateOfPosting.value) {
+            const date = postElement.ApplicationDate;
+            const year = date.substring(0, 4);
+            const month = date.substring(4, 6);
+            const day = date.substring(6, 8);
+            formValues.dateOfPosting.value = `${year}-${month}-${day}`;
+        }
+
+        if (formValues.itemDestinationCountry && !formValues.itemDestinationCountry.value) {
+            NewGcssInjectUtil.SwitchValue(formValues.itemDestinationCountry, postElement.Destination);
+        }
+
+        if (formValues.destinationPostcode && formValues.destinationPostcode.value === "-") {
+            NewGcssInjectUtil.SwitchValue(formValues.destinationPostcode, postElement.AddresseeZipcode);
+        }
+
+        applyPostElementValue([
+            [formValues.contents, postElement.Contents],
+            [formValues.addresseeName, postElement.AddresseeName],
+            [formValues.addresseeStreet, postElement.AddresseeAddress],
+            [formValues.addresseeTelephone, postElement.AddresseePhone],
+            [formValues.addresseePostcode, postElement.AddresseeZipcode],
+            [formValues.senderName, postElement.SenderName],
+            [formValues.senderStreet, postElement.SenderAddress],
+            [formValues.senderTelephone, postElement.SenderPhone],
+        ]);
+
+        const callCenterSelect = await tryGetSelect("messageRouting.receivingCallCenterUpuCode");
+
+        InjectUtil.wait(500).then(async () => {
+            document.querySelector(".overflow-auto")?.scrollTo({ behavior: "smooth", top: 200 });
+            if (callCenterSelect?.textContent === "Select Destination Call Center") {
+                await InjectUtil.wait(500);
+                simulateSelectClick(callCenterSelect);
+            }
+        });
+    }
+
+    function finalizeInjectRequestForm(perfMarks: PerformanceMark[]) {
         InjectUtil.wait(1000).then(() => {
             GcssLoadingMask.hideLoadingMask();
             perfMarks.push(performance.mark("End Loading Mask"));
@@ -428,34 +456,34 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
                 `[InjectRequestForm] Total injection time: ${(performance.now() - perfMarks[0].startTime).toFixed(2)}ms`,
             );
         });
-        if (await waitUntilRequestTypeChanged()) {
-            GcssLoadingMask.showLoadingMask();
-            console.log("Request type changed, reinjecting form with new request type conditions");
-            // if (thisForm.itemValue?.value === prefillData?.itemValue) {
-            //     console.log("Value reverted due to request type change, reinjecting converted values");
-            //     selectAutoCompleteOption(thisForm.itemValueCurrency!, prefillData?.itemValueCurrency || "USD");
-            // }
-            // if (thisForm.postagePaid?.value === prefillData?.postagePaid) {
-            //     console.log("Value reverted due to request type change, reinjecting converted values");
-            //     selectAutoCompleteOption(thisForm.postagePaidCurrency!, prefillData?.postagePaidCurrency || "KRW");
-            // }
-            // const monitorResponse = await new MSG(CMD.NEW_GCSS_MONITOR_PREFILL_REQUEST, formInfo.itemId!).getResponse();
-            // console.log("Monitor response received after request type change:", monitorResponse);
-            await InjectUtil.wait(1500);
-            await InjectRequestForm(postElement, prefillData);
-        }
     }
 
-    function fillBlankInputs(inputs: (HTMLInputElement | null | undefined)[] | HTMLInputElement | null | undefined) {
-        if (Array.isArray(inputs)) {
-            inputs.forEach((input) => {
-                if (input && !input.value) {
-                    input.value = "-";
-                }
-            });
-        } else if (inputs && !inputs.value) {
-            inputs.value = "-";
-        }
+    async function injectRequestForm(postElement: PostElement | null, prefillData: GcssPrefillObject | null) {
+        console.log("[InjectRequestForm] Injecting request form with post element:", postElement);
+        console.log("[InjectRequestForm] Injecting request form with prefill data:", prefillData);
+
+        const perfMarks: PerformanceMark[] = [];
+        perfMarks.push(performance.mark("Start Injecting"));
+
+        GcssLoadingMask.showLoadingMask();
+
+        const formInfo = getCurrentRequestInfo();
+        console.log("[InjectRequestForm] Current form info:", formInfo);
+
+        await getInput("itemOriginCountry", 50, 100); // Wait for form to load by checking the presence of a key input
+        perfMarks.push(performance.mark("Original Content Loaded"));
+        perfMarks.push(performance.mark("Start Finding Elements"));
+        const { formValues } = await resolveRequestFormElements(formInfo);
+
+        perfMarks.push(performance.mark("End Finding Elements"));
+
+        await applyRequestFormDefaults(formValues);
+
+        await injectValueInputs(formValues, prefillData || {});
+
+        await applyPostElementFormValues(formInfo, formValues, postElement);
+        perfMarks.push(performance.mark("Finished Injecting"));
+        finalizeInjectRequestForm(perfMarks);
     }
     function getInputByName(name: string) {
         return InjectUtil.TryQuerySelectFor<HTMLInputElement>(`input[name='${name}']`);
