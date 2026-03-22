@@ -1,3 +1,6 @@
+export const GCSS_API_BASE_URL = "https://gcss-uat.ipc.be/ui-gtw/api";
+export const GCSS_WEB_BASE_URL = "https://gcss-uat.ipc.be";
+
 // Type guard for GCSSMessage
 export function isGCSSMessage(obj: any): obj is GCSSMessage {
     return (
@@ -115,7 +118,7 @@ export class GCSSWorkflow extends GCSSMessageBase implements IGCSSWorkflow {
     qumCount!: number;
     qumrCount!: number;
     reactivationCount!: number;
-    messageLink: string = `https://gcss-uat.ipc.be/#/items/${this.itemId}?workflowId=${this.id}`;
+    messageLink: string = `${GCSS_WEB_BASE_URL}/#/items/${this.itemId}?workflowId=${this.id}`;
     isNotification(): this is GCSSNotification {
         return false;
     }
@@ -144,7 +147,7 @@ export class GCSSNotification extends GCSSMessageBase implements IGCSSNotificati
     ignored!: boolean;
     statusLabel!: string;
     reply!: null;
-    messageLink: string = `https://gcss-uat.ipc.be/#/items/${this.itemId}/inquiry/${this.id}`;
+    messageLink: string = `${GCSS_WEB_BASE_URL}/#/items/${this.itemId}/inquiry/${this.id}`;
     isNotification(): this is GCSSNotification {
         return true;
     }
@@ -230,12 +233,40 @@ export class GcssArray<T extends IGCSSBase> extends Array<T> {
         return new GcssArray(mapped);
     }
 }
+export interface GcssPrefillObject {
+    dateOfPosting?: string | null;
+    deliveryDate?: string | null;
+    contents?: string | null;
+    itemValue?: string | null;
+    itemValueCurrency?: string | null;
+    itemWeight?: string | null;
+    postagePaid?: string | null;
+    postagePaidCurrency?: string | null;
+    destinationPostcode?: string | null;
+
+    senderName?: string | null;
+    senderEmail?: string | null;
+    senderTelephone?: string | null;
+    senderProvince?: string | null;
+    senderStreet?: string | null;
+    senderCity?: string | null;
+    senderPostcode?: string | null;
+
+    addresseeName?: string | null;
+    addresseeEmail?: string | null;
+    addresseeTelephone?: string | null;
+    addresseeProvince?: string | null;
+    addresseeStreet?: string | null;
+    addresseeCity?: string | null;
+    addresseePostcode?: string | null;
+}
+
 export type GcssPrefillDataGroup = "ITEM_DETAILS" | "SENDER_DETAILS" | "ADDRESSEE_DETAILS";
 
 export interface GcssPrefillData {
     dataGroup: GcssPrefillDataGroup;
     name: string;
-    value: string | number | null;
+    value: string | null;
 }
 
 export interface GcssPrefillInquiryResponse {
@@ -247,5 +278,5 @@ export interface GcssPrefillInquiryResponse {
     inquirer: string | null;
     requestType: string | null;
     manualDespatchInfo: string | null;
-    prefillData: GcssPrefillData[];
+    dataElements: GcssPrefillData[];
 }

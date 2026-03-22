@@ -1,6 +1,5 @@
 import createNotification from "../../lib/Notification";
 import { PostAPI } from "../../lib/PostUtil";
-import { GcssPrefillInquiryResponse } from "../pending-replies/newGcssWrapper";
 import { PopupTracker } from "../serviceworker";
 import { CMD, MSG } from "./Message";
 
@@ -148,5 +147,18 @@ export default function ProcessMessage(
                 args: [Message.Param.fId, Message.Param.count, Message.Param.lastCount],
             });
             return false;
+        // case CMD.NEW_GCSS_MONITOR_PREFILL_REQUEST:
+        //     const prefillMonitor = (details: chrome.webRequest.OnCompletedDetails) => {
+        //         console.log("Prefill monitor triggered for: ", details.url);
+        //         if (details.statusCode === 200 && details.url.includes(Message.Param)) {
+        //             console.log("Prefill request successful for: ", details.url);
+        //             chrome.webRequest.onCompleted.removeListener(prefillMonitor);
+        //             SendResponse(true);
+        //         }
+        //     };
+        //     chrome.webRequest.onCompleted.addListener(prefillMonitor, {
+        //         urls: [GCSS_API_BASE_URL + "/*", GCSS_WEB_BASE_URL + "/*"],
+        //     });
+        //     return true;
     }
 }

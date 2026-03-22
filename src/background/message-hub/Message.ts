@@ -15,6 +15,7 @@ export enum CMD {
     NEW_GCSS_UNREAD_REQUESTS = "NEW_GCSS_UNREAD_REQUESTS",
     NEW_GCSS_UNREAD_NOTIF_INBOUND = "NEW_GCSS_UNREAD_NOTIF_INBOUND",
     NEW_GCSS_UNREAD_NOTIF_OUTBOUND = "NEW_GCSS_UNREAD_NOTIF_OUTBOUND",
+    NEW_GCSS_MONITOR_PREFILL_REQUEST = "NEW_GCSS_MONITOR_PREFILL_REQUEST",
     POPUP_TRACK_SET = "POPUP_TRACK_SET",
     SIDEPANEL_TRACK_REQUEST = "SIDEPANEL_TRACK_REQUEST",
     SAVE_ICARE_USER_ID = "SAVE_ICARE_USER_ID",
@@ -41,6 +42,10 @@ export class MSG {
             });
         });
     }
+    notifyHub(): Promise<any>{
+        return chrome.runtime.sendMessage(this);
+    }
+
 }
 export async function sendRequest<T>(message: MSG, param?: any): Promise<T>;
 export async function sendRequest(message: MSG, param?: any): Promise<any>;

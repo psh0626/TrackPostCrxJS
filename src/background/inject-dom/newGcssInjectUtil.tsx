@@ -58,3 +58,36 @@ export default class NewGcssInjectUtil {
         }
     }
 }
+
+export type ResolvedFormElements = {
+    [K in keyof FormElements]: Awaited<ReturnType<NonNullable<FormElements[K]>>>;
+};
+export interface FormElements {
+    itemDestinationCountry?: () => Promise<HTMLInputElement | null>;
+    contentType?: () => Promise<HTMLInputElement | null>;
+    itemType?: () => Promise<HTMLInputElement | null>;
+    physicalDescription?: () => Promise<HTMLInputElement | null>;
+    dateOfPosting?: () => Promise<HTMLInputElement | null>;
+    destinationPostcode?: () => Promise<HTMLInputElement | null>;
+    contents?: () => Promise<HTMLInputElement | null>;
+    itemWeight?: () => Promise<HTMLInputElement | null>;
+    itemValue?: () => Promise<HTMLInputElement | null>;
+    itemValueCurrency?: () => Promise<HTMLInputElement | null>;
+    postagePaid?: () => Promise<HTMLInputElement | null>;
+    postagePaidCurrency?: () => Promise<HTMLInputElement | null>;
+    indemnityAmount?: () => Promise<HTMLInputElement | null>;
+    indemnityAmountCurrency?: () => Promise<HTMLInputElement | null>;
+    podRequired?: () => Promise<HTMLInputElement | null>;
+    addresseeName?: () => Promise<HTMLInputElement | null>;
+    addresseeStreet?: () => Promise<HTMLInputElement | null>;
+    addresseePostcode?: () => Promise<HTMLInputElement | null>;
+    addresseeCity?: () => Promise<HTMLInputElement | null>;
+    addresseeTelephone?: () => Promise<HTMLInputElement | null>;
+    addresseeEmail?: () => Promise<HTMLInputElement | null>;
+    senderName?: () => Promise<HTMLInputElement | null>;
+    senderStreet?: () => Promise<HTMLInputElement | null>;
+    senderPostcode?: () => Promise<HTMLInputElement | null>;
+    senderCity?: () => Promise<HTMLInputElement | null>;
+    senderTelephone?: () => Promise<HTMLInputElement | null>;
+    senderEmail?: () => Promise<HTMLInputElement | null>;
+}

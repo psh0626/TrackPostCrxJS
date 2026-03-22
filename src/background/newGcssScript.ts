@@ -1,11 +1,11 @@
 import { IMICSettings } from "../lib/IMICSettings";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./inject-dom/injectUtil";
-import NewGcssInjectUtil from "./inject-dom/newGcssInjectUtil";
+import NewGcssInjectUtil, { FormElements, ResolvedFormElements } from "./inject-dom/newGcssInjectUtil";
 import newGcssInsertAuthorColumn from "./inject-dom/newGcssSumUtil";
 import { CMD, MSG } from "./message-hub/Message";
 import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
-import { GcssPrefillInquiryResponse } from "./pending-replies/newGcssWrapper";
+import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
 
 (async () => {
     console.log("Content script loaded at: " + document.readyState);
@@ -59,7 +59,12 @@ import { GcssPrefillInquiryResponse } from "./pending-replies/newGcssWrapper";
         const [isRequestingPage, requestLevel] = checkURLIfRequesting(url);
         if (isRequestingPage) {
             const itemId = url.pathname.replace("/items/", "");
-            let promises = await Promise.allSettled([fetchPostElement(itemId), waitUntilRequestTypeSelected()]);
+
+            let promises = await Promise.allSettled([
+                fetchPostElement(itemId),
+                GcssWorkflowService.fetchPrefillData(itemId),
+                waitUntilRequestTypeSelected(),
+            ]);
 
             if (promises.some((p) => p.status === "rejected")) {
                 console.error("One or more promises were rejected:", promises);
@@ -67,12 +72,16 @@ import { GcssPrefillInquiryResponse } from "./pending-replies/newGcssWrapper";
             }
 
             const postElement = promises[0].status === "fulfilled" ? promises[0].value : await fetchPostElement(itemId);
+            const prefillData =
+                promises[1].status === "fulfilled"
+                    ? promises[1].value
+                    : await GcssWorkflowService.fetchPrefillData(itemId);
 
-            if (!postElement) {
-                console.error("Failed to fetch post element for item ID:", itemId);
+            if (!postElement || !prefillData) {
+                console.error("Failed to fetch post element or prefill data for item ID:", itemId);
             }
 
-            await InjectRequestForm(postElement);
+            await InjectRequestForm(postElement, prefillData);
         } else if (url.pathname.includes("/update-messages/")) {
             await newGcssInsertAuthorColumn(url);
         }
@@ -107,7 +116,7 @@ import { GcssPrefillInquiryResponse } from "./pending-replies/newGcssWrapper";
         return postElement;
     }
 
-    async function waitUntilRequestTypeSelected(detectChange: boolean = false): Promise<void> {
+    async function waitUntilRequestTypeSelected(): Promise<void> {
         const requestType = await InjectUtil.TryQuerySelectFor<HTMLInputElement>(
             "input[aria-labelledby='requestType']",
         );
@@ -145,32 +154,28 @@ import { GcssPrefillInquiryResponse } from "./pending-replies/newGcssWrapper";
         };
         return form;
     }
-    async function InjectRequestForm(postElement: PostElement | null) {
+    async function InjectRequestForm(postElement: PostElement | null, prefillData: GcssPrefillObject | null) {
+        console.log("[InjectRequestForm] Injecting request form with post element:", postElement);
+        console.log("[InjectRequestForm] Injecting request form with prefill data:", prefillData);
+
         const perfMarks: PerformanceMark[] = [];
         perfMarks.push(performance.mark("Start Injecting"));
 
         ShowLoadingMask();
 
-        console.log("[InjectRequestForm] Injecting request form with post element:", postElement);
         const formInfo = getCurrentRequestInfo();
         console.log("[InjectRequestForm] Current form info:", formInfo);
-        const prefillResponse = await new MSG(
-            CMD.NEW_GCSS_PREFILL,
-            formInfo.itemId,
-        ).getResponse<GcssPrefillInquiryResponse>();
 
         await getInput("itemOriginCountry", 50, 100); // Wait for form to load by checking the presence of a key input
         perfMarks.push(performance.mark("Original Content Loaded"));
 
-        const elements = {
+        const elements: FormElements = {
             itemDestinationCountry: () => getInput("itemDestinationCountry"),
             contentType: () => getInput("itemDetails.contentType"),
             itemType: () => getInput("itemDetails.itemType"),
-
             physicalDescription: () => getInput("itemDetails.physicalDescription"),
             dateOfPosting: () => getInput("itemDetails.dateOfPosting"),
             destinationPostcode: () => getInput("itemDetails.destinationPostcode"),
-
             contents: () => getInput("itemDetails.contents"),
             itemWeight: () => getInput("itemDetails.itemWeight"),
             itemValue: () => getInput("itemDetails.itemValue"),
@@ -180,14 +185,12 @@ import { GcssPrefillInquiryResponse } from "./pending-replies/newGcssWrapper";
             indemnityAmount: () => getInput("itemDetails.indemnityAmount"),
             indemnityAmountCurrency: () => getInput("itemDetails.indemnityAmountCurrency"),
             podRequired: () => getInputByName("itemDetails.podRequired"),
-
             addresseeName: () => getInput("addresseeDetails.addresseeName"),
             addresseeStreet: () => getInput("addresseeDetails.addresseeStreet"),
             addresseePostcode: () => getInput("addresseeDetails.addresseePostcode"),
             addresseeCity: () => getInput("addresseeDetails.addresseeCity"),
             addresseeTelephone: () => getInput("addresseeDetails.addresseeTelephone"),
             addresseeEmail: () => getInput("addresseeDetails.addresseeEmail"),
-
             senderName: () => getInput("senderDetails.senderName"),
             senderStreet: () => getInput("senderDetails.senderStreet"),
             senderPostcode: () => getInput("senderDetails.senderPostcode"),
@@ -230,7 +233,7 @@ import { GcssPrefillInquiryResponse } from "./pending-replies/newGcssWrapper";
             },
             {
                 condition: () => formInfo.level === "L1Q" && formInfo.requestType?.includes("RETURN"),
-                elements: ["senderTelephone", "senderEmail"] as const,
+                elements: ["contentType", "senderTelephone", "senderEmail"] as const,
             },
             {
                 condition: () => formInfo.level === "L1Q" && formInfo.requestType?.includes("WPOD"),
@@ -320,39 +323,12 @@ import { GcssPrefillInquiryResponse } from "./pending-replies/newGcssWrapper";
         if (thisForm.itemWeight && !thisForm.itemWeight.value) {
             thisForm.itemWeight.value = "0.00";
         }
-        const oldValues = {
-            itemValue: thisForm.itemValue?.value,
-            postagePaid: thisForm.postagePaid?.value,
-            itemValueCurrency: thisForm.itemValueCurrency?.value,
-            postagePaidCurrency: thisForm.postagePaidCurrency?.value,
-        };
-        // TODO: 걍 fetch로 초기값 가져와서 설정할 것, 그리고 아래거 분리해서 await해야함 indemnity때매
-        if (thisForm.itemValue && thisForm.itemValueCurrency?.value !== "SDR") {
-            oldValues.itemValue = thisForm.itemValue.value;
-            oldValues.itemValueCurrency = thisForm.itemValueCurrency!.value;
-            ExchangeRateUtil.injectConvertedValue(thisForm.itemValue, thisForm.itemValueCurrency!);
-        }
-        if (thisForm.postagePaid && parseFloat(thisForm.postagePaid.value) > 1000) {
-            selectAutoCompleteOption(thisForm.postagePaidCurrency!, "KRW");
-        }
-        if (thisForm.postagePaid && thisForm.postagePaidCurrency?.value !== "SDR") {
-            oldValues.postagePaid = thisForm.postagePaid.value;
-            oldValues.postagePaidCurrency = thisForm.postagePaidCurrency!.value;
-            ExchangeRateUtil.injectConvertedValue(thisForm.postagePaid, thisForm.postagePaidCurrency!);
-        }
-        if (thisForm.indemnityAmount && !thisForm.indemnityAmount.value) {
-            const indemnityValue = parseFloat(thisForm.itemValue!.value) + parseFloat(thisForm.postagePaid!.value);
-            NewGcssInjectUtil.SwitchValueForCurrency(
-                thisForm.indemnityAmount!,
-                thisForm.indemnityAmountCurrency!,
-                indemnityValue.toString(),
-            );
-            thisForm.indemnityAmount.value = indemnityValue.toString();
-            selectAutoCompleteOption(thisForm.indemnityAmountCurrency!, "SDR");
-        }
+
         if (thisForm.podRequired && thisForm.podRequired.checked === false) {
             thisForm.podRequired.parentElement?.click();
         }
+
+        await injectValueInputs(thisForm, prefillData || {});
 
         if (formInfo.level !== "L1Q") {
             InjectUtil.wait(500).then(async () => {
@@ -431,16 +407,18 @@ import { GcssPrefillInquiryResponse } from "./pending-replies/newGcssWrapper";
         if (await waitUntilRequestTypeChanged()) {
             ShowLoadingMask();
             console.log("Request type changed, reinjecting form with new request type conditions");
-            if (thisForm.itemValue?.value === oldValues.itemValue) {
-                console.log("Value reverted due to request type change, reinjecting converted values");
-                selectAutoCompleteOption(thisForm.itemValueCurrency!, oldValues.itemValueCurrency || "USD");
-            }
-            if (thisForm.postagePaid?.value === oldValues.postagePaid) {
-                console.log("Value reverted due to request type change, reinjecting converted values");
-                selectAutoCompleteOption(thisForm.postagePaidCurrency!, oldValues.postagePaidCurrency || "KRW");
-            }
-            await InjectUtil.wait(1800);
-            await InjectRequestForm(postElement);
+            // if (thisForm.itemValue?.value === prefillData?.itemValue) {
+            //     console.log("Value reverted due to request type change, reinjecting converted values");
+            //     selectAutoCompleteOption(thisForm.itemValueCurrency!, prefillData?.itemValueCurrency || "USD");
+            // }
+            // if (thisForm.postagePaid?.value === prefillData?.postagePaid) {
+            //     console.log("Value reverted due to request type change, reinjecting converted values");
+            //     selectAutoCompleteOption(thisForm.postagePaidCurrency!, prefillData?.postagePaidCurrency || "KRW");
+            // }
+            // const monitorResponse = await new MSG(CMD.NEW_GCSS_MONITOR_PREFILL_REQUEST, formInfo.itemId!).getResponse();
+            // console.log("Monitor response received after request type change:", monitorResponse);
+            await InjectUtil.wait(1500);
+            await InjectRequestForm(postElement, prefillData);
         }
     }
     function injectLoadingMask() {
@@ -475,9 +453,9 @@ import { GcssPrefillInquiryResponse } from "./pending-replies/newGcssWrapper";
     function ShowLoadingMask() {
         const mask = injectLoadingMask();
         mask.style.opacity = "1";
-        InjectUtil.wait(5000).then(() => {
-            mask.style.opacity = "0";
-        });
+        // InjectUtil.wait(5000).then(() => {
+        //     mask.style.opacity = "0";
+        // });
     }
     function hideLoadingMask() {
         const mask = injectLoadingMask();
@@ -587,52 +565,96 @@ import { GcssPrefillInquiryResponse } from "./pending-replies/newGcssWrapper";
             const calcValue = this.convert(inputValue, currency, "SDR");
             return Math.ceil(calcValue).toString();
         }
-        static async injectConvertedValue(input: HTMLInputElement, currency: HTMLInputElement) {
-            if (!input || !currency) {
-                console.log("Input or currency element not found, cannot inject converted value.");
+        static async injectConvertedValue(
+            targetElements: { valueInput: HTMLInputElement; currencyInput: HTMLInputElement },
+            prefill?: { value?: string; currency?: string },
+        ) {
+            const { valueInput, currencyInput } = targetElements;
+            if (!valueInput || !currencyInput) {
+                console.log("Value or currency element not found, cannot inject converted value.");
                 return;
             }
-            const sdrValue = this.calculateSDR(input.value, currency.value);
-            const oldValue = input.value;
-            const oldCurrency = currency.value;
-            const inputLabel = input.getAttribute("aria-labelledby");
-            const currencyLabel = currency.getAttribute("aria-labelledby");
-            NewGcssInjectUtil.SwitchValueForCurrency(input, currency, sdrValue);
+
+            if (!valueInput.value && prefill?.value) {
+                valueInput.value = prefill.value;
+            }
+            if (!currencyInput.value && prefill?.currency) {
+                await selectAutoCompleteOption(currencyInput, prefill.currency);
+            }
+
+            const sdrValue = this.calculateSDR(
+                prefill?.value || valueInput.value,
+                prefill?.currency || currencyInput.value,
+            );
+            const inputLabel = valueInput.getAttribute("aria-labelledby")?.replaceAll(".", "-");
+            const currencyLabel = currencyInput.getAttribute("aria-labelledby")?.replaceAll(".", "-");
+
+            NewGcssInjectUtil.SwitchValueForCurrency(valueInput, currencyInput, sdrValue);
 
             // Retry setting value until it sticks
             for (let i = 0; i < 5; i++) {
-                input.value = sdrValue;
-                await InjectUtil.wait(400);
-                if (input.value === sdrValue) break;
+                valueInput.value = sdrValue;
+                await InjectUtil.wait(100);
+                if (valueInput.value === sdrValue) break;
             }
 
-            if (!document.querySelector("#IMIC-" + inputLabel?.replaceAll(".", "-"))) {
-                console.log("[injectConvertedValue] Tooltip element not found for input:", inputLabel);
-                await InjectUtil.wait(1200);
-                const [newInput, newCurrency] = await Promise.all([getInput(inputLabel!), getInput(currencyLabel!)]);
-                this.injectConvertedValue(newInput!, newCurrency!);
-                return;
-            }
+            // if (!document.querySelector("#IMIC-" + inputLabel)) {
+            //     console.log("[injectConvertedValue] Tooltip element not found for input:", inputLabel);
+            //     await InjectUtil.wait(1200);
+            //     const [newInput, newCurrency] = await Promise.all([getInput(inputLabel!), getInput(currencyLabel!)]);
+            //     this.injectConvertedValue({ valueInput: newInput!, currencyInput: newCurrency! }, prefill);
+            //     return;
+            // }
 
-            await selectAutoCompleteOption(currency, "SDR");
+            await selectAutoCompleteOption(currencyInput, "SDR");
+        }
+    }
 
-            // Handle value reversion on request type change
-            // waitUntilRequestTypeChanged().then(async () => {
-            //     ShowLoadingMask();
-            //     // const valueWasReverted = input.value === oldValue;
-            //     // if (!valueWasReverted) return;
+    async function injectValueInputs(
+        thisForm: Partial<ResolvedFormElements>,
+        prefillValues: Partial<GcssPrefillObject>,
+    ) {
+        const promises = [];
+        if (thisForm.itemValue && thisForm.itemValueCurrency) {
+            const targetInputs = {
+                valueInput: thisForm.itemValue,
+                currencyInput: thisForm.itemValueCurrency!,
+            } as const;
+            const targetPrefill = {
+                value: prefillValues.itemValue || undefined,
+                currency: prefillValues.itemValueCurrency || undefined,
+            } as const;
+            const itemValuePromise = ExchangeRateUtil.injectConvertedValue(targetInputs, targetPrefill);
+            promises.push(itemValuePromise);
+        }
+        if (thisForm.postagePaid && thisForm.postagePaidCurrency) {
+            const targetInputs = {
+                valueInput: thisForm.postagePaid,
+                currencyInput: thisForm.postagePaidCurrency,
+            } as const;
+            const targetPrefill = {
+                value: prefillValues.postagePaid || undefined,
+                currency: prefillValues.postagePaidCurrency || undefined,
+            } as const;
+            const postagePaidPromise = ExchangeRateUtil.injectConvertedValue(targetInputs, targetPrefill);
+            promises.push(postagePaidPromise);
+        }
+        const perfStart = performance.now();
+        await Promise.all(promises);
+        const perfDuration = performance.now() - perfStart;
+        if (perfDuration > 1000) {
+            console.log(`[injectValueInputs] Injecting converted values took ${perfDuration.toFixed(2)}ms`);
+        }
 
-            //     selectAutoCompleteOption(currency, oldCurrency);
-            //     if (inputLabel === "itemDetails.postagePaid") {
-            //         await InjectUtil.wait(1700);
-            //         console.log("Postage paid value reverted, re-injecting converted value...");
-            //         const [newPostageInput, newCurrency] = await Promise.all([
-            //             getInput("itemDetails.postagePaid"),
-            //             getInput("itemDetails.postagePaidCurrency"),
-            //         ]);
-            //         this.injectConvertedValue(newPostageInput!, newCurrency!);
-            //     }
-            // });
+        if (thisForm.indemnityAmount && !thisForm.indemnityAmount.value) {
+            const indemnityValue = parseFloat(thisForm.itemValue!.value) + parseFloat(thisForm.postagePaid!.value);
+            NewGcssInjectUtil.SwitchValueForCurrency(
+                thisForm.indemnityAmount!,
+                thisForm.indemnityAmountCurrency!,
+                indemnityValue.toString(),
+            );
+            thisForm.indemnityAmount.value = indemnityValue.toString();
+            selectAutoCompleteOption(thisForm.indemnityAmountCurrency!, "SDR");
         }
     }
 })();

@@ -1,6 +1,14 @@
 import { IMICSettings } from "../../lib/IMICSettings";
 import { CMD, MSG } from "../message-hub/Message";
-import { GcssArray, IGCSSNotification, IGCSSWorkflow } from "./newGcssWrapper";
+import {
+    GCSS_API_BASE_URL,
+    GcssArray,
+    GcssPrefillData,
+    GcssPrefillInquiryResponse,
+    GcssPrefillObject,
+    IGCSSNotification,
+    IGCSSWorkflow,
+} from "./newGcssWrapper";
 
 type WorkflowView = "TODOS" | "REQUEST_SENT" | "REPLY_SENT" | "REPLY_RECEIVED";
 type NotificationView = "SENT" | "RECEIVED";
@@ -11,8 +19,8 @@ type ViewType = WorkflowViewType | NotificationViewType;
 const workflow = (view: WorkflowView) => ({ type: "workflows", view }) as WorkflowViewType;
 const notification = (view: NotificationView) => ({ type: "notifications", view }) as NotificationViewType;
 class GcssClient {
-    private baseUrl = "https://gcss-uat.ipc.be/ui-gtw/api/";
-    private defaultParams = {
+    private readonly baseUrl = GCSS_API_BASE_URL;
+    private readonly defaultParams = {
         products: "EMS,EXPRES,REG,INS,UPU,PREMIUM,STAND2,STAND30",
         sort_by: "CREATION_DATE",
         sort_direction: "DESC",
@@ -30,7 +38,7 @@ class GcssClient {
     ): Promise<GcssArray<IGCSSNotification>>;
     async getMessages(viewType: ViewType, params: Partial<typeof this.defaultParams> = {}) {
         const endpoint = viewType.type;
-        const url = new URL(this.baseUrl + endpoint + "?");
+        const url = new URL(this.baseUrl + "/" + endpoint + "?");
 
         url.searchParams.append("view", viewType.view);
 
@@ -40,12 +48,24 @@ class GcssClient {
         });
 
         const response = await fetch(url.toString()).then((res) => res.json());
-        console.log(`GCSS ${endpoint.toUpperCase()} ${viewType.view} fetched: `, response);
+        console.log(`[GcssClient] GCSS ${endpoint.toUpperCase()} ${viewType.view} fetched: `, response);
         if (response.totalResults < 1) {
             console.log("No data found.");
             return new GcssArray();
         }
         return new GcssArray(response.data);
+    }
+    async getPrefillData(itemId: string): Promise<Array<GcssPrefillData> | null> {
+        const url = this.baseUrl + "/prefill-inquiries/item-events/" + itemId;
+
+        const responseData = await fetch(url).then((res) => {
+            if (res.status !== 200) {
+                return null;
+            }
+            return res.json() as Promise<GcssPrefillInquiryResponse>;
+        });
+        console.log(`[GcssClient] GCSS Prefill data fetched for item ${itemId}: `, responseData);
+        return responseData?.dataElements || null;
     }
 }
 export class GcssWorkflowService {
@@ -66,7 +86,7 @@ export class GcssWorkflowService {
                 .filterUnread()
                 .mapToGcssWorkflow();
 
-            messages.push(this.notifyMessageHub(CMD.NEW_GCSS_UNREAD_REQUESTS, filteredWorkflows));
+            messages.push(new MSG(CMD.NEW_GCSS_UNREAD_REQUESTS, filteredWorkflows).notifyHub());
         }
 
         if (this.settings.GcssUnreadReplies) {
@@ -83,7 +103,7 @@ export class GcssWorkflowService {
                 .filterUnread()
                 .mapToGcssWorkflow();
 
-            messages.push(this.notifyMessageHub(CMD.NEW_GCSS_UNREAD_REPLIES, filteredWorkflows));
+            messages.push(new MSG(CMD.NEW_GCSS_UNREAD_REPLIES, filteredWorkflows).notifyHub());
         }
 
         if (this.settings.GcssUnreadNotificationInbound || this.settings.GcssUnreadNotificationOutbound) {
@@ -91,7 +111,7 @@ export class GcssWorkflowService {
 
             if (this.settings.GcssUnreadNotificationInbound) {
                 const inbound = notifications.filterInbound().mapToGcssNotification();
-                messages.push(this.notifyMessageHub(CMD.NEW_GCSS_UNREAD_NOTIF_INBOUND, inbound));
+                messages.push(new MSG(CMD.NEW_GCSS_UNREAD_NOTIF_INBOUND, inbound).notifyHub());
             }
             if (this.settings.GcssUnreadNotificationOutbound) {
                 const outbound = notifications
@@ -99,7 +119,7 @@ export class GcssWorkflowService {
                     .filterOutboundByCountries(this.settings.GcssOutboundNotificationCountries)
                     .filterOutboundExcludeCountries(this.settings.GcssOutboundNotificationExcludedCountries)
                     .mapToGcssNotification();
-                messages.push(this.notifyMessageHub(CMD.NEW_GCSS_UNREAD_NOTIF_OUTBOUND, outbound));
+                messages.push(new MSG(CMD.NEW_GCSS_UNREAD_NOTIF_OUTBOUND, outbound).notifyHub());
             }
         }
 
@@ -107,7 +127,18 @@ export class GcssWorkflowService {
             await Promise.all(messages);
         }
     }
-    private static async notifyMessageHub(messageType: CMD, workflows: IGCSSWorkflow[] | IGCSSNotification[]) {
-        return chrome.runtime.sendMessage(new MSG(messageType, workflows));
+    static async fetchPrefillData(itemId: string): Promise<GcssPrefillObject | null> {
+        const prefillObj = await this.client.getPrefillData(itemId).then((prefillData) => {
+            if (!prefillData) {
+                console.log(`[GcssWorkflowService] No prefill data found for item ${itemId}`);
+                return null;
+            }
+            const obj: GcssPrefillObject = {};
+            prefillData.forEach((data) => {
+                if (data && data.name) obj[data.name as keyof GcssPrefillObject] = data.value;
+            });
+            return obj;
+        });
+        return prefillObj;
     }
 }
