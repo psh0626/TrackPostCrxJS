@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
 import { CheckCircle } from "@mui/icons-material";
-import { Grid } from "@mui/material";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -145,7 +144,7 @@ function PopUpApp() {
 
     // Helper for empty state
     const renderEmpty = (msg: string) => (
-        <Typography width="120px" variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
+        <Typography variant="subtitle2" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
             <CheckCircle fontSize="small" color="info" sx={{ verticalAlign: "middle", mr: 0.5 }} />
             {msg}
         </Typography>
@@ -501,13 +500,37 @@ function PopUpApp() {
                     </Typography>
                 </Divider>
             ) : null}
-            <Stack direction="row" justifyContent="center">
-                <Grid container width="256px" rowSpacing={0.5} columnSpacing={2} justifyContent="start">
-                    {renderOrder.map((item, idx) => {
-                        if (item.count > 0) return null;
-                        return item.render();
-                    })}
-                </Grid>
+            <Stack direction="row" width="100%" justifyContent="center" sx={{ alignSelf: "center" }}>
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gridColumnGap: "18px",
+                        width: "fit-content",
+                        rowGap: "5px",
+                        columnGap: "15px",
+                    }}
+                >
+                    {renderOrder
+                        .filter((item) => item.count < 1 && item.render() !== null)
+                        .map((item, idx, arr) => {
+                            const content = item.render();
+                            return (
+                                <div
+                                    key={idx}
+                                    data-idx={`idx-${idx}`}
+                                    style={{
+                                        gridColumn:
+                                            (idx === arr.length - 1 && idx % 2 === 0) || arr.length === 1
+                                                ? "span 2"
+                                                : "span 1",
+                                    }}
+                                >
+                                    {content}
+                                </div>
+                            );
+                        })}
+                </div>
             </Stack>
         </Stack>
     );

@@ -1,7 +1,6 @@
 import { requestFetch } from "../lib/findTabs";
 import createNotification, { getStorageItems } from "../lib/Notification";
 import PopupTrack from "../lib/PopupTrack";
-import "../lib/timespanExtension";
 import { time } from "../lib/timespanExtension";
 import { CMD, MSG } from "./message-hub/Message";
 import ProcessMessage from "./message-hub/MessageHub";
