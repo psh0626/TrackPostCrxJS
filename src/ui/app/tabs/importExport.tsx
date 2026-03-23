@@ -35,13 +35,14 @@ export const ImportExport: React.FC<ImportExportProps> = ({ settings }) => {
         const files = e.target.files;
         if (!files) return;
         const reader = new FileReader();
-        reader.onload = function _imp() {
+        reader.onload = async function _imp() {
             try {
                 const _myImportedData = JSON.parse(this.result as string) as IMICSettings;
                 console.log("Importing data: ", _myImportedData);
                 Object.assign(settings.current, _myImportedData);
-                void settings.current.saveOptions();
+                await settings.current.saveOptions();
                 alert("설정 불러오기 성공!");
+                location.reload();
             } catch (e) {
                 console.error(e);
                 alert("설정 불러오기 실패, 개발자와 확인하세요.");

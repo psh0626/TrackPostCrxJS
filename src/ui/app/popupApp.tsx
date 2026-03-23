@@ -515,7 +515,7 @@ function PopUpApp() {
                         .filter((item) => item.count < 1 && item.render() !== null)
                         .map((item, idx, arr) => {
                             const content = item.render();
-                            const isLastSingle = (idx === arr.length - 1 && item.count < 1) || arr.length === 1;
+                            const isLastSingle = (idx === arr.length - 1 && idx % 2 === 0) || arr.length === 1;
                             return (
                                 <div
                                     key={idx}

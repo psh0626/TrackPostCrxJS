@@ -73,7 +73,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
     const [weekpickerForIcare, setWeekpickerForIcare] = useState(true);
     const [weekpickerEnabled, setWeekpickerEnabled] = useState(false);
     const initialized = useRef(false);
-
+    // TODO: 엘리먼트 부분 더 모듈화 필요, GCSS iCare 설정 순서 바꾸고, 환율 설정 기능 추가하기
     useEffect(() => {
         if (!initialized.current) {
             const curSet = settings.current;
