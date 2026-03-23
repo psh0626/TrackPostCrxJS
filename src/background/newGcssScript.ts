@@ -55,13 +55,14 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
     })();
 
     async function injectBasedOnURL(url: URL) {
-        if (!url.searchParams.has("form")) {
-            console.log("[injectBasedOnURL] Left form page, resetting injection lock");
-            isInjecting = false;
+        if (isInjecting) {
+            if (!url.searchParams.has("form")) {
+                console.log("[injectBasedOnURL] Left form page, resetting injection lock");
+                isInjecting = false;
+            } else return;
         }
-        if (isInjecting) return;
         isInjecting = true;
-        const [isRequestingPage, requestLevel] = checkURLIfRequesting(url);
+        const isRequestingPage = checkURLIfRequesting(url);
         if (isRequestingPage) {
             const itemId = url.pathname.replace("/items/", "").split("/")[0];
 
@@ -110,9 +111,9 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
         const formParam = url.searchParams.get("form")!;
         if (/(L\d\d?Q)/.test(formParam)) {
             console.log("Request form detected:", formParam);
-            return [true, formParam] as const;
+            return true as const;
         }
-        return [false, null] as const;
+        return false as const;
     }
 
     async function fetchPostElement(itemId: string): Promise<PostElement | null> {

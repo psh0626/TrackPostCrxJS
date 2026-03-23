@@ -1,25 +1,81 @@
 import { Margin } from "@mui/icons-material";
-import { Button, Input, Paper, Stack, styled, Typography } from "@mui/material";
-import { PickersDayProps, PickersDay, DateCalendar } from "@mui/x-date-pickers";
-import { Dayjs } from "dayjs";
+import { Button, IconButton, Input, Paper, Stack, styled, Typography } from "@mui/material";
+import { PickersDayProps, PickersDay, DateCalendar, DateRangeIcon } from "@mui/x-date-pickers";
+import dayjs, { Dayjs } from "dayjs";
 import React, { useEffect, useMemo, useState } from "react";
 
+export interface DatePickButtonProps {
+    service: "iCare" | "GCSS";
+}
+
+interface DatePickToggleButtonProps extends DatePickButtonProps {
+    weekpickerEnabled: boolean;
+    weekpickerForIcare: boolean;
+    icareOutboundEnabled: boolean;
+    gcssOutboundEnabled: boolean;
+    setWeekpickerEnabled: (enabled: boolean) => void;
+    showWeekpicker: (service: "iCare" | "GCSS") => void;
+}
+
+export const DatePickToggleButton: React.FC<DatePickToggleButtonProps> = ({
+    service,
+    weekpickerEnabled,
+    weekpickerForIcare,
+    icareOutboundEnabled,
+    gcssOutboundEnabled,
+    setWeekpickerEnabled,
+    showWeekpicker,
+}) => {
+    if ((service === "iCare" && icareOutboundEnabled) || (service === "GCSS" && gcssOutboundEnabled)) {
+        return (
+            <IconButton
+                aria-label=""
+                sx={{ transform: "scale(0.9)" }}
+                onClick={() => {
+                    if (weekpickerEnabled) {
+                        if ((service === "iCare" && weekpickerForIcare) || (service === "GCSS" && !weekpickerForIcare))
+                            setWeekpickerEnabled(false);
+                        else showWeekpicker(service);
+                    } else showWeekpicker(service);
+                }}
+            >
+                <DateRangeIcon />
+            </IconButton>
+        );
+    }
+    return null;
+};
+
+export interface WeekPickerOverlayProps {
+    weekpickerEnabled: boolean;
+    weekpickerForIcare: boolean;
+    icareOutboundEnabled: boolean;
+    gcssOutboundEnabled: boolean;
+    icareOutboundDate: string | null;
+    gcssOutboundDate: string | null;
+    onIcareDateChange: (date: string | null) => void;
+    onGcssDateChange: (date: string | null) => void;
+    onSave: () => void;
+    onCancel: () => void;
+    onReset: (forIcare: boolean) => void;
+}
+
 interface CustomPickerDayProps extends PickersDayProps {
-    isSelected: boolean;
-    isHovered: boolean;
+    isselected: boolean;
+    ishovered: boolean;
 }
 
 const CustomPickersDay = styled(PickersDay)<CustomPickerDayProps>(
-    ({ theme, isSelected, isHovered, day }) => ({
+    ({ theme, isselected, ishovered, day }) => ({
         borderRadius: 0,
-        ...(isSelected && {
+        ...(isselected && {
             backgroundColor: theme.palette.primary.main,
             color: theme.palette.primary.contrastText,
             "&:hover, &:focus": {
                 backgroundColor: theme.palette.primary.main,
             },
         }),
-        ...(isHovered && {
+        ...(ishovered && {
             backgroundColor: theme.palette.primary.light,
             "&:hover, &:focus": {
                 backgroundColor: theme.palette.primary.light,
@@ -67,8 +123,8 @@ function Day(
             sx={{ px: 2.5 }}
             disableMargin
             selected={false}
-            isSelected={isInSameWeek(day, selectedDay)}
-            isHovered={isInSameWeek(day, hoveredDay)}
+            isselected={isInSameWeek(day, selectedDay)}
+            ishovered={isInSameWeek(day, hoveredDay)}
         />
     );
 }

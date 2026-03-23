@@ -22,9 +22,9 @@ export default class ExchangeRateUtil {
         const toRate = this.getRate(toCurrency);
         return (amount * fromRate) / toRate;
     }
-    static calculateSDR(input: string, currency: string) {
-        const inputValue = parseFloat(input || "0");
-        const calcValue = this.convert(inputValue, currency, "SDR");
+    static calculateSDR(value: string | number, currency: string) {
+        const inputValue = parseFloat(value?.toString() || "0");
+        const calcValue = this.convert(inputValue, currency?.toString() || "USD", "SDR");
         return Math.ceil(calcValue).toString();
     }
 }

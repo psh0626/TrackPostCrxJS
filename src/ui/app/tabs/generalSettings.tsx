@@ -1,20 +1,20 @@
 import { SubdirectoryArrowRight } from "@mui/icons-material";
-import { Checkbox, Divider, FormControlLabel, IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Checkbox, Divider, FormControlLabel, Paper, Stack, TextField, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import { DateRangeIcon } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import React, { useEffect, useRef, useState } from "react";
 import { ServiceTypes } from "../../../background/pending-replies/gcssReplies";
 import { IMICSettings } from "../../../lib/IMICSettings";
 import { CountryInput } from "../../components/components";
-import { WeekPicker } from "../../components/weekPicker";
+import {
+    DatePickButtonProps,
+    DatePickToggleButton,
+    WeekPicker,
+    WeekPickerOverlayProps,
+} from "../../components/weekPicker";
 
 interface GeneralSettingsProps {
     settings: React.RefObject<IMICSettings>;
-}
-
-interface DatePickButtonProps {
-    service: "iCare" | "GCSS";
 }
 
 const NotificationSettings: React.FC<{
@@ -46,6 +46,72 @@ const AuthorInput: React.FC<{
     </Stack>
 );
 
+const AuthorHelpText: React.FC = () => (
+    <Typography textAlign="end" fontWeight={100} sx={{ mt: 2 }} variant="subtitle2">
+        * 대소문자 구분 없음 <br />* 일부만 입력 가능 (예: Sunghoon Park -{">"} sung) <br />* 여러명 입력 가능 (예:
+        sung, mi, kim) <br />
+    </Typography>
+);
+
+interface InboundNotifSettingProps {
+    label: string;
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+}
+
+const InboundNotifSetting: React.FC<InboundNotifSettingProps> = ({ label, checked, onChange }) => (
+    <FormControlLabel
+        sx={{ transform: "scale(0.9)", ml: "10px" }}
+        label={label}
+        control={
+            <Stack direction="row" alignItems="center">
+                <SubdirectoryArrowRight sx={{ paddingBottom: 1 }} />
+                <Checkbox checked={checked} onChange={(e, c) => onChange(c)} color="error" />
+            </Stack>
+        }
+    />
+);
+
+interface OutboundNotifSettingProps {
+    label: string;
+    checked: boolean;
+    service: "iCare" | "GCSS";
+    onChange: (checked: boolean) => void;
+    DatePickButton: React.FC<DatePickButtonProps>;
+    children?: React.ReactNode;
+}
+
+const OutboundNotifSetting: React.FC<OutboundNotifSettingProps> = ({
+    label,
+    checked,
+    service,
+    onChange,
+    DatePickButton,
+    children,
+}) => (
+    <Stack>
+        <Stack direction="row">
+            <FormControlLabel
+                sx={{ transform: "scale(0.9)", letterSpacing: "-1px" }}
+                label={label}
+                control={
+                    <Stack direction="row" alignItems="center">
+                        <SubdirectoryArrowRight
+                            sx={{
+                                marginLeft: 0.5,
+                                paddingBottom: 1,
+                            }}
+                        />
+                        <Checkbox checked={checked} onChange={(e, c) => onChange(c)} color="error" />
+                    </Stack>
+                }
+            />
+            <DatePickButton service={service} />
+        </Stack>
+        {checked && children}
+    </Stack>
+);
+
 const CountrySettings: React.FC<{
     countries: string[];
     excludedCountries: string[];
@@ -66,6 +132,350 @@ const CountrySettings: React.FC<{
     </Stack>
 );
 
+type UpdateSettingFn = <K extends keyof IMICSettings>(key: K, value: IMICSettings[K]) => void;
+type UpdateAuthorRawFn = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, isGcss?: boolean) => void;
+
+interface IcareSectionProps {
+    settingsState: IMICSettings;
+    icareAuthorRaw: string;
+    updateSetting: UpdateSettingFn;
+    updateAuthorRaw: UpdateAuthorRawFn;
+    setIcareAuthorRaw: React.Dispatch<React.SetStateAction<string>>;
+    resetWeekpicker: (forIcare?: boolean, closePicker?: boolean) => Promise<void>;
+    DatePickButton: React.FC<DatePickButtonProps>;
+}
+const SectionCard: React.FC<{
+    children?: React.ReactNode;
+    sx?: React.CSSProperties | object;
+}> = ({ children, sx }) => <Paper sx={{ p: 3, pl: 4, pt: 4, width: "510px", ...sx }}>{children}</Paper>;
+const IcareSection: React.FC<IcareSectionProps> = ({
+    settingsState,
+    icareAuthorRaw,
+    updateSetting,
+    updateAuthorRaw,
+    setIcareAuthorRaw,
+    resetWeekpicker,
+    DatePickButton,
+}) => (
+    <SectionCard>
+        <Grid container width="100%" rowSpacing={1}>
+            <Grid size={{ xs: 12 }}>
+                <Typography variant="h5" fontWeight={100}>
+                    iCare
+                </Typography>
+                <Divider sx={{ mt: 1, mb: 2 }} />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+                <NotificationSettings
+                    label="iCare 도착 문의 알림"
+                    checked={settingsState.IcareUnreadRequests}
+                    onChange={(c) => {
+                        updateSetting("IcareUnreadRequests", c);
+                        if (!c) updateSetting("IcareUnreadNotificationInbound", false);
+                    }}
+                    subSettings={
+                        <InboundNotifSetting
+                            label="도착 통지 알림"
+                            checked={settingsState.IcareUnreadNotificationInbound}
+                            onChange={(c) => updateSetting("IcareUnreadNotificationInbound", c)}
+                        />
+                    }
+                />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+                <NotificationSettings
+                    label="iCare 발송 회신 알림"
+                    checked={settingsState.IcareUnreadReplies}
+                    onChange={(c) => {
+                        updateSetting("IcareUnreadReplies", c);
+                        if (!c) updateSetting("IcareUnreadNotificationOutbound", false);
+                    }}
+                    subSettings={
+                        <OutboundNotifSetting
+                            label="발송 통지 알림"
+                            checked={settingsState.IcareUnreadNotificationOutbound}
+                            service="iCare"
+                            DatePickButton={DatePickButton}
+                            onChange={(c) => {
+                                if (!c) {
+                                    void resetWeekpicker();
+                                }
+                                updateSetting("IcareUnreadNotificationOutbound", c);
+                            }}
+                        >
+                            <CountrySettings
+                                countries={settingsState.IcareOutboundNotificationCountries}
+                                excludedCountries={settingsState.IcareOutboundNotificationExcludedCountries}
+                                onCountriesChange={(value) =>
+                                    updateSetting("IcareOutboundNotificationCountries", value)
+                                }
+                                onExcludedCountriesChange={(value) =>
+                                    updateSetting("IcareOutboundNotificationExcludedCountries", value)
+                                }
+                            />
+                        </OutboundNotifSetting>
+                    }
+                />
+            </Grid>
+            {settingsState.IcareUnreadReplies && (
+                <Grid size={{ xs: 12 }}>
+                    <Divider sx={{ marginTop: 1, marginBottom: 2 }} />
+                    <AuthorInput
+                        label="검색할 작성자:"
+                        value={icareAuthorRaw}
+                        onChange={(e) => updateAuthorRaw(e, false)}
+                        onBlur={() => setIcareAuthorRaw(settingsState.IcareAuthor.join(", "))}
+                    />
+                    <AuthorHelpText />
+                </Grid>
+            )}
+        </Grid>
+    </SectionCard>
+);
+
+interface GcssSectionProps {
+    settingsState: IMICSettings;
+    gcssAuthorRaw: string;
+    updateSetting: UpdateSettingFn;
+    updateAuthorRaw: UpdateAuthorRawFn;
+    setGcssAuthorRaw: React.Dispatch<React.SetStateAction<string>>;
+    resetWeekpicker: (forIcare?: boolean, closePicker?: boolean) => Promise<void>;
+    toggleCheckService: (type: ServiceTypes, checked: boolean) => void;
+    toggleCheckRequestService: (type: ServiceTypes, checked: boolean) => void;
+    DatePickButton: React.FC<DatePickButtonProps>;
+}
+
+const GcssSection: React.FC<GcssSectionProps> = ({
+    settingsState,
+    gcssAuthorRaw,
+    updateSetting,
+    updateAuthorRaw,
+    setGcssAuthorRaw,
+    resetWeekpicker,
+    toggleCheckService,
+    toggleCheckRequestService,
+    DatePickButton,
+}) => (
+    <SectionCard>
+        <Grid container width="100%" rowSpacing={1}>
+            <Grid size={{ xs: 12 }}>
+                <Typography variant="h5" fontWeight={100}>
+                    GCSS
+                </Typography>
+                <Divider sx={{ mt: 1, mb: 2 }} />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+                <NotificationSettings
+                    label="GCSS 도착 문의 알림"
+                    checked={settingsState.GcssUnreadRequests}
+                    onChange={(c) => {
+                        updateSetting("GcssUnreadRequests", c);
+                        if ((settingsState.GcssRequestServiceTypes || []).length < 1)
+                            updateSetting("GcssRequestServiceTypes", [ServiceTypes.EMS]);
+                        if (!c) updateSetting("GcssUnreadNotificationInbound", false);
+                    }}
+                    subSettings={
+                        <InboundNotifSetting
+                            label="EMS 도착 통지 알림"
+                            checked={settingsState.GcssUnreadNotificationInbound}
+                            onChange={(c) => updateSetting("GcssUnreadNotificationInbound", c)}
+                        />
+                    }
+                />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+                <NotificationSettings
+                    label="GCSS 발송 회신 알림"
+                    checked={settingsState.GcssUnreadReplies}
+                    onChange={(c) => {
+                        updateSetting("GcssUnreadReplies", c);
+                        if (!c) updateSetting("GcssUnreadNotificationOutbound", false);
+                        if ((settingsState.GcssServiceTypes || []).length < 1)
+                            updateSetting("GcssServiceTypes", [ServiceTypes.EMS]);
+                    }}
+                    subSettings={
+                        <OutboundNotifSetting
+                            label="EMS 발송 통지 알림"
+                            checked={settingsState.GcssUnreadNotificationOutbound}
+                            service="GCSS"
+                            DatePickButton={DatePickButton}
+                            onChange={(c) => {
+                                if (!c) {
+                                    void resetWeekpicker(false);
+                                }
+                                updateSetting("GcssUnreadNotificationOutbound", c);
+                            }}
+                        >
+                            <CountrySettings
+                                countries={settingsState.GcssOutboundNotificationCountries}
+                                excludedCountries={settingsState.GcssOutboundNotificationExcludedCountries}
+                                onCountriesChange={(value) => updateSetting("GcssOutboundNotificationCountries", value)}
+                                onExcludedCountriesChange={(value) =>
+                                    updateSetting("GcssOutboundNotificationExcludedCountries", value)
+                                }
+                            />
+                        </OutboundNotifSetting>
+                    }
+                />
+            </Grid>
+            {settingsState.GcssUnreadRequests && (
+                <Grid size={{ xs: 12 }}>
+                    <Divider sx={{ marginTop: 1 }}>도착문의</Divider>
+                    <Stack direction="row" alignItems="end" justifyContent="space-evenly">
+                        <FormControlLabel
+                            label="EMS"
+                            control={
+                                <Checkbox
+                                    checked={(settingsState.GcssRequestServiceTypes || []).includes(ServiceTypes.EMS)}
+                                    onChange={(e, c) => toggleCheckRequestService(ServiceTypes.EMS, c)}
+                                    color="error"
+                                />
+                            }
+                        />
+                        <FormControlLabel
+                            label="REG"
+                            control={
+                                <Checkbox
+                                    checked={(settingsState.GcssRequestServiceTypes || []).some(
+                                        (rs) =>
+                                            rs === ServiceTypes.Registered ||
+                                            rs === ServiceTypes.KPacket ||
+                                            rs === ServiceTypes.Insured,
+                                    )}
+                                    onChange={(e, c) => {
+                                        toggleCheckRequestService(ServiceTypes.Registered, c);
+                                    }}
+                                    color="error"
+                                />
+                            }
+                        />
+                        <FormControlLabel
+                            label="Parcels"
+                            control={
+                                <Checkbox
+                                    checked={(settingsState.GcssRequestServiceTypes || []).includes(
+                                        ServiceTypes.Parcel,
+                                    )}
+                                    onChange={(e, c) => toggleCheckRequestService(ServiceTypes.Parcel, c)}
+                                    color="error"
+                                />
+                            }
+                        />
+                    </Stack>
+                    <Divider sx={{ marginTop: 1 }}></Divider>
+                </Grid>
+            )}
+            {settingsState.GcssUnreadReplies && (
+                <Grid size={{ xs: 12 }}>
+                    <Divider sx={{ marginTop: 2 }}>발송회신</Divider>
+                    <Stack direction="row" alignItems="end" justifyContent="space-evenly">
+                        <FormControlLabel
+                            label="EMS"
+                            control={
+                                <Checkbox
+                                    checked={(settingsState.GcssServiceTypes || []).includes(ServiceTypes.EMS)}
+                                    onChange={(e, c) => toggleCheckService(ServiceTypes.EMS, c)}
+                                    color="error"
+                                />
+                            }
+                        />
+                        <FormControlLabel
+                            label="Exprès/Tracked"
+                            control={
+                                <Checkbox
+                                    checked={(settingsState.GcssServiceTypes || []).includes(ServiceTypes.KPacket)}
+                                    onChange={(e, c) => toggleCheckService(ServiceTypes.KPacket, c)}
+                                    color="error"
+                                />
+                            }
+                        />
+                        <FormControlLabel
+                            label="REG"
+                            control={
+                                <Checkbox
+                                    checked={(settingsState.GcssServiceTypes || []).includes(ServiceTypes.Registered)}
+                                    onChange={(e, c) => toggleCheckService(ServiceTypes.Registered, c)}
+                                    color="error"
+                                />
+                            }
+                        />
+                        <FormControlLabel
+                            label="Parcels"
+                            control={
+                                <Checkbox
+                                    checked={(settingsState.GcssServiceTypes || []).includes(ServiceTypes.Parcel)}
+                                    onChange={(e, c) => toggleCheckService(ServiceTypes.Parcel, c)}
+                                    color="error"
+                                />
+                            }
+                        />
+                    </Stack>
+                    <Divider sx={{ marginTop: 1, marginBottom: 2 }} />
+                    <AuthorInput
+                        label="검색할 작성자:"
+                        value={gcssAuthorRaw}
+                        onChange={(e) => updateAuthorRaw(e, true)}
+                        onBlur={() => setGcssAuthorRaw(settingsState.GcssAuthor.join(", "))}
+                    />
+                    <AuthorHelpText />
+                </Grid>
+            )}
+        </Grid>
+    </SectionCard>
+);
+
+const renderHeader = () => (
+    <>
+        <Stack spacing={2} padding={1} direction="row" alignItems="end" sx={{ mb: 2, userSelect: "none" }}>
+            <Typography variant="h4" fontWeight={100} color="initial">
+                기본 설정
+            </Typography>
+        </Stack>
+        <Divider sx={{ mb: 2 }} variant="fullWidth" />
+    </>
+);
+
+const WeekPickerOverlay: React.FC<WeekPickerOverlayProps> = ({
+    weekpickerEnabled,
+    weekpickerForIcare,
+    icareOutboundEnabled,
+    gcssOutboundEnabled,
+    icareOutboundDate,
+    gcssOutboundDate,
+    onIcareDateChange,
+    onGcssDateChange,
+    onSave,
+    onCancel,
+    onReset,
+}) => {
+    if (!weekpickerEnabled) return null;
+    if (!icareOutboundEnabled && !gcssOutboundEnabled) return null;
+
+    return (
+        <Paper sx={{ position: "absolute", top: "30vh", left: "750px" }}>
+            <WeekPicker
+                targetState={
+                    weekpickerForIcare
+                        ? icareOutboundDate
+                            ? dayjs(icareOutboundDate)
+                            : null
+                        : gcssOutboundDate
+                          ? dayjs(gcssOutboundDate)
+                          : null
+                }
+                saveTo={
+                    weekpickerForIcare
+                        ? (d) => onIcareDateChange(d ? d.toString() : null)
+                        : (d) => onGcssDateChange(d ? d.toString() : null)
+                }
+                onSave={onSave}
+                onCancel={onCancel}
+                onReset={() => onReset(weekpickerForIcare)}
+            />
+        </Paper>
+    );
+};
+
 export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) => {
     const [settingsState, setSettingsState] = useState<IMICSettings>(new IMICSettings());
     const [icareAuthorRaw, setIcareAuthorRaw] = useState("");
@@ -73,7 +483,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
     const [weekpickerForIcare, setWeekpickerForIcare] = useState(true);
     const [weekpickerEnabled, setWeekpickerEnabled] = useState(false);
     const initialized = useRef(false);
-    // TODO: 엘리먼트 부분 더 모듈화 필요, GCSS iCare 설정 순서 바꾸고, 환율 설정 기능 추가하기
+    // TODO: 환율 설정 기능 추가하기
     useEffect(() => {
         if (!initialized.current) {
             const curSet = settings.current;
@@ -142,7 +552,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
         }
     }
 
-    function ToggleCheckService(type: ServiceTypes, checked: boolean) {
+    function toggleCheckService(type: ServiceTypes, checked: boolean) {
         const current = settingsState.GcssServiceTypes || [];
         if (checked) {
             if (current.includes(type)) return;
@@ -157,7 +567,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
         }
     }
 
-    function ToggleCheckRequestService(type: ServiceTypes, checked: boolean) {
+    function toggleCheckRequestService(type: ServiceTypes, checked: boolean) {
         const current = settingsState.GcssRequestServiceTypes || [];
         const relatedTypes = [ServiceTypes.Registered, ServiceTypes.KPacket, ServiceTypes.Insured];
         const typesToToggle = relatedTypes.includes(type) ? relatedTypes : [type];
@@ -172,7 +582,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
 
         updateSetting("GcssRequestServiceTypes", newTypes);
     }
-    function ShowWeekpicker(service: "iCare" | "GCSS") {
+    function showWeekpicker(service: "iCare" | "GCSS") {
         if (
             (service === "iCare" && settingsState.IcareUnreadNotificationOutbound) ||
             (service === "GCSS" && settingsState.GcssUnreadNotificationOutbound)
@@ -181,414 +591,71 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             setWeekpickerEnabled(true);
         }
     }
-    async function ResetWeekpicker(forIcare = true, closePicker = true) {
+    async function resetWeekpicker(forIcare = true, closePicker = true) {
         if (closePicker) setWeekpickerEnabled(false);
         if (forIcare) updateSetting("IcareOutboundNotificationDate", null);
         else updateSetting("GcssOutboundNotificationDate", null);
         await SaveSettings();
     }
-    async function SaveWeekpicker() {
+    async function saveWeekpicker() {
         if (!weekpickerEnabled) return;
         setWeekpickerEnabled(false);
         await SaveSettings();
     }
 
-    const MyWeekPicker = () => {
-        if (!weekpickerEnabled) return null;
-        if (!settingsState.IcareUnreadNotificationOutbound && !settingsState.GcssUnreadNotificationOutbound)
-            return null;
+    const DatePickButton: React.FC<DatePickButtonProps> = ({ service }) => {
         return (
-            <WeekPicker
-                targetState={
-                    weekpickerForIcare
-                        ? settingsState.IcareOutboundNotificationDate
-                            ? dayjs(settingsState.IcareOutboundNotificationDate)
-                            : null
-                        : settingsState.GcssOutboundNotificationDate
-                          ? dayjs(settingsState.GcssOutboundNotificationDate)
-                          : null
-                }
-                saveTo={
-                    weekpickerForIcare
-                        ? (d) => updateSetting("IcareOutboundNotificationDate", d ? d.toString() : null)
-                        : (d) => updateSetting("GcssOutboundNotificationDate", d ? d.toString() : null)
-                }
-                onSave={SaveWeekpicker}
-                onCancel={() => setWeekpickerEnabled(false)}
-                onReset={() => ResetWeekpicker(weekpickerForIcare, false)}
+            <DatePickToggleButton
+                service={service}
+                weekpickerEnabled={weekpickerEnabled}
+                weekpickerForIcare={weekpickerForIcare}
+                icareOutboundEnabled={settingsState.IcareUnreadNotificationOutbound}
+                gcssOutboundEnabled={settingsState.GcssUnreadNotificationOutbound}
+                setWeekpickerEnabled={setWeekpickerEnabled}
+                showWeekpicker={showWeekpicker}
             />
         );
     };
 
-    const DatePickButton: React.FC<DatePickButtonProps> = ({ service }) => {
-        if (
-            (service === "iCare" && settingsState.IcareUnreadNotificationOutbound) ||
-            (service === "GCSS" && settingsState.GcssUnreadNotificationOutbound)
-        ) {
-            return (
-                <IconButton
-                    aria-label=""
-                    sx={{ transform: "scale(0.9)" }}
-                    onClick={() => {
-                        if (weekpickerEnabled) {
-                            if (
-                                (service === "iCare" && weekpickerForIcare) ||
-                                (service === "GCSS" && !weekpickerForIcare)
-                            )
-                                setWeekpickerEnabled(false);
-                            else ShowWeekpicker(service);
-                        } else ShowWeekpicker(service);
-                    }}
-                >
-                    <DateRangeIcon />
-                </IconButton>
-            );
-        } else return null;
-    };
-
-    // function handleCountryInput<K extends keyof IMICSettings>(key: K) {
-    //     return (v: IMICSettings[K]) => updateSetting(key, v)
-    // }
-
     return (
         <div>
-            <Stack spacing={2} padding={1} direction="row" alignItems="end" sx={{ mb: 2 }}>
-                <Typography variant="h4" fontWeight={100} color="initial">
-                    기본 설정
-                </Typography>
-            </Stack>
-            <Divider sx={{ mb: 2 }} variant="fullWidth" />
-
-            <Paper sx={{ position: "absolute", top: "30vh", left: "750px" }}>
-                <MyWeekPicker />
-            </Paper>
-            <Stack spacing={4} sx={{ width: 550 }}>
-                <Paper sx={{ p: 3 }}>
-                    <Grid container width="100%" rowSpacing={1}>
-                        <Grid size={{ xs: 12 }}>
-                            <Typography variant="h5" fontWeight={100}>
-                                iCare
-                            </Typography>
-                            <Divider sx={{ mt: 1, mb: 2 }} />
-                        </Grid>
-                        <Grid size={{ xs: 6 }}>
-                            <NotificationSettings
-                                label="iCare 도착 문의 알림"
-                                checked={settingsState.IcareUnreadRequests}
-                                onChange={(c) => {
-                                    updateSetting("IcareUnreadRequests", c);
-                                    if (!c) updateSetting("IcareUnreadNotificationInbound", false);
-                                }}
-                                subSettings={
-                                    <FormControlLabel
-                                        sx={{ transform: "scale(0.9)", ml: "10px" }}
-                                        label="도착 통지 알림"
-                                        control={
-                                            <Stack direction="row" alignItems="center">
-                                                <SubdirectoryArrowRight sx={{ paddingBottom: 1 }} />
-                                                <Checkbox
-                                                    checked={settingsState.IcareUnreadNotificationInbound}
-                                                    onChange={(e, c) =>
-                                                        updateSetting("IcareUnreadNotificationInbound", c)
-                                                    }
-                                                    color="error"
-                                                />
-                                            </Stack>
-                                        }
-                                    />
-                                }
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 6 }}>
-                            <NotificationSettings
-                                label="iCare 발송 회신 알림"
-                                checked={settingsState.IcareUnreadReplies}
-                                onChange={(c) => {
-                                    updateSetting("IcareUnreadReplies", c);
-                                    if (!c) updateSetting("IcareUnreadNotificationOutbound", false);
-                                }}
-                                subSettings={
-                                    <Stack>
-                                        <Stack direction="row">
-                                            <FormControlLabel
-                                                sx={{ transform: "scale(0.9)" }}
-                                                label="발송 통지 알림"
-                                                control={
-                                                    <Stack direction="row" alignItems="center">
-                                                        <SubdirectoryArrowRight
-                                                            sx={{
-                                                                marginLeft: 0.5,
-                                                                paddingBottom: 1,
-                                                            }}
-                                                        />
-                                                        <Checkbox
-                                                            checked={settingsState.IcareUnreadNotificationOutbound}
-                                                            onChange={(e, c) => {
-                                                                if (!c) {
-                                                                    ResetWeekpicker();
-                                                                }
-                                                                updateSetting("IcareUnreadNotificationOutbound", c);
-                                                            }}
-                                                            color="error"
-                                                        />
-                                                    </Stack>
-                                                }
-                                            />
-                                            <DatePickButton service="iCare" />
-                                        </Stack>
-                                        {settingsState.IcareUnreadNotificationOutbound && (
-                                            <CountrySettings
-                                                countries={settingsState.IcareOutboundNotificationCountries}
-                                                excludedCountries={
-                                                    settingsState.IcareOutboundNotificationExcludedCountries
-                                                }
-                                                onCountriesChange={(value) =>
-                                                    updateSetting("IcareOutboundNotificationCountries", value)
-                                                }
-                                                onExcludedCountriesChange={(value) =>
-                                                    updateSetting("IcareOutboundNotificationExcludedCountries", value)
-                                                }
-                                            />
-                                        )}
-                                    </Stack>
-                                }
-                            />
-                        </Grid>
-                        {settingsState.IcareUnreadReplies && (
-                            <Grid size={{ xs: 12 }}>
-                                <Divider sx={{ marginTop: 1, marginBottom: 2 }} />
-                                <AuthorInput
-                                    label="검색할 작성자:"
-                                    value={icareAuthorRaw}
-                                    onChange={(e) => updateAuthorRaw(e, false)}
-                                    onBlur={() => setIcareAuthorRaw(settingsState.IcareAuthor.join(", "))}
-                                />
-                                <Typography textAlign="end" fontWeight={100} sx={{ mt: 2 }} variant="subtitle2">
-                                    * 대소문자 구분 없음 <br />* 일부만 입력 가능 (예: Sunghoon Park -{">"} sung) <br />
-                                    * 여러명 입력 가능 (예: sung, mi, kim) <br />
-                                </Typography>
-                            </Grid>
-                        )}
-                    </Grid>
-                </Paper>
-                <Paper sx={{ p: 3 }}>
-                    <Grid container width="100%" rowSpacing={1}>
-                        <Grid size={{ xs: 12 }}>
-                            <Typography variant="h5" fontWeight={100}>
-                                GCSS
-                            </Typography>
-                            <Divider sx={{ mt: 1, mb: 2 }} />
-                        </Grid>
-                        <Grid size={{ xs: 6 }}>
-                            <NotificationSettings
-                                label="GCSS 도착 문의 알림"
-                                checked={settingsState.GcssUnreadRequests}
-                                onChange={(c) => {
-                                    updateSetting("GcssUnreadRequests", c);
-
-                                    if ((settingsState.GcssRequestServiceTypes || []).length < 1)
-                                        updateSetting("GcssRequestServiceTypes", [ServiceTypes.EMS]);
-                                    if (!c) updateSetting("GcssUnreadNotificationInbound", false);
-                                }}
-                                subSettings={
-                                    <FormControlLabel
-                                        sx={{ transform: "scale(0.9)", ml: "10px" }}
-                                        label="EMS 도착 통지 알림"
-                                        control={
-                                            <Stack direction="row" alignItems="center">
-                                                <SubdirectoryArrowRight sx={{ paddingBottom: 1 }} />
-                                                <Checkbox
-                                                    checked={settingsState.GcssUnreadNotificationInbound}
-                                                    onChange={(e, c) =>
-                                                        updateSetting("GcssUnreadNotificationInbound", c)
-                                                    }
-                                                    color="error"
-                                                />
-                                            </Stack>
-                                        }
-                                    />
-                                }
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 6 }}>
-                            <NotificationSettings
-                                label="GCSS 발송 회신 알림"
-                                checked={settingsState.GcssUnreadReplies}
-                                onChange={(c) => {
-                                    updateSetting("GcssUnreadReplies", c);
-                                    if (!c) updateSetting("GcssUnreadNotificationOutbound", false);
-                                    if ((settingsState.GcssServiceTypes || []).length < 1)
-                                        updateSetting("GcssServiceTypes", [ServiceTypes.EMS]);
-                                }}
-                                subSettings={
-                                    <Stack>
-                                        <Stack direction="row">
-                                            <FormControlLabel
-                                                sx={{ transform: "scale(0.9)" }}
-                                                label="EMS 발송 통지 알림"
-                                                control={
-                                                    <Stack direction="row" alignItems="center">
-                                                        <SubdirectoryArrowRight
-                                                            sx={{
-                                                                marginLeft: 0.5,
-                                                                paddingBottom: 1,
-                                                            }}
-                                                        />
-                                                        <Checkbox
-                                                            checked={settingsState.GcssUnreadNotificationOutbound}
-                                                            onChange={(e, c) => {
-                                                                if (!c) {
-                                                                    ResetWeekpicker(false);
-                                                                }
-                                                                updateSetting("GcssUnreadNotificationOutbound", c);
-                                                            }}
-                                                            color="error"
-                                                        />
-                                                    </Stack>
-                                                }
-                                            />
-                                            <DatePickButton service="GCSS" />
-                                        </Stack>
-                                        {settingsState.GcssUnreadNotificationOutbound && (
-                                            <CountrySettings
-                                                countries={settingsState.GcssOutboundNotificationCountries}
-                                                excludedCountries={
-                                                    settingsState.GcssOutboundNotificationExcludedCountries
-                                                }
-                                                onCountriesChange={(value) =>
-                                                    updateSetting("GcssOutboundNotificationCountries", value)
-                                                }
-                                                onExcludedCountriesChange={(value) =>
-                                                    updateSetting("GcssOutboundNotificationExcludedCountries", value)
-                                                }
-                                            />
-                                        )}
-                                    </Stack>
-                                }
-                            />
-                        </Grid>
-                        {settingsState.GcssUnreadRequests && (
-                            <Grid size={{ xs: 12 }}>
-                                <Divider sx={{ marginTop: 1 }}>도착문의</Divider>
-                                <Stack direction="row" alignItems="end" justifyContent="space-evenly">
-                                    <FormControlLabel
-                                        label="EMS"
-                                        control={
-                                            <Checkbox
-                                                checked={(settingsState.GcssRequestServiceTypes || []).includes(
-                                                    ServiceTypes.EMS,
-                                                )}
-                                                onChange={(e, c) => ToggleCheckRequestService(ServiceTypes.EMS, c)}
-                                                color="error"
-                                            />
-                                        }
-                                    />
-
-                                    <FormControlLabel
-                                        label="REG"
-                                        control={
-                                            <Checkbox
-                                                checked={(settingsState.GcssRequestServiceTypes || []).some(
-                                                    (rs) =>
-                                                        rs === ServiceTypes.Registered ||
-                                                        rs === ServiceTypes.KPacket ||
-                                                        rs === ServiceTypes.Insured,
-                                                )}
-                                                onChange={(e, c) => {
-                                                    ToggleCheckRequestService(ServiceTypes.Registered, c);
-                                                }}
-                                                color="error"
-                                            />
-                                        }
-                                    />
-
-                                    <FormControlLabel
-                                        label="Parcels"
-                                        control={
-                                            <Checkbox
-                                                checked={(settingsState.GcssRequestServiceTypes || []).includes(
-                                                    ServiceTypes.Parcel,
-                                                )}
-                                                onChange={(e, c) => ToggleCheckRequestService(ServiceTypes.Parcel, c)}
-                                                color="error"
-                                            />
-                                        }
-                                    />
-                                </Stack>
-                                <Divider sx={{ marginTop: 1 }}></Divider>
-                            </Grid>
-                        )}
-                        {settingsState.GcssUnreadReplies && (
-                            <Grid size={{ xs: 12 }}>
-                                <Divider sx={{ marginTop: 2 }}>발송회신</Divider>
-                                <Stack direction="row" alignItems="end" justifyContent="space-evenly">
-                                    <FormControlLabel
-                                        label="EMS"
-                                        control={
-                                            <Checkbox
-                                                checked={(settingsState.GcssServiceTypes || []).includes(
-                                                    ServiceTypes.EMS,
-                                                )}
-                                                onChange={(e, c) => ToggleCheckService(ServiceTypes.EMS, c)}
-                                                color="error"
-                                            />
-                                        }
-                                    />
-
-                                    <FormControlLabel
-                                        label="Exprès/Tracked"
-                                        control={
-                                            <Checkbox
-                                                checked={(settingsState.GcssServiceTypes || []).includes(
-                                                    ServiceTypes.KPacket,
-                                                )}
-                                                onChange={(e, c) => ToggleCheckService(ServiceTypes.KPacket, c)}
-                                                color="error"
-                                            />
-                                        }
-                                    />
-
-                                    <FormControlLabel
-                                        label="REG"
-                                        control={
-                                            <Checkbox
-                                                checked={(settingsState.GcssServiceTypes || []).includes(
-                                                    ServiceTypes.Registered,
-                                                )}
-                                                onChange={(e, c) => ToggleCheckService(ServiceTypes.Registered, c)}
-                                                color="error"
-                                            />
-                                        }
-                                    />
-
-                                    <FormControlLabel
-                                        label="Parcels"
-                                        control={
-                                            <Checkbox
-                                                checked={(settingsState.GcssServiceTypes || []).includes(
-                                                    ServiceTypes.Parcel,
-                                                )}
-                                                onChange={(e, c) => ToggleCheckService(ServiceTypes.Parcel, c)}
-                                                color="error"
-                                            />
-                                        }
-                                    />
-                                </Stack>
-                                <Divider sx={{ marginTop: 1, marginBottom: 2 }} />
-                                <AuthorInput
-                                    label="검색할 작성자:"
-                                    value={gcssAuthorRaw}
-                                    onChange={(e) => updateAuthorRaw(e, true)}
-                                    onBlur={() => setGcssAuthorRaw(settingsState.GcssAuthor.join(", "))}
-                                />
-                                <Typography textAlign="end" fontWeight={100} sx={{ mt: 2 }} variant="subtitle2">
-                                    * 대소문자 구분 없음 <br />* 일부만 입력 가능 (예: Sunghoon Park -{">"} sung) <br />
-                                    * 여러명 입력 가능 (예: sung, mi, kim) <br />
-                                </Typography>
-                            </Grid>
-                        )}
-                    </Grid>
-                </Paper>
+            {renderHeader()}
+            <WeekPickerOverlay
+                weekpickerEnabled={weekpickerEnabled}
+                weekpickerForIcare={weekpickerForIcare}
+                icareOutboundEnabled={settingsState.IcareUnreadNotificationOutbound}
+                gcssOutboundEnabled={settingsState.GcssUnreadNotificationOutbound}
+                icareOutboundDate={settingsState.IcareOutboundNotificationDate}
+                gcssOutboundDate={settingsState.GcssOutboundNotificationDate}
+                onIcareDateChange={(date) => updateSetting("IcareOutboundNotificationDate", date)}
+                onGcssDateChange={(date) => updateSetting("GcssOutboundNotificationDate", date)}
+                onSave={saveWeekpicker}
+                onCancel={() => setWeekpickerEnabled(false)}
+                onReset={(forIcare) => {
+                    void resetWeekpicker(forIcare, false);
+                }}
+            />
+            <Stack spacing={5} sx={{p: 2}}>
+                <GcssSection
+                    settingsState={settingsState}
+                    gcssAuthorRaw={gcssAuthorRaw}
+                    updateSetting={updateSetting}
+                    updateAuthorRaw={updateAuthorRaw}
+                    setGcssAuthorRaw={setGcssAuthorRaw}
+                    resetWeekpicker={resetWeekpicker}
+                    toggleCheckService={toggleCheckService}
+                    toggleCheckRequestService={toggleCheckRequestService}
+                    DatePickButton={DatePickButton}
+                />
+                <IcareSection
+                    settingsState={settingsState}
+                    icareAuthorRaw={icareAuthorRaw}
+                    updateSetting={updateSetting}
+                    updateAuthorRaw={updateAuthorRaw}
+                    setIcareAuthorRaw={setIcareAuthorRaw}
+                    resetWeekpicker={resetWeekpicker}
+                    DatePickButton={DatePickButton}
+                />
             </Stack>
         </div>
     );

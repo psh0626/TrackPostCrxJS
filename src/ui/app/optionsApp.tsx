@@ -26,20 +26,23 @@ export default function OptionsApp() {
             <AppBar position="sticky" color="primary">
                 <Toolbar>
                     <TravelExplore sx={{ mr: 1 }} />
-                    <Typography variant="h6">IMIC TrackPost Extension Settings</Typography>
+                    <Typography variant="h6" sx={{ userSelect: "none" }}>
+                        IMIC TrackPost Extension Settings
+                    </Typography>
                 </Toolbar>
             </AppBar>
 
             {!initialized ? (
                 ""
             ) : (
-                <Box sx={{ display: "flex", flexGrow: 1, overflow: "auto", height: "88vh" }}>
+                <Box sx={{ display: "flex", flexGrow: 1, overflow: "auto", minHeight: "88vh" }}>
                     <Tabs
+                        id="tab-container"
                         variant="fullWidth"
                         value={tabValue}
                         onChange={(_e, n) => setTabValue(n)}
                         orientation="vertical"
-                        sx={{ borderRight: 1, borderColor: "divider" }}
+                        sx={{ borderRight: 1, borderColor: "divider", minHeight: "88vh" }}
                     >
                         <Tab label="General" />
                         <Tab label="Personal Remarks" />

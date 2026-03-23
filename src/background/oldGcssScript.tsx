@@ -1,5 +1,6 @@
 import { IMICSettings } from "../lib/IMICSettings";
 import { PostElement } from "../lib/PostUtil";
+import ExchangeRateUtil from "./inject-dom/exchangeRateUtil";
 import InjectUtil from "./inject-dom/injectUtil";
 import OldGcssInjectUtil from "./inject-dom/oldGcssInjectUtil";
 import { CMD, MSG, sendRequest } from "./message-hub/Message";
@@ -124,24 +125,24 @@ import { GcssAPI } from "./pending-replies/gcssReplies";
     async function findPostElement(item_id: string): Promise<PostElement> {
         return await sendRequest<PostElement>(new MSG(CMD.FETCH_POST_ELEMENT, item_id));
     }
-    function getExchangeRate(currency_value: string) {
-        let rate = 1500; // USD
+    function getCurrencyString(currency_value: string) {
+        let rate = "USD";
 
         switch (currency_value) {
             case "2": // EUR
-                rate = 1700;
+                rate = "EUR";
                 break;
             case "89": // KRW
-                rate = 1;
+                rate = "KRW";
                 break;
             case "111": // GBP
-                rate = 2000;
+                rate = "GBP";
                 break;
             case "87": // JPY
-                rate = 1000;
+                rate = "JPY";
                 break;
             case "80": // CNY
-                rate = 200;
+                rate = "CNY";
                 break;
         }
         return rate;
@@ -160,9 +161,8 @@ import { GcssAPI } from "./pending-replies/gcssReplies";
         if (item_value_currency.value !== "3") {
             // 이미 SDR이 지정되지 않은 경우에만
             if (item_value.value !== "") {
-                const calc_item_value = Math.ceil(
-                    (parseFloat(item_value.value) * getExchangeRate(item_value_currency.value)) / 1749,
-                );
+                const rate = getCurrencyString(item_value_currency.value);
+                const calc_item_value = ExchangeRateUtil.calculateSDR(item_value.value, rate);
                 OldGcssInjectUtil.SwitchValueForCurrency(item_value, item_value_currency, calc_item_value.toString());
             } else if (is_registered) {
                 item_value.value = "0";
@@ -180,7 +180,10 @@ import { GcssAPI } from "./pending-replies/gcssReplies";
         if (postage_paid_currency.value !== "3") {
             // 이미 SDR이 지정되지 않은 경우에만
             if (postage_paid.value !== "") {
-                const calc_postage_paid = Math.ceil(parseFloat(postage_paid.value) / 1749);
+                const calc_postage_paid = ExchangeRateUtil.calculateSDR(
+                    postage_paid.value,
+                    getCurrencyString(postage_paid_currency.value),
+                );
                 OldGcssInjectUtil.SwitchValueForCurrency(
                     postage_paid,
                     postage_paid_currency,
