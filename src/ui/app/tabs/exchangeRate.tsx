@@ -19,7 +19,7 @@ import {
     useTheme,
 } from "@mui/material";
 import React, { ReactElement, useEffect, useRef, useState } from "react";
-import ExchangeRateUtil, { CurrencyItem, ExchangeRateMap } from "../../../background/inject-dom/exchangeRateUtil";
+import ExchangeRateUtil, { CurrencyItem, ExchangeRateMap } from "../../../lib/exchangeRateUtil";
 
 const renderHeader = (title: string) => (
     <Stack spacing={2} padding={1} direction="row" alignItems="end" sx={{ mb: 2, userSelect: "none" }}>

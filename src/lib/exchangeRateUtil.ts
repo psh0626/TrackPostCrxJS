@@ -1,4 +1,4 @@
-import { CMD, MSG } from "../message-hub/Message";
+import { CMD, MSG } from "../background/message-hub/Message";
 
 export type ExchangeRateMap = Map<string, CurrencyItem>;
 export class CurrencyItem {
