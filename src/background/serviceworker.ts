@@ -6,7 +6,7 @@ import { CMD, MSG } from "./message-hub/Message";
 import ProcessMessage from "./message-hub/MessageHub";
 import { GcssItem, isGcssItem, isWorkflowItem, WorkflowItem } from "./pending-replies/dataWrapper";
 import { ServiceTypes } from "./pending-replies/gcssReplies";
-import { GCSSMessage, isGCSSMessage, isGCSSNotification } from "./pending-replies/newGcssWrapper";
+import { GCSSMessage, isGCSSMessage } from "./pending-replies/newGcssWrapper";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
 void chrome.action.setBadgeBackgroundColor({ color: "#424242" });
@@ -18,6 +18,7 @@ console.log("BackgroundWorker has been initiated.");
 
 const MsgPort: { [key: number]: chrome.runtime.Port } = {};
 export const PopupTracker = new PopupTrack();
+const MAXIMUM_COUNT = 120;
 
 main();
 
@@ -27,8 +28,10 @@ function main() {
     const MAIL_TAB_INTERVAL = time(20).toMinutes();
 
     setInterval(() => {
-        void APICalls(count++);
+        if (count > MAXIMUM_COUNT) count = 0;
+        void APICalls(++count);
     }, GLOBAL_INTERVAL);
+
     console.log(
         new Date().toLocaleTimeString() + " Global Timer has been started. Interval: ",
         time(GLOBAL_INTERVAL).toSecondsString(),
@@ -77,7 +80,7 @@ async function APICalls(count: number, final = false) {
                     } else if (isWorkflowItem(i)) {
                         return i.isNotification === false;
                     } else if (isGCSSMessage(i)) {
-                        return isGCSSNotification(i) === false;
+                        return i.isNotification() === false;
                     }
                     return false;
                 });
@@ -88,7 +91,7 @@ async function APICalls(count: number, final = false) {
             }
         }
 
-        if (hasImportantUnread || count % 120 === 0) {
+        if (hasImportantUnread || count % MAXIMUM_COUNT === 0) {
             console.log("There are important unread items. Forcing notification update.");
             await createNotification(true);
         }

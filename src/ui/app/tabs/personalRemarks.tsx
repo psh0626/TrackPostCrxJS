@@ -152,15 +152,63 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
         setSlSelected(event.target.value as string);
     }
 
+    function onExportClicked() {
+        const vblob = new Blob([JSON.stringify(prList, null, 2)], { type: "application/json" });
+        const vlink = document.createElement("a");
+        const fileName = "MyPersonalRemarks.json";
+        const vurl = window.URL.createObjectURL(vblob);
+        vlink.setAttribute("href", vurl);
+        vlink.setAttribute("download", fileName);
+        vlink.click();
+        vlink.remove();
+    }
+
+    function onImportClicked() {
+        const importInput = document.createElement("input");
+        importInput.type = "file";
+        importInput.accept = ".json";
+        importInput.onchange = (e) => {
+            const files = (e.target as HTMLInputElement).files;
+            if (!files) return;
+            const reader = new FileReader();
+            reader.onload = function _imp() {
+                try {
+                    const importedData = JSON.parse(this.result as string) as PersonalRemark[];
+                    console.log("Importing data: ", importedData);
+                    setPrList(importedData);
+                    alert("Personal Remarks 불러오기 성공!");
+                } catch (e) {
+                    console.error(e);
+                    alert("개인 메모 불러오기 실패, 개발자와 확인하세요.");
+                }
+            };
+            reader.readAsText(files[0]);
+        };
+        importInput.click();
+    }
+
     return (
         <div>
-            <Stack spacing={2} padding={1} direction="row" alignItems="end" sx={{ mb: 2 }}>
-                <Typography variant="h4" fontWeight={100} color="initial" sx={{ width: 500 }}>
-                    ICare Personal Remarks
+            <Stack padding={1} direction="row" justifyContent="space-between" alignItems="end" sx={{ mb: 2 }}>
+                <Typography variant="h4" fontWeight={100} color="initial" sx={{userSelect:"none"}}>
+                    iCare Personal Remarks
                 </Typography>
+                <Stack direction="column" spacing={0.4}>
+                    <Divider sx={{ userSelect: "none" }}>
+                        <Typography variant="caption">설정</Typography>
+                    </Divider>
+                    <Stack direction="row" spacing={1}>
+                        <Button variant="outlined" size="small" onClick={onExportClicked}>
+                            내보내기
+                        </Button>
+                        <Button variant="contained" size="small" onClick={onImportClicked}>
+                            불러오기
+                        </Button>
+                    </Stack>
+                </Stack>
             </Stack>
             <Divider sx={{ mb: 2 }} variant="fullWidth" />
-            <Stack direction="row-reverse" alignItems="end" spacing={3} marginBottom={3}>
+            <Stack direction="row-reverse" alignItems="end" spacing={3} marginBottom={3} pl={2}>
                 <Fab
                     color="primary"
                     variant="extended"
@@ -183,15 +231,15 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
                     </Select>
                 </FormControl>
             </Stack>
-            <Stack direction="column">
+            <Stack direction="column" pl={2}>
                 {prList.length > 0 &&
-                    prList.map((pr) => {
+                    prList.map((pr, idx) => {
                         return (
                             pr.Section === slSelected && (
-                                <Card key={pr.Id} sx={{ mb: 2 }}>
+                                <Card key={idx} sx={{ mb: 2 }}>
                                     <Stack direction="row">
                                         <CardActionArea onClick={() => onCardClicked(pr)}>
-                                            <CardContent sx={{ minHeight: 120, width: 430 }}>
+                                            <CardContent sx={{ minHeight: 120, width: "450px" }}>
                                                 <Typography gutterBottom variant="h6" component="div">
                                                     {pr.Title}
                                                 </Typography>

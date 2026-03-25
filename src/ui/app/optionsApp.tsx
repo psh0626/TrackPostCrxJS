@@ -2,8 +2,8 @@ import { TravelExplore } from "@mui/icons-material";
 import { AppBar, Box, Paper, Tab, Tabs, Toolbar, Typography } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { IMICSettings } from "../../lib/IMICSettings";
+import { ExchangeRate } from "./tabs/exchangeRate";
 import { GeneralSettings } from "./tabs/generalSettings";
-import { ImportExport } from "./tabs/importExport";
 import { PersonalRemarks } from "./tabs/personalRemarks";
 
 export default function OptionsApp() {
@@ -46,7 +46,7 @@ export default function OptionsApp() {
                     >
                         <Tab label="General" />
                         <Tab label="Personal Remarks" />
-                        <Tab label="Import/Export" />
+                        <Tab label="Exchange Rates" />
                     </Tabs>
                     <Box sx={{ padding: "10px" }}>
                         <Box sx={{ display: tabValue === 0 ? "block" : "none" }}>
@@ -56,7 +56,7 @@ export default function OptionsApp() {
                             <PersonalRemarks settings={settings} />
                         </Box>
                         <Box sx={{ display: tabValue === 2 ? "block" : "none" }}>
-                            <ImportExport settings={settings} />
+                            <ExchangeRate />
                         </Box>
                     </Box>
                 </Box>

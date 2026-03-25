@@ -9,6 +9,7 @@ import { GcssAPI } from "./pending-replies/gcssReplies";
 (async () => {
     const settings = new IMICSettings();
     await settings.requestLoad();
+
     GcssAPI.settings = settings;
 
     console.log("Content script loaded at: " + document.readyState);

@@ -18,7 +18,7 @@ const MyButton: React.FC<MyButtonProps> = ({ children, ...other }) => {
 };
 
 export const ImportExport: React.FC<ImportExportProps> = ({ settings }) => {
-    const import_input = useRef<HTMLInputElement>(null);
+    const importInput = useRef<HTMLInputElement>(null);
     function onExportClicked() {
         const strSettings = JSON.stringify(settings.current, null, 2);
         const vlink = document.createElement("a");
@@ -31,7 +31,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({ settings }) => {
         vlink.remove();
     }
 
-    function ImportSettings(e: ChangeEvent<HTMLInputElement>) {
+    function importSettings(e: ChangeEvent<HTMLInputElement>) {
         const files = e.target.files;
         if (!files) return;
         const reader = new FileReader();
@@ -47,7 +47,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({ settings }) => {
                 console.error(e);
                 alert("설정 불러오기 실패, 개발자와 확인하세요.");
             } finally {
-                import_input.current!.value = ""; //make sure to clear input value after every import
+                importInput.current!.value = ""; //make sure to clear input value after every import
             }
         };
         reader.readAsText(files[0]);
@@ -57,9 +57,9 @@ export const ImportExport: React.FC<ImportExportProps> = ({ settings }) => {
             <input
                 type="file"
                 accept=".json"
-                ref={import_input}
+                ref={importInput}
                 style={{ display: "none" }}
-                onChange={ImportSettings}
+                onChange={importSettings}
             />
             <Stack spacing={2} padding={1} direction="row" alignItems="end" sx={{ mb: 2 }}>
                 <Typography variant="h4" fontWeight={100} color="initial" sx={{ width: 500 }}>
@@ -67,7 +67,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({ settings }) => {
                 </Typography>
             </Stack>
             <Divider sx={{ mb: 2 }} variant="fullWidth" />
-            <MyButton startIcon={<Upload />} onClick={() => import_input.current!.click()}>
+            <MyButton startIcon={<Upload />} onClick={() => importInput.current!.click()}>
                 설정 불러오기
             </MyButton>
             <Box marginY={10} />

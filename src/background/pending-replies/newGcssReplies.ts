@@ -119,7 +119,7 @@ export class GcssWorkflowService {
                 .filterUnread()
                 .mapToGcssWorkflow();
 
-            messages.push(new MSG(CMD.NEW_GCSS_UNREAD_REQUESTS, filteredWorkflows).notifyHub());
+            messages.push(new MSG(CMD.NEW_GCSS_UNREAD_REQUESTS, filteredWorkflows).notifyService());
         }
 
         if (this.settings.GcssUnreadReplies) {
@@ -136,7 +136,7 @@ export class GcssWorkflowService {
                 .filterUnread()
                 .mapToGcssWorkflow();
 
-            messages.push(new MSG(CMD.NEW_GCSS_UNREAD_REPLIES, filteredWorkflows).notifyHub());
+            messages.push(new MSG(CMD.NEW_GCSS_UNREAD_REPLIES, filteredWorkflows).notifyService());
         }
 
         if (this.settings.GcssUnreadNotificationInbound || this.settings.GcssUnreadNotificationOutbound) {
@@ -144,7 +144,7 @@ export class GcssWorkflowService {
 
             if (this.settings.GcssUnreadNotificationInbound) {
                 const inbound = notifications.filterInbound().mapToGcssNotification();
-                messages.push(new MSG(CMD.NEW_GCSS_UNREAD_NOTIF_INBOUND, inbound).notifyHub());
+                messages.push(new MSG(CMD.NEW_GCSS_UNREAD_NOTIF_INBOUND, inbound).notifyService());
             }
             if (this.settings.GcssUnreadNotificationOutbound) {
                 const outbound = notifications
@@ -152,7 +152,7 @@ export class GcssWorkflowService {
                     .filterOutboundByCountries(this.settings.GcssOutboundNotificationCountries)
                     .filterOutboundExcludeCountries(this.settings.GcssOutboundNotificationExcludedCountries)
                     .mapToGcssNotification();
-                messages.push(new MSG(CMD.NEW_GCSS_UNREAD_NOTIF_OUTBOUND, outbound).notifyHub());
+                messages.push(new MSG(CMD.NEW_GCSS_UNREAD_NOTIF_OUTBOUND, outbound).notifyService());
             }
         }
 

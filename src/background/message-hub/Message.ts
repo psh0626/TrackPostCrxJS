@@ -1,3 +1,5 @@
+import { getAllServiceTabs } from "../../lib/findTabs";
+
 export enum CMD {
     NULL = "NULL",
     FETCH_POST_ELEMENT = "FETCH_POST_ELEMENT",
@@ -23,6 +25,7 @@ export enum CMD {
     SAVE_OPTIONS = "SAVE_OPTIONS",
     LOAD_OPTIONS = "LOAD_OPTIONS",
     SETTINGS_CHANGED = "SETTINGS_CHANGED",
+    EXCHANGE_RATES_UPDATED = "EXCHANGE_RATES_UPDATED",
     KMMBOX_REFRESH = "KMMBOX_REFRESH",
 }
 
@@ -42,10 +45,20 @@ export class MSG {
             });
         });
     }
-    notifyHub(): Promise<any>{
+    notifyService(): Promise<any> {
         return chrome.runtime.sendMessage(this);
     }
-
+    async notifyAllTabs(): Promise<any> {
+        const allTabs = await getAllServiceTabs(true);
+        if (!allTabs || allTabs.length === 0) {
+            return;
+        }
+        allTabs.forEach((tab) => {
+            if (tab && tab.id) {
+                chrome.tabs.sendMessage(tab.id, this);
+            }
+        });
+    }
 }
 export async function sendRequest<T>(message: MSG, param?: any): Promise<T>;
 export async function sendRequest(message: MSG, param?: any): Promise<any>;
