@@ -267,16 +267,21 @@ export async function injectValueInputs(
         selectAutoCompleteOption(thisForm.indemnityAmountCurrency!, "SDR");
     }
 }
-export async function waitUntilRequestTypeSelected(): Promise<void> {
-    const requestType = await InjectUtil.TryQuerySelectFor<HTMLInputElement>("input[aria-labelledby='requestType']");
+export async function waitUntilRequestTypeSelected(): Promise<boolean> {
+    const requestType = await InjectUtil.TryQuerySelectFor<HTMLInputElement>(
+        "input[aria-labelledby='requestType']",
+        300,
+        100,
+    );
     if (!requestType) {
         console.log("Request type input not found");
-        return;
+        return false;
     }
     do {
         await InjectUtil.wait(100);
     } while (!requestType.value);
     console.log("Request type selected:", requestType.value);
+    return true;
 }
 export async function waitUntilRequestTypeChanged(): Promise<boolean> {
     const requestType = await InjectUtil.TryQuerySelectFor<HTMLInputElement>("input[aria-labelledby='requestType']");
@@ -289,7 +294,7 @@ export async function waitUntilRequestTypeChanged(): Promise<boolean> {
         await InjectUtil.wait(100);
     } while (requestType.value === initialValue);
     console.log("Request type changed to:", requestType.value);
-    return Promise.resolve(true);
+    return true;
 }
 export function getCurrentRequestInfo() {
     const url = new URL(location.href.replace("/#", ""));

@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "IMIC TrackPost",
     "description": "Chrome/Edge 확장프로그램 - iCare, GCSS 사무 자동화",
-    "version": "3.0.8",
+    "version": "3.0.9",
     "icons": {
         "16": "src/ext-icon.png",
         "32": "src/ext-icon.png",
@@ -36,8 +36,10 @@
         "https://ems.epost.go.kr/*",
         "https://icare.post/*",
         "https://gcss.ipc.be/*",
-        "https://github.com/shawnpark9494/TrackPostExtZip/commits/main/",
+        "https://github.com/psh0626/TrackPostExtZip/commits/main/",
+        "https://gcss-uat.ipc.be/*",
         "https://kmmbox.korea.kr/*",
+        "https://mail.posa.or.kr/*",
         "http://localhost:5173/"
     ],
     "content_scripts": [

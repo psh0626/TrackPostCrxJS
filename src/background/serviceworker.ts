@@ -4,9 +4,9 @@ import PopupTrack from "../lib/PopupTrack";
 import { time } from "../lib/timespanExtension";
 import { CMD, MSG } from "./message-hub/Message";
 import ProcessMessage from "./message-hub/MessageHub";
-import { GcssItem, WorkflowItem } from "./pending-replies/dataWrapper";
+import { GcssItem, isGcssItem, isWorkflowItem, WorkflowItem } from "./pending-replies/dataWrapper";
 import { ServiceTypes } from "./pending-replies/gcssReplies";
-import { GcssPrefillInquiryResponse } from "./pending-replies/newGcssWrapper";
+import { GCSSMessage, isGCSSMessage, isGCSSNotification } from "./pending-replies/newGcssWrapper";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
 void chrome.action.setBadgeBackgroundColor({ color: "#424242" });
@@ -69,9 +69,18 @@ async function APICalls(count: number, final = false) {
         ];
         let hasImportantUnread = false;
         for (const e of services) {
-            let itemList = await getStorageItems<GcssItem | WorkflowItem>(e);
+            let itemList = await getStorageItems<GcssItem | WorkflowItem | GCSSMessage>(e);
             if (e === CMD.GCSS_UNREAD_REQUESTS && itemList.length > 0) {
-                itemList = itemList.filter((i) => (i as GcssItem).serviceType === ServiceTypes.EMS);
+                itemList = itemList.filter((i) => {
+                    if (isGcssItem(i)) {
+                        return i.serviceType === ServiceTypes.EMS;
+                    } else if (isWorkflowItem(i)) {
+                        return i.isNotification === false;
+                    } else if (isGCSSMessage(i)) {
+                        return isGCSSNotification(i) === false;
+                    }
+                    return false;
+                });
             }
             if (itemList.length > 0) {
                 hasImportantUnread = true;

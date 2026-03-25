@@ -493,7 +493,8 @@ function PopUpApp() {
                 <Divider variant="middle" sx={{ m: "15px" }}></Divider>
             ) : null}
             {newGcssRenderOrder.map((item) => item.count > 0 && item.render())}
-            {renderOrder.some((item) => item.count < 1) || newGcssRenderOrder.some((item) => item.count < 1) ? (
+
+            {renderOrder.some((item) => item.count < 1 && item.render() !== null) ? (
                 <Divider variant="middle" sx={{ mt: "12px", mb: "7px" }}>
                     <Typography variant="caption" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
                         모두 읽음

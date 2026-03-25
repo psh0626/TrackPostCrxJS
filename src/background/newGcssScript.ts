@@ -88,13 +88,17 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
                     ? promises[1].value
                     : await GcssWorkflowService.fetchPrefillData(itemId);
 
+            const requestTypeSelected = promises[2].status === "fulfilled" ? promises[2].value : false;
+
             if (!postElement || !prefillData) {
                 console.error("Failed to fetch post element or prefill data for item ID:", itemId);
                 isInjecting = false;
                 return;
             }
 
-            await injectRequestForm(postElement, prefillData);
+            if (requestTypeSelected) {
+                await injectRequestForm(postElement, prefillData);
+            }
             if (await GcssHelper.waitUntilRequestTypeChanged()) {
                 GcssLoadingMask.showLoadingMask();
                 console.log("Request type changed, reinjecting form with new request type conditions");
@@ -148,6 +152,7 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
         const formInfo = GcssHelper.getCurrentRequestInfo();
         console.log("[InjectRequestForm] Current form info:", formInfo);
 
+        // TODO: try and replace it with chrome.webRequest API to detect form load more efficiently instead of waiting for a fixed input element
         await GcssHelper.getInput("itemOriginCountry", 50, 100); // Wait for form to load by checking the presence of a key input
         perfMarks.push(performance.mark("Original Content Loaded"));
         perfMarks.push(performance.mark("Start Finding Elements"));
