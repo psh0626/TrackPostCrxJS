@@ -173,6 +173,7 @@ function NewItemInput({ onAdd, sx, ...props }: NewItemInputProps) {
         backgroundColor: "transparent",
         textColor: "inherit",
     });
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
 
     useEffect(() => {
         if (accState.isMouseOver && !accState.isExpanded) {
@@ -244,11 +245,7 @@ function NewItemInput({ onAdd, sx, ...props }: NewItemInputProps) {
                             variant="outlined"
                             sx={{ width: "85%", my: 1.5 }}
                             onClick={() => {
-                                if (onAdd) {
-                                    const newValue = isNaN(Number(value)) ? 1 : Number(value);
-                                    const newItem = new CurrencyItem({ currency, valueInKRW: newValue, isAdded: true });
-                                    onAdd(newItem);
-                                }
+                                setIsAlertOpen(true);
                             }}
                         >
                             추가
@@ -256,6 +253,23 @@ function NewItemInput({ onAdd, sx, ...props }: NewItemInputProps) {
                     </Stack>
                 </AccordionDetails>
             </Accordion>
+            <AlertDialog
+                content={
+                    <>
+                        <span>환율 정보를 추가하시겠습니까?</span>
+                        <br />
+                        <span>이미 존재하는 통화의 경우 환율 정보가 업데이트됩니다.</span>
+                    </>
+                }
+                isOpen={isAlertOpen}
+                onClose={(result) => {
+                    if (result && onAdd) {
+                        const newValue = isNaN(Number(value)) ? 1 : Number(value);
+                        const newItem = new CurrencyItem({ currency, valueInKRW: newValue, isAdded: true });
+                        onAdd(newItem);
+                    }
+                }}
+            />
         </Stack>
     );
 }
@@ -347,14 +361,11 @@ function AlertDialog({ isOpen, onClose, content }: AlertDialogProps) {
     );
 }
 
-const currencyOrder = ["SDR", "USD", "EUR", "GBP", "CNY", "JPY"];
 export function ExchangeRate() {
     const [isInitialized, setIsInitialized] = useState(false);
     const [rates, setRates] = useState<ExchangeRateMap>(ExchangeRateUtil.rates);
     // TODO: 내보내기/가져오기 기능 추가하기 (파일로 저장/불러오기 or 클립보드 복사/붙여넣기)
-    // TODO: 아래 각 컴포넌트로 돌려보내기
-    const [isAlertOpen, setIsAlertOpen] = useState({ saveButton: false, addButton: false, removeButton: false });
-    const [tempNewItem, setTempNewItem] = useState<CurrencyItem>({ currency: "", valueInKRW: 1, isAdded: true });
+    const [isAlertOpen, setIsAlertOpen] = useState({ saveButton: false });
 
     useEffect(() => {
         if (isInitialized) return;
@@ -365,6 +376,7 @@ export function ExchangeRate() {
         });
     }, []);
 
+    const currencyOrder = ["SDR", "USD", "EUR", "GBP", "CNY", "JPY"];
     const sortRates = (a: CurrencyItem, b: CurrencyItem) => {
         const indexA = currencyOrder.indexOf(a.currency);
         const indexB = currencyOrder.indexOf(b.currency);
@@ -386,6 +398,25 @@ export function ExchangeRate() {
         return a.currency.localeCompare(b.currency);
     };
 
+    const onRateInputChange = (item: CurrencyItem, value: string) => {
+        const parsedValue = isNaN(Number(value)) ? 1 : Number(value);
+        setRates((prevRates) => {
+            const newRates = new Map(prevRates);
+            newRates.get(item.currency)!.valueInKRW = parsedValue;
+            return newRates;
+        });
+    };
+
+    const onSaveClick = async () => {
+        setIsAlertOpen({ saveButton: true });
+    };
+
+    const handleSaveConfirmed = async (result: boolean) => {
+        if (result) {
+            await ExchangeRateUtil.updateRates(rates);
+        }
+    };
+
     const handleAddConfirmed = (item: CurrencyItem) => {
         const existingItem = rates.has(item.currency);
         if (existingItem) {
@@ -399,33 +430,7 @@ export function ExchangeRate() {
         }
     };
 
-    const onAddClicked = (item: CurrencyItem) => {
-        setTempNewItem(item);
-        setIsAlertOpen({ addButton: true, saveButton: false, removeButton: false });
-    };
-
-    const onRateInputChange = (item: CurrencyItem, value: string) => {
-        const parsedValue = isNaN(Number(value)) ? 1 : Number(value);
-        setRates((prevRates) => {
-            const newRates = new Map(prevRates);
-            newRates.get(item.currency)!.valueInKRW = parsedValue;
-            return newRates;
-        });
-    };
-
-    const onSaveClick = async () => {
-        setIsAlertOpen({ addButton: false, saveButton: true, removeButton: false });
-    };
-
-    const handleSaveConfirmed = async (result: boolean) => {
-        setIsAlertOpen({ addButton: false, saveButton: false, removeButton: false });
-        if (result) {
-            await ExchangeRateUtil.updateRates(rates);
-        }
-    };
-
     const handleRemoveConfirmed = async (item: CurrencyItem) => {
-        setIsAlertOpen({ addButton: false, saveButton: false, removeButton: false });
         if (rates.has(item.currency)) {
             setRates((prevRates) => {
                 const newRates = new Map(prevRates);
@@ -440,7 +445,7 @@ export function ExchangeRate() {
             {renderHeader("환율 조정")}
             <Divider variant="fullWidth" sx={{ mb: 2 }} />
             <Stack direction={"column"} paddingLeft={2} paddingTop={2} spacing={3}>
-                <NewItemInput onAdd={onAddClicked} />
+                <NewItemInput onAdd={handleAddConfirmed} />
                 <Divider variant="middle" />
                 <Paper variant="elevation">
                     {Array.from(rates.values())
@@ -468,22 +473,6 @@ export function ExchangeRate() {
                 <Button variant="outlined" onClick={onSaveClick}>
                     저장
                 </Button>
-                <AlertDialog
-                    content={
-                        <>
-                            <span>환율 정보를 추가하시겠습니까?</span>
-                            <br />
-                            <span>이미 존재하는 통화의 경우 환율 정보가 업데이트됩니다.</span>
-                        </>
-                    }
-                    isOpen={isAlertOpen.addButton}
-                    onClose={async (result) => {
-                        setIsAlertOpen({ addButton: false, saveButton: false, removeButton: false });
-                        if (result) {
-                            handleAddConfirmed(tempNewItem);
-                        }
-                    }}
-                />
                 <AlertDialog
                     content="환율 정보를 저장하시겠습니까?"
                     isOpen={isAlertOpen.saveButton}
