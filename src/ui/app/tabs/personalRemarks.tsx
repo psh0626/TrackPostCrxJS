@@ -208,7 +208,7 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
                 </Stack>
             </Stack>
             <Divider sx={{ mb: 2 }} variant="fullWidth" />
-            <Stack direction="row-reverse" alignItems="end" spacing={3} marginBottom={3} pl={2}>
+            <Stack direction="row-reverse" alignItems="end" spacing={3} marginBottom={3} pl={2} width={560}>
                 <Fab
                     color="primary"
                     variant="extended"
