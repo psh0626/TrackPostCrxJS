@@ -17,10 +17,11 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 
 import { IMICSettings, PersonalRemark } from "../../../lib/IMICSettings";
+import ImportExport from "./import-export/importExport";
 import { RemarkDialog } from "./personalRemarksDialog";
 
 interface PersonalRemarksProps {
-    settings: React.MutableRefObject<IMICSettings>;
+    settings: React.RefObject<IMICSettings>;
 }
 
 export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) => {
@@ -35,9 +36,9 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
 
     useEffect(() => {
         if (!initialized.current) {
-            setPrList(settings.current.PersonalRemarks);
+            setPrList(settings.current?.PersonalRemarks || []);
             console.log("settings loaded as", settings.current);
-            console.log("personal remarks loaded as", settings.current.PersonalRemarks);
+            console.log("personal remarks loaded as", settings.current?.PersonalRemarks);
         }
     }, []);
 
@@ -152,60 +153,17 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
         setSlSelected(event.target.value as string);
     }
 
-    function onExportClicked() {
-        const vblob = new Blob([JSON.stringify(prList, null, 2)], { type: "application/json" });
-        const vlink = document.createElement("a");
-        const fileName = "MyPersonalRemarks.json";
-        const vurl = window.URL.createObjectURL(vblob);
-        vlink.setAttribute("href", vurl);
-        vlink.setAttribute("download", fileName);
-        vlink.click();
-        vlink.remove();
-    }
-
-    function onImportClicked() {
-        const importInput = document.createElement("input");
-        importInput.type = "file";
-        importInput.accept = ".json";
-        importInput.onchange = (e) => {
-            const files = (e.target as HTMLInputElement).files;
-            if (!files) return;
-            const reader = new FileReader();
-            reader.onload = function _imp() {
-                try {
-                    const importedData = JSON.parse(this.result as string) as PersonalRemark[];
-                    console.log("Importing data: ", importedData);
-                    setPrList(importedData);
-                    alert("Personal Remarks 불러오기 성공!");
-                } catch (e) {
-                    console.error(e);
-                    alert("개인 메모 불러오기 실패, 개발자와 확인하세요.");
-                }
-            };
-            reader.readAsText(files[0]);
-        };
-        importInput.click();
+    function onItemImported(importedPrList: PersonalRemark[]) {
+        setPrList(importedPrList);
     }
 
     return (
         <div>
             <Stack padding={1} direction="row" justifyContent="space-between" alignItems="end" sx={{ mb: 2 }}>
-                <Typography variant="h4" fontWeight={100} color="initial" sx={{userSelect:"none"}}>
+                <Typography variant="h4" fontWeight={100} color="initial" sx={{ userSelect: "none" }}>
                     iCare Personal Remarks
                 </Typography>
-                <Stack direction="column" spacing={0.4}>
-                    <Divider sx={{ userSelect: "none" }}>
-                        <Typography variant="caption">설정</Typography>
-                    </Divider>
-                    <Stack direction="row" spacing={1}>
-                        <Button variant="outlined" size="small" onClick={onExportClicked}>
-                            내보내기
-                        </Button>
-                        <Button variant="contained" size="small" onClick={onImportClicked}>
-                            불러오기
-                        </Button>
-                    </Stack>
-                </Stack>
+                <ImportExport fileName="MyPersonalRemarks.json" target={prList} onImport={onItemImported} />
             </Stack>
             <Divider sx={{ mb: 2 }} variant="fullWidth" />
             <Stack direction="row-reverse" alignItems="end" spacing={3} marginBottom={3} pl={2} width={560}>

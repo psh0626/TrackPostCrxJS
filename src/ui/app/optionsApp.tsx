@@ -2,7 +2,7 @@ import { TravelExplore } from "@mui/icons-material";
 import { AppBar, Box, Paper, Tab, Tabs, Toolbar, Typography } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { IMICSettings } from "../../lib/IMICSettings";
-import { ExchangeRate } from "./tabs/exchangeRate";
+import ExchangeRate from "./tabs/exhcnage-rate/exchangeRate";
 import { GeneralSettings } from "./tabs/generalSettings";
 import { PersonalRemarks } from "./tabs/personalRemarks";
 

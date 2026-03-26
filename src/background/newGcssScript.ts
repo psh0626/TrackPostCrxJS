@@ -1,3 +1,4 @@
+import ExchangeRateUtil from "../lib/exchangeRateUtil";
 import { IMICSettings } from "../lib/IMICSettings";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./inject-dom/injectUtil";
@@ -14,6 +15,8 @@ import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
     const settings = new IMICSettings();
     await settings.requestLoad();
     GcssWorkflowService.settings = settings;
+
+    await ExchangeRateUtil.initialize();
 
     let lastPostElement: PostElement | null = null;
     let isInjecting = false;

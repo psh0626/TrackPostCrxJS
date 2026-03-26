@@ -1,6 +1,6 @@
+import ExchangeRateUtil from "../lib/exchangeRateUtil";
 import { IMICSettings } from "../lib/IMICSettings";
 import { PostElement } from "../lib/PostUtil";
-import ExchangeRateUtil from "./inject-dom/exchangeRateUtil";
 import InjectUtil from "./inject-dom/injectUtil";
 import OldGcssInjectUtil from "./inject-dom/oldGcssInjectUtil";
 import { CMD, MSG, sendRequest } from "./message-hub/Message";
@@ -9,6 +9,8 @@ import { GcssAPI } from "./pending-replies/gcssReplies";
 (async () => {
     const settings = new IMICSettings();
     await settings.requestLoad();
+
+    await ExchangeRateUtil.initialize();
 
     GcssAPI.settings = settings;
 

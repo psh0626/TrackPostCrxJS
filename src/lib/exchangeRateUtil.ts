@@ -12,6 +12,9 @@ export class CurrencyItem {
 
 export default class ExchangeRateUtil {
     private static readonly storageName = "IMIC_EXCHANGE_RATES";
+    private static readonly storageNameLastUpdated = "IMIC_EXCHANGE_RATES_LAST_UPDATED";
+
+    static lastUpdated: Date | null = null;
     static rates: ExchangeRateMap = new Map<string, CurrencyItem>([
         ["KRW", new CurrencyItem({ currency: "KRW", valueInKRW: 1 })],
         ["SDR", new CurrencyItem({ currency: "SDR", valueInKRW: 1749 })],
@@ -44,11 +47,21 @@ export default class ExchangeRateUtil {
 
     static saveRates() {
         console.log("[ExchangeRateUtil] Saving exchange rates to storage: ", this.rates);
-        return chrome.storage.local.set({ [ExchangeRateUtil.storageName]: Object.fromEntries(this.rates) });
+        return chrome.storage.local.set({
+            [ExchangeRateUtil.storageName]: Object.fromEntries(this.rates),
+            [ExchangeRateUtil.storageNameLastUpdated]: new Date().toISOString(),
+        });
     }
     static async loadRates() {
-        const result = await chrome.storage.local.get([ExchangeRateUtil.storageName]);
+        const result = await chrome.storage.local.get([
+            ExchangeRateUtil.storageName,
+            ExchangeRateUtil.storageNameLastUpdated,
+        ]);
         const foundRates = result[ExchangeRateUtil.storageName];
+        const lastUpdated = result[ExchangeRateUtil.storageNameLastUpdated] as string | undefined;
+        if (lastUpdated) {
+            this.lastUpdated = new Date(lastUpdated);
+        }
         if (foundRates) {
             this.rates = new Map(
                 Object.entries(foundRates).map(([key, value]) => [key, new CurrencyItem({ currency: key, ...value })]),

@@ -1,7 +1,7 @@
+import ExchangeRateUtil from "../../lib/exchangeRateUtil";
 import { PostElement } from "../../lib/PostUtil";
 import { CMD, MSG } from "../message-hub/Message";
 import { GcssPrefillObject } from "../pending-replies/newGcssWrapper";
-import ExchangeRateUtil from "./exchangeRateUtil";
 import FloatingHelper from "./floatingHelper";
 import InjectUtil from "./injectUtil";
 import GcssLoadingMask from "./newGcssLoadingMask";
