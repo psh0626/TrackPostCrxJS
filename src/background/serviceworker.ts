@@ -148,13 +148,13 @@ chrome.webRequest.onCompleted.addListener(
 
 chrome.webRequest.onCompleted.addListener(
     function (details) {
-        if (details.url.includes("https://github.com/shawnpark9494/TrackPostExtZip/commits/main/")) {
+        if (details.url.includes("https://github.com/psh0626/TrackPostExtZip/commits/main/")) {
             console.log("[Git onCompleted] github commits page requested, extention reload begins..", details);
             chrome.runtime.reload();
         }
     },
     {
-        urls: ["https://github.com/shawnpark9494/TrackPostExtZip/commits/main/"],
+        urls: ["https://github.com/psh0626/TrackPostExtZip/commits/main/"],
     },
 );
 chrome.webRequest.onCompleted.addListener(
