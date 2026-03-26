@@ -67,9 +67,9 @@ export default function ExchangeRate() {
     };
 
     const handleSaveConfirmed = async (result: boolean) => {
+        setIsAlertOpen({ saveButton: false });
         if (result) {
             await ExchangeRateUtil.updateRates(rates);
-            setIsAlertOpen({ saveButton: false });
             setLastUpdated(new Date());
         }
     };
