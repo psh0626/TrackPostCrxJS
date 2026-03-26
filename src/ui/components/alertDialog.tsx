@@ -54,7 +54,7 @@ export default function AlertDialog({ isOpen, onClose, content }: AlertDialogPro
             );
         }
         return content;
-    }
+    };
 
     const onChange = () => {};
     return (
@@ -76,15 +76,16 @@ export default function AlertDialog({ isOpen, onClose, content }: AlertDialogPro
                             cursor: "move",
                         }}
                     >
-                        <Paper {...props} sx={{ maxWidth: 500 }}></Paper>
+                        <Paper
+                            {...props}
+                            sx={{ width: 500, maxWidth: "calc(100vw - 32px)", boxSizing: "border-box" }}
+                        />
                     </div>
                 );
             }}
         >
             <DialogTitle sx={{ userSelect: "none" }}>확인</DialogTitle>
-            <DialogContent>
-                {renderContent()}
-            </DialogContent>
+            <DialogContent>{renderContent()}</DialogContent>
             <DialogActions>
                 <Button onClick={() => onClose(false)}>취소</Button>
                 <Button

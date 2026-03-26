@@ -145,7 +145,7 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
     async function SaveSettings() {
         console.log("current state: ", prList);
         settings.current.PersonalRemarks = prList;
-        await settings.current.saveOptions(false);
+        await settings.current.saveOptions(true);
         console.log("settings saved as", settings.current);
     }
 
