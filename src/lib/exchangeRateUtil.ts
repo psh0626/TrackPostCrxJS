@@ -1,4 +1,4 @@
-import { CMD, MSG } from "../background/message-hub/Message";
+import { CMD, MSG } from "./message-hub/Message";
 
 export type ExchangeRateMap = Map<string, CurrencyItem>;
 export class CurrencyItem {
@@ -80,7 +80,7 @@ export default class ExchangeRateUtil {
     }
     static async notifyRateChangeToTabs() {
         console.log("[ExchangeRateUtil] Notifying all tabs about exchange rate update.");
-        return new MSG(CMD.EXCHANGE_RATES_UPDATED).notifyAllTabs();
+        return new MSG(CMD.EXCHANGE_RATES_UPDATED).fromService.notifyAllTabs();
     }
     static async initialize() {
         chrome.runtime.onMessage.addListener((message: MSG, _sender, sendResponse) => {

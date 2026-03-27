@@ -1,7 +1,7 @@
-export function time(ms: string | number): Mil {
-    return new Mil(ms);
+export function ms(ms: string | number): Ms {
+    return new Ms(ms);
 }
-export class Mil {
+export class Ms {
     private _timeMs = 0;
     constructor(ms: string | number) {
         if (typeof ms === "string") {

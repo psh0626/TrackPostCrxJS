@@ -1,4 +1,4 @@
-import { CMD, MSG } from "../background/message-hub/Message";
+import { CMD, MSG } from "./message-hub/Message";
 
 export default async function getIcareUserId() {
     let user_id = "";

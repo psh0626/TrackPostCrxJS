@@ -1,6 +1,7 @@
-import { CMD, MSG } from "../background/message-hub/Message";
-import { ServiceTypes } from "../background/pending-replies/gcssReplies";
+import { ServiceTypes } from "../content-scripts/pending-replies/gcssReplies";
 import { requestFetch } from "./findTabs";
+import { CMD, MSG } from "./message-hub/Message";
+
 export class PersonalRemark {
     Section: string;
     Id: number;

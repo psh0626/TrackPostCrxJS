@@ -19,8 +19,8 @@ export default defineConfig(() => {
         build: {
             rollupOptions: {
                 input: {
-                    sidepanel: "/src/ui/sidepanel.html",
-                    options: "/src/ui/options.html",
+                    sidepanel: "/src/background-service//ui/sidepanel.html",
+                    options: "/src/background-service//ui/options.html",
                 },
                 onwarn(warning, warn) {
                     // Suppress “Module level directives cause errors when bundled” warnings
