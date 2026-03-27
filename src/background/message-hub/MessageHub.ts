@@ -1,6 +1,5 @@
 import createNotification from "../../lib/Notification";
 import { PostAPI } from "../../lib/PostUtil";
-import { PopupTracker } from "../serviceworker";
 import { CMD, MSG } from "./Message";
 
 declare global {
@@ -93,20 +92,6 @@ export default function ProcessMessage(
                 await createNotification(false);
             })();
             return;
-        case CMD.POPUP_TRACK_SET:
-            Object.assign(PopupTracker, Message.Param);
-            void (async () => {
-                await chrome.storage.session.set({ PopupTrack: PopupTracker });
-                console.log("popup set msg received: ", PopupTracker);
-            })();
-            return;
-        case CMD.SIDEPANEL_TRACK_REQUEST:
-            void (async () => {
-                const dict = await chrome.storage.session.get("PopupTrack");
-                console.log("RESPONSE SENDING: ", dict.PopupTrack);
-                SendResponse(dict.PopupTrack);
-            })();
-            return true;
 
         case CMD.SAVE_ICARE_USER_ID:
             void chrome.storage.sync.set({ IcareUserId: Message.Param }).then(() => {

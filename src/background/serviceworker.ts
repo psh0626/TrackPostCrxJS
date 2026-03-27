@@ -17,7 +17,7 @@ const ICARE_URL = "https://icare.post";
 console.log("BackgroundWorker has been initiated.");
 
 const MsgPort: { [key: number]: chrome.runtime.Port } = {};
-export const PopupTracker = new PopupTrack();
+
 const MAXIMUM_COUNT = 120;
 
 main();

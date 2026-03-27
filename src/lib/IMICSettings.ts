@@ -1,6 +1,6 @@
-import { CMD, MSG, sendRequest } from "../background/message-hub/Message";
+import { CMD, MSG } from "../background/message-hub/Message";
 import { ServiceTypes } from "../background/pending-replies/gcssReplies";
-import { getAllServiceTabs, requestFetch } from "./findTabs";
+import { requestFetch } from "./findTabs";
 export class PersonalRemark {
     Section: string;
     Id: number;
@@ -36,18 +36,7 @@ export class IMICSettings {
     GcssServiceTypes: ServiceTypes[] = [ServiceTypes.EMS];
     static SavingFinished: NodeJS.Timeout | null = null;
     private async notifyTabs() {
-        const work_tabs = await getAllServiceTabs(true);
-
-        if (!work_tabs || work_tabs.length === 0) {
-            return;
-        }
-        console.log("Notifying tabs of settings change: ", work_tabs);
-
-        work_tabs.forEach(async (tab) => {
-            if (tab && tab.id) {
-                await chrome.tabs.sendMessage(tab.id, new MSG(CMD.SETTINGS_CHANGED));
-            }
-        });
+        await new MSG(CMD.SETTINGS_CHANGED).fromService.notifyAllTabs();
 
         await requestFetch();
         IMICSettings.SavingFinished = null;
@@ -75,10 +64,10 @@ export class IMICSettings {
     }
 
     async requestSave() {
-        await sendRequest(new MSG(CMD.SAVE_OPTIONS, this));
+        await new MSG(CMD.SAVE_OPTIONS, this).fromContent.toService();
     }
 
     async requestLoad() {
-        Object.assign(this, await sendRequest<IMICSettings>(new MSG(CMD.LOAD_OPTIONS)));
+        Object.assign(this, await new MSG(CMD.LOAD_OPTIONS).fromContent.toServiceWaitResponse<IMICSettings>());
     }
 }

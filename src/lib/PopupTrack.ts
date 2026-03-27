@@ -7,14 +7,14 @@ export default class PopupTrack {
     async SetItemId(id: string) {
         this.ItemId = id;
         this.IsTracked = true;
-        await this.PassToBackground();
+        await this.saveSession();
     }
     Reset() {
         this.ItemId = "";
         this.IsTracked = false;
-        this.PassToBackground();
+        this.saveSession();
     }
-    private PassToBackground() {
-        return chrome.runtime.sendMessage(new MSG(CMD.POPUP_TRACK_SET, this));
+    private saveSession() {
+        return chrome.storage.session.set({ PopupTrack: this });
     }
 }

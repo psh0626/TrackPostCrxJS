@@ -2,7 +2,7 @@ import { IMICSettings } from "../lib/IMICSettings";
 import { PostElement } from "../lib/PostUtil";
 import IcareInjectUtil from "./inject-dom/icareInjectUtil";
 import InjectUtil from "./inject-dom/injectUtil";
-import { CMD, MSG, sendRequest } from "./message-hub/Message";
+import { CMD, MSG } from "./message-hub/Message";
 import { IcareAPI2 } from "./pending-replies/icareReplies";
 
 void (async () => {
@@ -181,6 +181,6 @@ void (async () => {
     }
 
     async function FindPostElement(item_id: string): Promise<PostElement> {
-        return await sendRequest<PostElement>(new MSG(CMD.FETCH_POST_ELEMENT, item_id));
+        return await new MSG(CMD.FETCH_POST_ELEMENT, item_id).fromContent.toServiceWaitResponse<PostElement>();
     }
 })();

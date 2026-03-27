@@ -18,8 +18,6 @@ export enum CMD {
     NEW_GCSS_UNREAD_NOTIF_INBOUND = "NEW_GCSS_UNREAD_NOTIF_INBOUND",
     NEW_GCSS_UNREAD_NOTIF_OUTBOUND = "NEW_GCSS_UNREAD_NOTIF_OUTBOUND",
     NEW_GCSS_MONITOR_PREFILL_REQUEST = "NEW_GCSS_MONITOR_PREFILL_REQUEST",
-    POPUP_TRACK_SET = "POPUP_TRACK_SET",
-    SIDEPANEL_TRACK_REQUEST = "SIDEPANEL_TRACK_REQUEST",
     SAVE_ICARE_USER_ID = "SAVE_ICARE_USER_ID",
     LOAD_ICARE_USER_ID = "LOAD_ICARE_USER_ID",
     SAVE_OPTIONS = "SAVE_OPTIONS",
@@ -37,35 +35,39 @@ export class MSG {
         this.Command = command;
         this.Param = param;
     }
-    getResponse<T>(): Promise<T>;
-    getResponse(): Promise<any> {
-        return new Promise((resolve) => {
-            chrome.runtime.sendMessage(this, (response) => {
-                resolve(response);
+    public readonly fromContent = {
+        toServiceWaitResponse<T>(): Promise<T> {
+            return new Promise((resolve) => {
+                chrome.runtime.sendMessage(this, (response) => {
+                    resolve(response);
+                });
             });
-        });
-    }
-    notifyService(): Promise<any> {
-        return chrome.runtime.sendMessage(this);
-    }
-    async notifyAllTabs(): Promise<any> {
-        const allTabs = await getAllServiceTabs(true);
-        if (!allTabs || allTabs.length === 0) {
-            return;
-        }
-        allTabs.forEach((tab) => {
-            if (tab && tab.id) {
-                chrome.tabs.sendMessage(tab.id, this);
+        },
+        toService(): Promise<void> {
+            return chrome.runtime.sendMessage(this);
+        },
+    };
+    public readonly fromService = {
+        toTab(tab: chrome.tabs.Tab): Promise<void> {
+            if (tab && tab.id)
+                return chrome.tabs.sendMessage(tab.id, this).catch(() => {
+                    chrome.tabs.reload(tab.id!);
+                });
+            return Promise.resolve();
+        },
+
+        async notifyAllTabs(): Promise<void> {
+            const allTabs = await getAllServiceTabs(true);
+            if (!allTabs || allTabs.length === 0) {
+                return;
             }
-        });
-    }
-}
-export async function sendRequest<T>(message: MSG, param?: any): Promise<T>;
-export async function sendRequest(message: MSG, param?: any): Promise<any>;
-export async function sendRequest<T>(message: MSG, param?: any): Promise<T | any> {
-    return new Promise((resolve) => {
-        chrome.runtime.sendMessage(message, param, (response) => {
-            resolve(response);
-        });
-    });
+            allTabs.forEach((tab) => {
+                if (tab && tab.id) {
+                    chrome.tabs.sendMessage(tab.id, this).catch(() => {
+                        chrome.tabs.reload(tab.id!);
+                    });
+                }
+            });
+        },
+    };
 }

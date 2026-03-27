@@ -3,7 +3,7 @@ import { IMICSettings } from "../lib/IMICSettings";
 import { PostElement } from "../lib/PostUtil";
 import InjectUtil from "./inject-dom/injectUtil";
 import OldGcssInjectUtil from "./inject-dom/oldGcssInjectUtil";
-import { CMD, MSG, sendRequest } from "./message-hub/Message";
+import { CMD, MSG } from "./message-hub/Message";
 import { GcssAPI } from "./pending-replies/gcssReplies";
 
 (async () => {
@@ -126,7 +126,7 @@ import { GcssAPI } from "./pending-replies/gcssReplies";
     }
 
     async function findPostElement(item_id: string): Promise<PostElement> {
-        return await sendRequest<PostElement>(new MSG(CMD.FETCH_POST_ELEMENT, item_id));
+        return await new MSG(CMD.FETCH_POST_ELEMENT, item_id).fromContent.toServiceWaitResponse<PostElement>();
     }
     function getCurrencyString(currency_value: string) {
         let rate = "USD";

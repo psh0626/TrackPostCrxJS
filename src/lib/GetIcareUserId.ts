@@ -1,4 +1,4 @@
-import { CMD, MSG, sendRequest } from "../background/message-hub/Message";
+import { CMD, MSG } from "../background/message-hub/Message";
 
 export default async function getIcareUserId() {
     let user_id = "";
@@ -33,9 +33,9 @@ export default async function getIcareUserId() {
 }
 
 function saveIcareUserId(user_id: string) {
-    void chrome.runtime.sendMessage(new MSG(CMD.SAVE_ICARE_USER_ID, user_id));
+    void new MSG(CMD.SAVE_ICARE_USER_ID, user_id).fromContent.toService();
 }
 async function loadIcareUserId() {
     console.log("requesting local storage for icare user id");
-    return await sendRequest<string>(new MSG(CMD.LOAD_ICARE_USER_ID));
+    return await new MSG(CMD.LOAD_ICARE_USER_ID).fromContent.toServiceWaitResponse<string>();
 }
