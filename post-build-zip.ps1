@@ -1,4 +1,5 @@
-
+$prePublishPath = ".\pre-publish\dist.zip"
+$publishPath = ".\publish\dist.zip"
 $directoryPath = ".\publish"
 
 # Check if the directory already exists
@@ -13,6 +14,14 @@ if (-not (Test-Path -Path $directoryPath)) {
 # Write-Output "Creating dist.zip..."
 # Compress-Archive -Path "dist\\*" -DestinationPath "publish\\dist.zip" -Force
 # Write-Output "dist.zip file has been created!"
+if (Test-Path -Path $prePublishPath) {
+    Move-Item -Path $prePublishPath -Destination $publishPath -Force
+    Write-Output "dist.zip file has been moved to publish directory!"
+} else {
+    Write-Output "dist.zip file does not exist in pre-publish directory!"
+    exit 1
+}
+
 
 Set-Location publish
 git add dist.zip
