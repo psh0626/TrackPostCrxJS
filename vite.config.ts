@@ -22,7 +22,7 @@ export default defineConfig(() => {
             viteReact(),
             babel({ presets: [reactCompilerPreset()] }),
             crx({ manifest }),
-            zip({ outDir: "release", outFileName: "dist.zip" }),
+            zip({ outDir: "publish", outFileName: "dist.zip" }),
         ],
         build: {
             rollupOptions: {

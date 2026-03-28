@@ -10,9 +10,9 @@ if (-not (Test-Path -Path $directoryPath)) {
     Write-Output "Directory already exists: $directoryPath"
 }
 
-Write-Output "Creating dist.zip..."
-Compress-Archive -Path "dist\\*" -DestinationPath "publish\\dist.zip" -Force
-Write-Output "dist.zip file has been created!"
+# Write-Output "Creating dist.zip..."
+# Compress-Archive -Path "dist\\*" -DestinationPath "publish\\dist.zip" -Force
+# Write-Output "dist.zip file has been created!"
 
 Set-Location publish
 git add dist.zip
