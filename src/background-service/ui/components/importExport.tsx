@@ -1,7 +1,7 @@
 import { Download, Upload } from "@mui/icons-material";
 import { Box, Button, ButtonProps, Divider, Stack, Typography } from "@mui/material";
 import React, { ChangeEvent, useRef } from "react";
-import { IMICSettings } from "../../../lib/IMICSettings";
+import { IMICSettings } from "@/common/IMICSettings";
 
 
 interface ImportExportProps {

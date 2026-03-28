@@ -1,5 +1,5 @@
-import { CMD, MSG } from "../lib/message-hub/Message";
-import { ms } from "../lib/timespanExtension";
+import { MSG, CMD } from "@/common/message-hub/Message";
+import { ms } from "@/common/TimespanExtension";
 
 void (() => {
     let isFetching = false;
@@ -174,7 +174,7 @@ void (() => {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-    chrome.runtime.onMessage.addListener((message: MSG, sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener((message: MSG) => {
         if (message.Command === CMD.WEB_REQUEST_COMPLETE) {
             if (isFetching) {
                 console.log("Request already in progress, ignoring message");

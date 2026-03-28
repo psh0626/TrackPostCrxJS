@@ -330,7 +330,7 @@ export class WorkflowItem {
 
         // Decode HTML entities
         const textWithDecodedEntities = textOnly
-            .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec))
+            .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(dec))
             .replace(/&quot;/g, '"')
             .replace(/&amp;/g, "&")
             .replace(/&lt;/g, "<")

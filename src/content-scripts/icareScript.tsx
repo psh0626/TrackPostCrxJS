@@ -1,6 +1,6 @@
-import { IMICSettings } from "../lib/IMICSettings";
-import { MSG, CMD } from "../lib/message-hub/Message";
-import { PostElement } from "../lib/PostUtil";
+import { IMICSettings } from "@/common/IMICSettings";
+import { MSG, CMD } from "@/common/message-hub/Message";
+import { PostElement } from "@/common/PostUtil";
 import IcareInjectUtil from "./inject-dom/icareInjectUtil";
 import InjectUtil from "./inject-dom/injectUtil";
 import { IcareAPI2 } from "./pending-replies/icareReplies";

@@ -1,3 +1,4 @@
+import "./newGcssLoadingMask.css";
 export default class GcssLoadingMask {
     private static maskElement: HTMLDivElement | null = null;
     private static maskTimeout: number | null = null;
@@ -6,24 +7,6 @@ export default class GcssLoadingMask {
         if (!this.maskElement) {
             const mask = document.createElement("div");
             mask.id = maskId;
-            mask.style.cssText = `
-                display: flex;
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(255, 255, 255, 0.8);
-                backdrop-filter: blur(5px);
-                z-index: 9999;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                font-size: 2rem;
-                font-weight: 900;
-                transition: opacity 0.3s ease;
-                pointer-events: none;
-            `;
             mask.style.opacity = "0";
             mask.innerText = "자동 입력 중";
             document.body.appendChild(mask);

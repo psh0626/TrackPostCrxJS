@@ -17,7 +17,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 
 import ImportExport from "../import-export/importExport";
-import { IMICSettings, PersonalRemark } from "../../../../../lib/IMICSettings";
+import { IMICSettings, PersonalRemark } from "@/common/IMICSettings";
 import { RemarkDialog } from "./remarkDialog";
 
 interface PersonalRemarksProps {

@@ -1,3 +1,5 @@
+// @ts-ignore
+
 fetch("https://service.epost.go.kr/trace.RetrieveEmsRigiTraceList.comm?POST_CODE=RK005034920KR&displayHeader=")
     .then((response) => response.text())
     .then((txt) => new DOMParser().parseFromString(txt, "text/html"))
@@ -10,12 +12,12 @@ fetch("https://service.epost.go.kr/trace.RetrieveEmsRigiTraceList.comm?POST_CODE
         ),
     );
 
-interface Trace {
-    deliveryDateAndTime: string;
-    processState: string;
-    processPlace: string;
-    detailProcessState: string;
-}
+// interface Trace {
+//     deliveryDateAndTime: string;
+//     processState: string;
+//     processPlace: string;
+//     detailProcessState: string;
+// }
 [
     [
         "2025.12.03 16:30",

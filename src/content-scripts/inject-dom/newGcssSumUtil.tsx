@@ -105,7 +105,7 @@ export default async function newGcssInsertAuthorColumn(url: URL) {
             console.log(
                 `Document ready at ${i + 1} attempts (${Math.round(performance.now() - beforeTime)} ms), proceeding with insertion.`,
             );
-            [...document.querySelector("tbody")!.children].forEach((elm, idx) => {
+            [...document.querySelector("tbody")!.children].forEach((_, idx) => {
                 const existingCell = document.querySelector(`#author-row-${idx}`);
                 if (existingCell) {
                     existingCell.textContent = "loading...";

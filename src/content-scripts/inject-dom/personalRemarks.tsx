@@ -1,7 +1,7 @@
 import { InputLabel, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import FormControl from "@mui/material/FormControl";
 import { useEffect, useRef, useState } from "react";
-import { IMICSettings, PersonalRemark } from "../../lib/IMICSettings";
+import { IMICSettings, PersonalRemark } from "@/common/IMICSettings";
 interface prSelectProp {
     type: string;
 }

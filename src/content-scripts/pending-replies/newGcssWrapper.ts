@@ -30,7 +30,6 @@ export interface IGCSSBase {
     readStatus: string;
 }
 
-type IGcssMessage = IGCSSWorkflow | IGCSSNotification;
 export interface IGCSSNotification extends IGCSSBase {
     workflowId: string;
     type: string;
@@ -119,9 +118,7 @@ export class GCSSWorkflow extends GCSSMessageBase implements IGCSSWorkflow {
     qumrCount!: number;
     reactivationCount!: number;
     messageLink: string = `${GCSS_WEB_BASE_URL}/#/items/${this.itemId}?workflowId=${this.id}`;
-    isNotification(): this is GCSSNotification {
-        return false;
-    }
+    isNotification = false;
     constructor(data: IGCSSWorkflow) {
         super(data);
         Object.assign(this, data);
@@ -148,9 +145,7 @@ export class GCSSNotification extends GCSSMessageBase implements IGCSSNotificati
     statusLabel!: string;
     reply!: null;
     messageLink: string = `${GCSS_WEB_BASE_URL}/#/items/${this.itemId}/inquiry/${this.id}`;
-    isNotification(): this is GCSSNotification {
-        return true;
-    }
+    isNotification = true;
     isUnread(): boolean {
         return this.readStatus !== "READ";
     }

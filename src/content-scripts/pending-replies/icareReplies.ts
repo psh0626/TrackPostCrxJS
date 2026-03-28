@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
-import { IMICSettings } from "../../lib/IMICSettings";
-import { CMD, MSG } from "../../lib/message-hub/Message";
 import { IcareResponse, WorkflowItem } from "./dataWrapper";
+import { IMICSettings } from "@/common/IMICSettings";
+import { MSG, CMD } from "@/common/message-hub/Message";
 
 export class IcareAPI2 {
     static LastCsrfToken: string = "";

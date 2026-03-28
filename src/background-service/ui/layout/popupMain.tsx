@@ -1,13 +1,10 @@
+import "@/background-service/fonts.css";
+import "@/background-service/index.css";
+import { deepOrange, orange } from "@mui/material/colors";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import PopUpApp from "../app/popupApp";
-// import "@fontsource/noto-sans-kr/300.css";
-// import "@fontsource/noto-sans-kr/400.css";
-// import "@fontsource/noto-sans-kr/500.css";
-// import "@fontsource/noto-sans-kr/700.css";
-import "@fontsource/noto-sans-kr";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { deepOrange, orange } from "@mui/material/colors";
 import PopupHeader from "../app/popupHeader";
 
 const myTheme = createTheme({
@@ -16,7 +13,7 @@ const myTheme = createTheme({
         secondary: orange,
     },
     typography: {
-        fontFamily: `"Noto Sans KR Variable", sans-serif`,
+        fontFamily: `"Pretendard Variable", "Noto Sans KR Variable", sans-serif`,
         fontSize: 14,
         fontWeightLight: 300,
         fontWeightRegular: 400,
@@ -30,5 +27,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <PopupHeader></PopupHeader>
             <PopUpApp />
         </ThemeProvider>
-    </React.StrictMode>
+    </React.StrictMode>,
 );

@@ -1,45 +1,51 @@
 {
-  "env": {
-    "browser": true,
-    "es2021": true,
-    "node": true
-  },
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:react/recommended"
-  ],
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "project": "./tsconfig.json",
-    "ecmaVersion": "latest",
-    "sourceType": "module"
-  },
-  "plugins": ["@typescript-eslint", "react", "eslint-plugin-react-compiler"], 
-  "rules": {
-    "react-compiler/react-compiler": "error",
-    "indent": ["error", 4, { "SwitchCase": 1 }],
-    "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-floating-promises": "warn",
-    "linebreak-style": ["error", "windows"],
-    "semi": ["error", "always"],
-    "no-restricted-imports": [
-      "error",
-      {
-        "patterns": ["@mui/*/*/*"]
-      }
-    ]
-  },
-  "overrides": [
-    {
-      "files": ["*.cjs"],
-      "parser": "espree", // Use ESLint's default parser for plain JS files
-      "env": {
+    "env": {
+        "browser": true,
+        "es2021": true,
         "node": true
-      },
-      "rules": {
-        "@typescript-eslint/no-var-requires": "off" // Turn off TypeScript-specific rules
-      }
+    },
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:react/recommended",
+        "plugin:prettier/recommended",
+        "plugin:react-hooks/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "project": "./tsconfig.json",
+        "ecmaVersion": "latest",
+        "sourceType": "module"
+    },
+    "plugins": ["@typescript-eslint", "react", "react-hooks", "eslint-plugin-react-compiler", "simple-import-sort"],
+    "rules": {
+        "react-compiler/react-compiler": "error",
+        "indent": ["error", 4, { "SwitchCase": 1 }],
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-floating-promises": "warn",
+        "linebreak-style": ["error", "windows"],
+        "semi": ["error", "always"],
+        "react-hooks/exhaustive-deps": "warn",
+        "no-restricted-imports": [
+            "error",
+            {
+                "patterns": ["@mui/*/*/*"]
+            }
+        ]
+    },
+    "overrides": [
+        {
+            "files": ["*.cjs"],
+            "parser": "espree", // Use ESLint's default parser for plain JS files
+            "env": {
+                "node": true
+            },
+            "rules": {
+                "@typescript-eslint/no-var-requires": "off" // Turn off TypeScript-specific rules
+            }
+        }
+    ],
+    "scripts": {
+        "eslint": "eslint ./ --ext .ts,.tsx,.js,.jsx --fix"
     }
-  ]
 }

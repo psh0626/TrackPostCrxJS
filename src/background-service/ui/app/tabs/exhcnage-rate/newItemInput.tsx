@@ -15,7 +15,7 @@ import { useEffect, useState } from "react";
 import AlertDialog from "../../../components/alertDialog";
 import InputLayout from "./inputLayout";
 import ValueTextField from "./valueTextField";
-import { CurrencyItem } from "../../../../../lib/exchangeRateUtil";
+import { CurrencyItem } from "@/common/exchangeRateUtil";
 
 interface NewItemInputProps {
     onAdd?: (item: CurrencyItem) => void;

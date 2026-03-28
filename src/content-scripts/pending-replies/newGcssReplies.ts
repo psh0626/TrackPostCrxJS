@@ -1,6 +1,6 @@
-import { IMICSettings } from "../../lib/IMICSettings";
-import { CMD, MSG } from "../../lib/message-hub/Message";
-import { ms } from "../../lib/timespanExtension";
+import { IMICSettings } from "@/common/IMICSettings";
+import { MSG, CMD } from "@/common/message-hub/Message";
+import { ms } from "@/common/TimespanExtension";
 import {
     GCSS_API_BASE_URL,
     GcssArray,

@@ -1,7 +1,7 @@
-import ExchangeRateUtil from "../lib/exchangeRateUtil";
-import { IMICSettings } from "../lib/IMICSettings";
-import { CMD, MSG } from "../lib/message-hub/Message";
-import { PostElement } from "../lib/PostUtil";
+import ExchangeRateUtil from "@/common/exchangeRateUtil";
+import { IMICSettings } from "@/common/IMICSettings";
+import { MSG, CMD } from "@/common/message-hub/Message";
+import { PostElement } from "@/common/PostUtil";
 import InjectUtil from "./inject-dom/injectUtil";
 import OldGcssInjectUtil from "./inject-dom/oldGcssInjectUtil";
 import { GcssAPI } from "./pending-replies/gcssReplies";
@@ -108,7 +108,7 @@ import { GcssAPI } from "./pending-replies/gcssReplies";
                 injectGcss(post_element);
                 console.log("Dom Injected");
             } else {
-                injectGcssL2(post_element);
+                injectGcssL2();
             }
         } else if (currentURL.pathname.includes("/reply/")) {
             document.oncopy = (e) => {
@@ -220,7 +220,7 @@ import { GcssAPI } from "./pending-replies/gcssReplies";
         }
     }
 
-    async function injectGcssL2(post_element: PostElement) {
+    async function injectGcssL2() {
         await InjectUtil.TryQuerySelectFor("#txt_itemType");
 
         const getSelect = (id: string): HTMLSelectElement => {

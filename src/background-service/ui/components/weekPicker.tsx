@@ -1,8 +1,7 @@
-import { Margin } from "@mui/icons-material";
-import { Button, IconButton, Input, Paper, Stack, styled, Typography } from "@mui/material";
-import { PickersDayProps, PickersDay, DateCalendar, DateRangeIcon } from "@mui/x-date-pickers";
-import dayjs, { Dayjs } from "dayjs";
-import React, { useEffect, useMemo, useState } from "react";
+import { Button, IconButton, Stack, styled } from "@mui/material";
+import { DateCalendar, DateRangeIcon, PickersDay, PickersDayProps } from "@mui/x-date-pickers";
+import { Dayjs } from "dayjs";
+import React, { useState } from "react";
 
 export interface DatePickButtonProps {
     service: "iCare" | "GCSS";
@@ -65,40 +64,38 @@ interface CustomPickerDayProps extends PickersDayProps {
     ishovered: boolean;
 }
 
-const CustomPickersDay = styled(PickersDay)<CustomPickerDayProps>(
-    ({ theme, isselected, ishovered, day }) => ({
-        borderRadius: 0,
-        ...(isselected && {
+const CustomPickersDay = styled(PickersDay)<CustomPickerDayProps>(({ theme, isselected, ishovered, day }) => ({
+    borderRadius: 0,
+    ...(isselected && {
+        backgroundColor: theme.palette.primary.main,
+        color: theme.palette.primary.contrastText,
+        "&:hover, &:focus": {
             backgroundColor: theme.palette.primary.main,
-            color: theme.palette.primary.contrastText,
-            "&:hover, &:focus": {
-                backgroundColor: theme.palette.primary.main,
-            },
-        }),
-        ...(ishovered && {
+        },
+    }),
+    ...(ishovered && {
+        backgroundColor: theme.palette.primary.light,
+        "&:hover, &:focus": {
             backgroundColor: theme.palette.primary.light,
-            "&:hover, &:focus": {
-                backgroundColor: theme.palette.primary.light,
-            },
-            ...(theme.palette.mode === "dark"
-                ? {
+        },
+        ...(theme.palette.mode === "dark"
+            ? {
+                  backgroundColor: theme.palette.primary.dark,
+                  "&:hover, &:focus": {
                       backgroundColor: theme.palette.primary.dark,
-                      "&:hover, &:focus": {
-                          backgroundColor: theme.palette.primary.dark,
-                      },
-                  }
-                : {}),
-        }),
-        ...(day.day() === 0 && {
-            borderTopLeftRadius: "50%",
-            borderBottomLeftRadius: "50%",
-        }),
-        ...(day.day() === 6 && {
-            borderTopRightRadius: "50%",
-            borderBottomRightRadius: "50%",
-        }),
-    })
-);
+                  },
+              }
+            : {}),
+    }),
+    ...(day.day() === 0 && {
+        borderTopLeftRadius: "50%",
+        borderBottomLeftRadius: "50%",
+    }),
+    ...(day.day() === 6 && {
+        borderTopRightRadius: "50%",
+        borderBottomRightRadius: "50%",
+    }),
+}));
 
 const isInSameWeek = (dayA: Dayjs, dayB: Dayjs | null | undefined) => {
     if (dayB == null) {
@@ -112,7 +109,7 @@ function Day(
     props: PickersDayProps & {
         selectedDay?: Dayjs | null;
         hoveredDay?: Dayjs | null;
-    }
+    },
 ) {
     const { day, selectedDay, hoveredDay, ...other } = props;
 
@@ -136,13 +133,7 @@ interface WeekPickerProps {
     onCancel?: Function | null;
     onReset?: Function | null;
 }
-export const WeekPicker: React.FC<WeekPickerProps> = ({
-    targetState,
-    saveTo,
-    onSave,
-    onCancel,
-    onReset
-}) => {
+export const WeekPicker: React.FC<WeekPickerProps> = ({ targetState, saveTo, onSave, onCancel, onReset }) => {
     const [hoveredDay, setHoveredDay] = useState<Dayjs | null>(null);
 
     return (
@@ -171,31 +162,29 @@ export const WeekPicker: React.FC<WeekPickerProps> = ({
                     ),
                 }}
             />
-            <Stack
-                direction="row"
-                justifyContent="space-evenly"
-                spacing={2}
-                marginX={2}
-                marginY={2}>
+            <Stack direction="row" justifyContent="space-evenly" spacing={2} marginX={2} marginY={2}>
                 <Button
                     variant="outlined"
                     onClick={() => {
                         if (onReset) onReset();
-                    }}>
+                    }}
+                >
                     Reset
                 </Button>
                 <Button
                     variant="outlined"
                     onClick={() => {
                         if (onSave) onSave();
-                    }}>
+                    }}
+                >
                     Save
                 </Button>
                 <Button
                     variant="outlined"
                     onClick={() => {
                         if (onCancel) onCancel();
-                    }}>
+                    }}
+                >
                     Cancel
                 </Button>
             </Stack>

@@ -1,16 +1,13 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-// import "@fontsource/noto-sans-kr/300.css";
-// import "@fontsource/noto-sans-kr/400.css";
-// import "@fontsource/noto-sans-kr/500.css";
-// import "@fontsource/noto-sans-kr/700.css";
-import "@fontsource/noto-sans-kr";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import "@/background-service/fonts.css";
+import "@/background-service/index.css";
 import { deepOrange, orange } from "@mui/material/colors";
-import OptionsApp from "../app/optionsApp";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import "dayjs/locale/ko";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import OptionsApp from "../app/optionsApp";
 
 const myTheme = createTheme({
     palette: {
@@ -18,7 +15,7 @@ const myTheme = createTheme({
         secondary: orange,
     },
     typography: {
-        fontFamily: `"Noto Sans KR Variable", sans-serif`,
+        fontFamily: `"Pretendard Variable", sans-serif`,
         fontSize: 14,
         fontWeightLight: 300,
         fontWeightRegular: 400,
@@ -33,5 +30,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 <OptionsApp />
             </ThemeProvider>
         </LocalizationProvider>
-    </React.StrictMode>
+    </React.StrictMode>,
 );

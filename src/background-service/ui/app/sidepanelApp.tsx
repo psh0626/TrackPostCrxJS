@@ -1,3 +1,4 @@
+import { PostAPI, PostElement } from "@/common/PostUtil";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -8,8 +9,7 @@ import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
-import { PostAPI, PostElement } from "../../../lib/PostUtil";
-import PopupTrack from "../../PopupTrack";
+import PopupTrack from "../../lib/popupTrack";
 import { InfoTextField, StyledTextField } from "../components/components";
 
 function SidePanelApp() {

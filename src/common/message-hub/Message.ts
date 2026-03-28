@@ -1,4 +1,4 @@
-import { getAllServiceTabs } from "../../lib/findTabs";
+import { getAllServiceTabs } from "@/common/findTabs";
 
 export enum CMD {
     NULL = "NULL",
@@ -35,39 +35,44 @@ export class MSG {
         this.Command = command;
         this.Param = param;
     }
-    public readonly fromContent = {
-        toServiceWaitResponse<T>(): Promise<T> {
-            return new Promise((resolve) => {
-                chrome.runtime.sendMessage(this, (response) => {
-                    resolve(response);
+    get fromContent() {
+        return {
+            toServiceWaitResponse: <T>(): Promise<T> => {
+                return new Promise((resolve) => {
+                    chrome.runtime.sendMessage(this, (response) => {
+                        resolve(response);
+                    });
                 });
-            });
-        },
-        toService(): Promise<void> {
-            return chrome.runtime.sendMessage(this);
-        },
-    };
-    public readonly fromService = {
-        toTab(tab: chrome.tabs.Tab): Promise<void> {
-            if (tab && tab.id)
-                return chrome.tabs.sendMessage(tab.id, this).catch(() => {
-                    chrome.tabs.reload(tab.id!);
-                });
-            return Promise.resolve();
-        },
+            },
+            toService: (): Promise<void> => {
+                return chrome.runtime.sendMessage(this);
+            },
+        };
+    }
 
-        async notifyAllTabs(): Promise<void> {
-            const allTabs = await getAllServiceTabs(true);
-            if (!allTabs || allTabs.length === 0) {
-                return;
-            }
-            allTabs.forEach((tab) => {
-                if (tab && tab.id) {
-                    chrome.tabs.sendMessage(tab.id, this).catch(() => {
+    get fromService() {
+        return {
+            toTab: (tab: chrome.tabs.Tab): Promise<void> => {
+                if (tab && tab.id)
+                    return chrome.tabs.sendMessage(tab.id, this).catch(() => {
                         chrome.tabs.reload(tab.id!);
                     });
+                return Promise.resolve();
+            },
+
+            notifyAllTabs: async (): Promise<void> => {
+                const allTabs = await getAllServiceTabs(true);
+                if (!allTabs || allTabs.length === 0) {
+                    return;
                 }
-            });
-        },
-    };
+                allTabs.forEach((tab: chrome.tabs.Tab) => {
+                    if (tab && tab.id) {
+                        chrome.tabs.sendMessage(tab.id, this).catch(() => {
+                            chrome.tabs.reload(tab.id!);
+                        });
+                    }
+                });
+            },
+        };
+    }
 }

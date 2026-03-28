@@ -1,8 +1,10 @@
-import { crx, ManifestV3Export } from "@crxjs/vite-plugin";
+import { crx } from "@crxjs/vite-plugin";
 import babel from "@rolldown/plugin-babel";
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
+import path from "node:path";
 import { defineConfig } from "vite";
-import manifest from "./manifest.json";
+import zip from "vite-plugin-zip-pack";
+import manifest from "./manifest.config";
 
 const ReactCompilerConfig = {
     /* ... */
@@ -11,28 +13,36 @@ const ReactCompilerConfig = {
 // https://vitejs.dev/config/
 export default defineConfig(() => {
     return {
+        resolve: {
+            alias: {
+                "@": `${path.resolve(__dirname, "src")}`,
+            },
+        },
         plugins: [
             viteReact(),
             babel({ presets: [reactCompilerPreset()] }),
-            crx({ manifest: manifest as unknown as ManifestV3Export }),
+            crx({ manifest }),
+            zip({ outDir: "release", outFileName: "dist.zip" }),
         ],
         build: {
             rollupOptions: {
                 input: {
-                    sidepanel: "/src/background-service//ui/sidepanel.html",
-                    options: "/src/background-service//ui/options.html",
+                    sidepanel: "/src/background-service/ui/sidepanel.html",
+                    options: "/src/background-service/ui/options.html",
                 },
-                onwarn(warning, warn) {
-                    // Suppress “Module level directives cause errors when bundled” warnings
-                    if (warning.code === "MODULE_LEVEL_DIRECTIVE") {
-                        return;
-                    }
-                    warn(warning);
-                },
+                // onwarn(warning, warn) {
+                //     // Suppress “Module level directives cause errors when bundled” warnings
+                //     if (warning.code === "MODULE_LEVEL_DIRECTIVE") {
+                //         return;
+                //     }
+                //     warn(warning);
+                // },
             },
         },
-        legacy: {
-            skipWebSocketTokenCheck: true,
+        server: {
+            cors: {
+                origin: [/chrome-extension:\/\//],
+            },
         },
     };
 });

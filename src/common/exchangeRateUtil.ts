@@ -83,7 +83,7 @@ export default class ExchangeRateUtil {
         return new MSG(CMD.EXCHANGE_RATES_UPDATED).fromService.notifyAllTabs();
     }
     static async initialize() {
-        chrome.runtime.onMessage.addListener((message: MSG, _sender, sendResponse) => {
+        chrome.runtime.onMessage.addListener((message: MSG, _sender) => {
             switch (message.Command) {
                 case CMD.EXCHANGE_RATES_UPDATED:
                     ExchangeRateUtil.loadRates();

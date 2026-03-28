@@ -10,8 +10,8 @@ import {
     WeekPicker,
     WeekPickerOverlayProps,
 } from "../../components/weekPicker";
-import { ServiceTypes } from "../../../../content-scripts/pending-replies/gcssReplies";
-import { IMICSettings } from "../../../../lib/IMICSettings";
+import { ServiceTypes } from "@/content-scripts/pending-replies/gcssReplies";
+import { IMICSettings } from "@/common/IMICSettings";
 
 interface GeneralSettingsProps {
     settings: React.RefObject<IMICSettings>;
@@ -26,7 +26,7 @@ const NotificationSettings: React.FC<{
     <div>
         <FormControlLabel
             label={label}
-            control={<Checkbox checked={checked} onChange={(e, c) => onChange(c)} color="primary" />}
+            control={<Checkbox checked={checked} onChange={(_, c) => onChange(c)} color="primary" />}
         />
         {checked && subSettings}
     </div>
@@ -66,7 +66,7 @@ const InboundNotifSetting: React.FC<InboundNotifSettingProps> = ({ label, checke
         control={
             <Stack direction="row" alignItems="center">
                 <SubdirectoryArrowRight sx={{ paddingBottom: 1 }} />
-                <Checkbox checked={checked} onChange={(e, c) => onChange(c)} color="error" />
+                <Checkbox checked={checked} onChange={(_, c) => onChange(c)} color="error" />
             </Stack>
         }
     />
@@ -102,7 +102,7 @@ const OutboundNotifSetting: React.FC<OutboundNotifSettingProps> = ({
                                 paddingBottom: 1,
                             }}
                         />
-                        <Checkbox checked={checked} onChange={(e, c) => onChange(c)} color="error" />
+                        <Checkbox checked={checked} onChange={(_, c) => onChange(c)} color="error" />
                     </Stack>
                 }
             />
@@ -327,7 +327,7 @@ const GcssSection: React.FC<GcssSectionProps> = ({
                             control={
                                 <Checkbox
                                     checked={(settingsState.GcssRequestServiceTypes || []).includes(ServiceTypes.EMS)}
-                                    onChange={(e, c) => toggleCheckRequestService(ServiceTypes.EMS, c)}
+                                    onChange={(_, c) => toggleCheckRequestService(ServiceTypes.EMS, c)}
                                     color="error"
                                 />
                             }
@@ -337,12 +337,12 @@ const GcssSection: React.FC<GcssSectionProps> = ({
                             control={
                                 <Checkbox
                                     checked={(settingsState.GcssRequestServiceTypes || []).some(
-                                        (rs) =>
+                                        (rs: ServiceTypes) =>
                                             rs === ServiceTypes.Registered ||
                                             rs === ServiceTypes.KPacket ||
                                             rs === ServiceTypes.Insured,
                                     )}
-                                    onChange={(e, c) => {
+                                    onChange={(_, c) => {
                                         toggleCheckRequestService(ServiceTypes.Registered, c);
                                     }}
                                     color="error"
@@ -356,7 +356,7 @@ const GcssSection: React.FC<GcssSectionProps> = ({
                                     checked={(settingsState.GcssRequestServiceTypes || []).includes(
                                         ServiceTypes.Parcel,
                                     )}
-                                    onChange={(e, c) => toggleCheckRequestService(ServiceTypes.Parcel, c)}
+                                    onChange={(_, c) => toggleCheckRequestService(ServiceTypes.Parcel, c)}
                                     color="error"
                                 />
                             }
@@ -374,7 +374,7 @@ const GcssSection: React.FC<GcssSectionProps> = ({
                             control={
                                 <Checkbox
                                     checked={(settingsState.GcssServiceTypes || []).includes(ServiceTypes.EMS)}
-                                    onChange={(e, c) => toggleCheckService(ServiceTypes.EMS, c)}
+                                    onChange={(_, c) => toggleCheckService(ServiceTypes.EMS, c)}
                                     color="error"
                                 />
                             }
@@ -384,7 +384,7 @@ const GcssSection: React.FC<GcssSectionProps> = ({
                             control={
                                 <Checkbox
                                     checked={(settingsState.GcssServiceTypes || []).includes(ServiceTypes.KPacket)}
-                                    onChange={(e, c) => toggleCheckService(ServiceTypes.KPacket, c)}
+                                    onChange={(_, c) => toggleCheckService(ServiceTypes.KPacket, c)}
                                     color="error"
                                 />
                             }
@@ -394,7 +394,7 @@ const GcssSection: React.FC<GcssSectionProps> = ({
                             control={
                                 <Checkbox
                                     checked={(settingsState.GcssServiceTypes || []).includes(ServiceTypes.Registered)}
-                                    onChange={(e, c) => toggleCheckService(ServiceTypes.Registered, c)}
+                                    onChange={(_, c) => toggleCheckService(ServiceTypes.Registered, c)}
                                     color="error"
                                 />
                             }
@@ -404,7 +404,7 @@ const GcssSection: React.FC<GcssSectionProps> = ({
                             control={
                                 <Checkbox
                                     checked={(settingsState.GcssServiceTypes || []).includes(ServiceTypes.Parcel)}
-                                    onChange={(e, c) => toggleCheckService(ServiceTypes.Parcel, c)}
+                                    onChange={(_, c) => toggleCheckService(ServiceTypes.Parcel, c)}
                                     color="error"
                                 />
                             }
@@ -510,7 +510,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
     }
 
     function updateSetting<K extends keyof IMICSettings>(key: K, value: IMICSettings[K]) {
-        setSettingsState((prev) => {
+        setSettingsState((prev: IMICSettings) => {
             const updated = new IMICSettings();
             Object.assign(updated, prev);
             updated[key] = value;
@@ -562,7 +562,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
             if (current.length === 1) updateSetting("GcssUnreadReplies", false);
             updateSetting(
                 "GcssServiceTypes",
-                current.filter((el) => el !== type),
+                current.filter((el: ServiceTypes) => el !== type),
             );
         }
     }
@@ -576,7 +576,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
         if (checked) {
             newTypes = Array.from(new Set([...current, ...typesToToggle]));
         } else {
-            newTypes = current.filter((el) => !typesToToggle.includes(el));
+            newTypes = current.filter((el: ServiceTypes) => !typesToToggle.includes(el));
             if (newTypes.length === 0) updateSetting("GcssUnreadRequests", false);
         }
 

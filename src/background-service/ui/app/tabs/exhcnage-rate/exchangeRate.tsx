@@ -4,12 +4,12 @@ import AlertDialog from "../../../components/alertDialog";
 import ImportExport from "../import-export/importExport";
 import NewItemInput from "./newItemInput";
 import RateForm from "./rateForm";
-import ExchangeRateUtil, { ExchangeRateMap, CurrencyItem } from "../../../../../lib/exchangeRateUtil";
+import ExchangeRateUtil, { ExchangeRateMap, CurrencyItem } from "@/common/exchangeRateUtil";
 
 const renderHeader = (title: string) => (
     <Stack spacing={2} padding={1} direction="row" alignItems="end" sx={{ userSelect: "none" }}>
         <Typography variant="h4" fontWeight={100}>
-            환율 조정
+            {title}
         </Typography>
     </Stack>
 );
@@ -55,7 +55,7 @@ export default function ExchangeRate() {
 
     const onRateInputChange = (item: CurrencyItem, value: string) => {
         const parsedValue = isNaN(Number(value)) ? 1 : Number(value);
-        setRates((prevRates) => {
+        setRates((prevRates: ExchangeRateMap) => {
             const newRates = new Map(prevRates);
             newRates.get(item.currency)!.valueInKRW = parsedValue;
             return newRates;
@@ -89,7 +89,7 @@ export default function ExchangeRate() {
 
     const handleRemoveConfirmed = async (item: CurrencyItem) => {
         if (rates.has(item.currency)) {
-            setRates((prevRates) => {
+            setRates((prevRates: ExchangeRateMap) => {
                 const newRates = new Map(prevRates);
                 newRates.delete(item.currency);
                 return newRates;
@@ -118,7 +118,7 @@ export default function ExchangeRate() {
                 <Divider variant="middle" />
                 <Paper variant="elevation">
                     {Array.from(rates.values())
-                        .filter((item) => item.currency !== "KRW")
+                        .filter((item: CurrencyItem) => item.currency !== "KRW")
                         .sort(sortRates)
                         .map((item, idx) => {
                             return (

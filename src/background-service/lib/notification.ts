@@ -1,14 +1,25 @@
-import { GcssItem, isGcssItem, isWorkflowItem, WorkflowItem } from "../content-scripts/pending-replies/dataWrapper";
+import { IMICSettings } from "@/common/IMICSettings";
+import { CMD } from "@/common/message-hub/Message";
+import { GcssItem, isGcssItem, isWorkflowItem, WorkflowItem } from "@/content-scripts/pending-replies/dataWrapper";
 import {
     GCSSMessage,
     GCSSNotification,
     GCSSWorkflow,
     isGCSSMessage,
     isGCSSNotification,
-} from "../content-scripts/pending-replies/newGcssWrapper";
-import { IMICSettings } from "../lib/IMICSettings";
-import { CMD } from "../lib/message-hub/Message";
+} from "@/content-scripts/pending-replies/newGcssWrapper";
 
+chrome.notifications.onClicked.addListener((id) => {
+    chrome.tabs.getCurrent((tab) => {
+        if (tab) chrome.windows.update(tab.windowId, { focused: true }, () => chrome.action.openPopup());
+    });
+});
+
+chrome.notifications.onButtonClicked.addListener((id) => {
+    chrome.tabs.getCurrent((tab) => {
+        if (tab) chrome.windows.update(tab.windowId, { focused: true }, () => chrome.action.openPopup());
+    });
+});
 async function checkFetchError() {
     type FetchError = {
         ICARE: boolean;
@@ -172,7 +183,7 @@ export default async function createNotification(force_update = false) {
         type: "list",
         priority: 2,
         requireInteraction: true,
-        iconUrl: "src/ext-icon.png",
+        iconUrl: "icon.png",
         title: `${err_msg}IMIC 알림: ${current_num}개 메시지 대기`,
         message: `GCSS/iCare 읽지 않은 메시지가 ${current_num}개 있습니다.`,
         contextMessage: `GCSS/Icare unread replies: ${current_num}`,

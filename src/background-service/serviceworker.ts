@@ -1,11 +1,11 @@
-import { GcssItem, isGcssItem, isWorkflowItem, WorkflowItem } from "../content-scripts/pending-replies/dataWrapper";
+import { requestFetch } from "@/common/findTabs";
+import { CMD, MSG } from "@/common/message-hub/Message";
+import processMessage from "@/common/message-hub/MessageHub";
+import { ms } from "@/common/TimespanExtension";
+import { GcssItem, isGcssItem, WorkflowItem } from "../content-scripts/pending-replies/dataWrapper";
 import { ServiceTypes } from "../content-scripts/pending-replies/gcssReplies";
-import { GCSSMessage, isGCSSMessage } from "../content-scripts/pending-replies/newGcssWrapper";
-import { requestFetch } from "../lib/findTabs";
-import { CMD, MSG } from "../lib/message-hub/Message";
-import processMessage from "../lib/message-hub/MessageHub";
-import { ms } from "../lib/timespanExtension";
-import createNotification, { getStorageItems } from "./notification";
+import { GCSSMessage } from "../content-scripts/pending-replies/newGcssWrapper";
+import createNotification, { getStorageItems } from "./lib/notification";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
 void chrome.action.setBadgeBackgroundColor({ color: "#424242" });
@@ -17,17 +17,19 @@ console.log("BackgroundWorker has been initiated.");
 
 const MsgPort: { [key: number]: chrome.runtime.Port } = {};
 
-const MAXIMUM_COUNT = 120;
+const GLOBAL_INTERVAL = ms(30).toSeconds();
+const UPDATE_CHECK_TICK = 6; // Every 3 minutes (6 * 30 seconds)
+const MAXIMUM_TICK = 120;
+
+const MAIL_TAB_INTERVAL = ms(20).toMinutes();
 
 main();
 
 function main() {
     let count = 0;
-    const GLOBAL_INTERVAL = ms(30).toSeconds();
-    const MAIL_TAB_INTERVAL = ms(20).toMinutes();
 
     setInterval(() => {
-        if (count > MAXIMUM_COUNT) count = 0;
+        if (count > MAXIMUM_TICK) count = 0;
         void APICalls(++count);
     }, GLOBAL_INTERVAL);
 
@@ -62,35 +64,31 @@ function main() {
 async function APICalls(count: number, final = false) {
     const today = new Date();
     console.log(`${today.toLocaleTimeString("ko-KR")}: Ticking Global Timer: `, count, " times");
-    if (count % 6 === 0) {
+    if (count % UPDATE_CHECK_TICK === 0) {
         const services = [
             CMD.GCSS_UNREAD_REPLIES,
             CMD.GCSS_UNREAD_REQUESTS,
             CMD.ICARE_UNREAD_REPLIES,
             CMD.ICARE_UNREAD_REQUESTS,
+            CMD.NEW_GCSS_UNREAD_REPLIES,
+            CMD.NEW_GCSS_UNREAD_REQUESTS,
         ];
         let hasImportantUnread = false;
         for (const e of services) {
-            let itemList = await getStorageItems<GcssItem | WorkflowItem | GCSSMessage>(e);
-            if (e === CMD.GCSS_UNREAD_REQUESTS && itemList.length > 0) {
-                itemList = itemList.filter((i) => {
+            const itemList = await getStorageItems<GcssItem | WorkflowItem | GCSSMessage>(e);
+            if (itemList.length > 0) {
+                hasImportantUnread = itemList.some((i) => {
                     if (isGcssItem(i)) {
                         return i.serviceType === ServiceTypes.EMS;
-                    } else if (isWorkflowItem(i)) {
+                    } else {
                         return i.isNotification === false;
-                    } else if (isGCSSMessage(i)) {
-                        return i.isNotification() === false;
                     }
-                    return false;
                 });
-            }
-            if (itemList.length > 0) {
-                hasImportantUnread = true;
-                break;
+                if (hasImportantUnread) break;
             }
         }
 
-        if (hasImportantUnread || count % MAXIMUM_COUNT === 0) {
+        if (hasImportantUnread || count % MAXIMUM_TICK === 0) {
             console.log("There are important unread items. Forcing notification update.");
             await createNotification(true);
         }
@@ -261,19 +259,6 @@ chrome.runtime.onConnect.addListener((port) => {
 
 chrome.runtime.onMessage.addListener(processMessage);
 
-chrome.notifications.onClicked.addListener((id) => {
-    if (id === CMD.ICARE_UNREAD_REPLIES) {
-        chrome.notifications.clear(id);
-    }
-});
-
-chrome.notifications.onButtonClicked.addListener((noti_id) => {
-    if (noti_id === CMD.ICARE_UNREAD_REPLIES) {
-        chrome.tabs.getCurrent((tab) => {
-            if (tab) chrome.windows.update(tab.windowId, { focused: true }, () => chrome.action.openPopup());
-        });
-    }
-});
 
 // chrome.tabs.onUpdated.addListener((tabId, changed, tab: chrome.tabs.Tab) => {
 //   if (tab.url == null) {

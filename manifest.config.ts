@@ -1,0 +1,92 @@
+import { defineManifest } from "@crxjs/vite-plugin";
+
+export default defineManifest({
+    manifest_version: 3,
+    name: "IMIC TrackPost",
+    description: "Chrome/Edge 확장프로그램 - iCare, GCSS 사무 자동화",
+    version: "3.1.12",
+    icons: {
+        16: "icon.png",
+        32: "icon.png",
+        48: "icon.png",
+        128: "icon.png",
+    },
+    options_page: "src/background-service/ui/options.html",
+    action: {
+        default_title: "IMIC TRACKPOST V3",
+        default_popup: "src/background-service/ui/popup.html",
+    },
+    permissions: [
+        "storage",
+        "tabs",
+        "tabGroups",
+        "sidePanel",
+        "webRequest",
+        "clipboardWrite",
+        "notifications",
+        "unlimitedStorage",
+        "scripting",
+    ],
+    side_panel: {
+        default_path: "src/background-service/ui/sidepanel.html",
+    },
+    background: {
+        service_worker: "src/background-service/serviceworker.ts",
+        type: "module",
+    },
+    host_permissions: [
+        "https://ems.epost.go.kr/*",
+        "https://icare.post/*",
+        "https://gcss.ipc.be/*",
+        "https://github.com/psh0626/TrackPostExtZip/commits/main/",
+        "https://gcss-uat.ipc.be/*",
+        "https://kmmbox.korea.kr/*",
+        "https://mail.posa.or.kr/*",
+        "http://localhost:5173/",
+    ],
+    content_scripts: [
+        {
+            matches: ["https://icare.post/*"],
+            js: ["src/content-scripts/icareScript.tsx"],
+            run_at: "document_idle",
+        },
+        {
+            matches: ["https://gcss.ipc.be/*"],
+            js: ["src/content-scripts/oldGcssScript.tsx"],
+            run_at: "document_idle",
+            exclude_matches: [
+                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REPLY",
+                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REQ",
+                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/QUM_REQ",
+            ],
+        },
+        {
+            matches: ["https://gcss-uat.ipc.be/*"],
+            js: ["src/content-scripts/newGcssScript.ts"],
+            run_at: "document_idle",
+        },
+        {
+            matches: [
+                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REPLY",
+                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REQ",
+                "https://gcss.ipc.be/CSS/gcss/*/alerts/show/QUM_REQ",
+            ],
+            js: ["src/content-scripts/gcssSumScript.ts"],
+        },
+        {
+            matches: ["https://kmmbox.korea.kr/*"],
+            js: ["src/content-scripts/kmmboxScript.ts"],
+        },
+        {
+            matches: ["https://mail.posa.or.kr/*"],
+            js: ["src/content-scripts/posamailScript.js"],
+            world: "MAIN",
+        },
+    ],
+    web_accessible_resources: [
+        {
+            resources: ["fonts/PretendardVariable.woff2"],
+            matches: ["<all_urls>"],
+        },
+    ],
+});

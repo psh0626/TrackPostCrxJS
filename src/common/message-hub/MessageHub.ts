@@ -1,5 +1,5 @@
-import createNotification from "../../background-service/notification";
-import { PostAPI } from "../../lib/PostUtil";
+import { PostAPI } from "@/common/PostUtil";
+import createNotification from "../../background-service/lib/notification";
 import { CMD, MSG } from "./Message";
 
 export default function processMessage(
@@ -7,8 +7,12 @@ export default function processMessage(
     sender: chrome.runtime.MessageSender,
     SendResponse: (response?: unknown) => void,
 ) {
-    const today = new Date();
-    console.log(today.toLocaleString(), "\nmessage received from sender: ", sender.tab?.url, "\ncontent: ", Message);
+    console.log(
+        "[MessageHub] message received from sender: ",
+        new URL(sender.tab?.url || "")?.host,
+        "\ncontent: ",
+        Message,
+    );
     type FetchError = {
         ICARE: boolean;
         GCSS: boolean;

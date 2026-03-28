@@ -1,6 +1,7 @@
-import ExchangeRateUtil from "../../lib/exchangeRateUtil";
-import { MSG, CMD } from "../../lib/message-hub/Message";
-import { PostElement } from "../../lib/PostUtil";
+
+import ExchangeRateUtil from "@/common/exchangeRateUtil";
+import { MSG, CMD } from "@/common/message-hub/Message";
+import { PostElement } from "@/common/PostUtil";
 import { GcssPrefillObject } from "../pending-replies/newGcssWrapper";
 import FloatingHelper from "./floatingHelper";
 import InjectUtil from "./injectUtil";
@@ -210,8 +211,8 @@ export async function injectConvertedValue(
         prefill?.value || valueInput.value,
         prefill?.currency || currencyInput.value,
     );
-    const inputLabel = valueInput.getAttribute("aria-labelledby")?.replaceAll(".", "-");
-    const currencyLabel = currencyInput.getAttribute("aria-labelledby")?.replaceAll(".", "-");
+    // const inputLabel = valueInput.getAttribute("aria-labelledby")?.replaceAll(".", "-");
+    // const currencyLabel = currencyInput.getAttribute("aria-labelledby")?.replaceAll(".", "-");
 
     SwitchValueForCurrency(valueInput, currencyInput, sdrValue);
 

@@ -6,7 +6,7 @@ let isInserting = false;
 console.log("Initial call to insertAuthorColumn after script load.");
 setTimeout(insertAuthorColumn, 1);
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message) => {
     if (message === "GCSS_SUM_AJAX_COMPLETE") {
         setTimeout(() => {
             console.log("Received GCSS_SUM_AJAX_COMPLETE message, calling insertAuthorColumn.");
@@ -141,7 +141,7 @@ export default async function insertAuthorColumn() {
     const tbodyRows = [...document.querySelector("tbody")!.children];
 
     // Create all new <td> elements first
-    tbodyRows.forEach((td, idx) => {
+    tbodyRows.forEach((td) => {
         const itemId = (td.children[0] as HTMLElement).innerText;
         const newTd = document.createElement("td");
         newTd.textContent = "loading...";

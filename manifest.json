@@ -4,10 +4,10 @@
     "description": "Chrome/Edge 확장프로그램 - iCare, GCSS 사무 자동화",
     "version": "3.1.12",
     "icons": {
-        "16": "src/ext-icon.png",
-        "32": "src/ext-icon.png",
-        "48": "src/ext-icon.png",
-        "128": "src/ext-icon.png"
+        "16": "icon.png",
+        "32": "icon.png",
+        "48": "icon.png",
+        "128": "icon.png"
     },
     "options_page": "src/background-service/ui/options.html",
     "action": {

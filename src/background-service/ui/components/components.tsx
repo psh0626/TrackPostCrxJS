@@ -21,7 +21,7 @@ import { wait } from "../../../content-scripts/gcssSumScript";
 import { WorkflowItem, GcssItem, isGcssItem, isWorkflowItem } from "../../../content-scripts/pending-replies/dataWrapper";
 import { ServiceNames } from "../../../content-scripts/pending-replies/gcssReplies";
 import { GCSSMessage, isGCSSMessage, isGCSSNotification, GCSSNotification } from "../../../content-scripts/pending-replies/newGcssWrapper";
-import { requestFetch } from "../../../lib/findTabs";
+import { requestFetch } from "@/common/findTabs";
 
 export const CountryInput = (prop: { text: string; state: string[]; onChange: (countries: string[]) => void }) => {
     const [rawValue, setRawValue] = useState("");

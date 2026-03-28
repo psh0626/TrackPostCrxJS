@@ -1,7 +1,8 @@
-import ExchangeRateUtil from "../lib/exchangeRateUtil";
-import { IMICSettings } from "../lib/IMICSettings";
-import { CMD, MSG } from "../lib/message-hub/Message";
-import { PostElement } from "../lib/PostUtil";
+import ExchangeRateUtil from "@/common/exchangeRateUtil";
+import { IMICSettings } from "@/common/IMICSettings";
+import { CMD, MSG } from "@/common/message-hub/Message";
+import { PostElement } from "@/common/PostUtil";
+import "@/content-scripts/fonts";
 import InjectUtil from "./inject-dom/injectUtil";
 import * as GcssHelper from "./inject-dom/newGcssInjectUtil";
 import GcssLoadingMask from "./inject-dom/newGcssLoadingMask";

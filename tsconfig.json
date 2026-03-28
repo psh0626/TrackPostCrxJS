@@ -1,22 +1,36 @@
 {
     "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["src/*"]
+        },
+
         "target": "ESNext",
         "useDefineForClassFields": true,
         "lib": ["DOM", "DOM.Iterable", "ESNext"],
-        "allowJs": false,
-        "skipLibCheck": true,
-        "esModuleInterop": false,
-        "allowSyntheticDefaultImports": true,
-        "strict": true,
-        "forceConsistentCasingInFileNames": true,
         "module": "ESNext",
+        "skipLibCheck": true,
+
         "moduleResolution": "Bundler",
-        "types": ["node", "chrome"],
         "resolveJsonModule": true,
         "isolatedModules": true,
         "noEmit": true,
-        "jsx": "react-jsx"
+        "allowImportingTsExtensions": true,
+        "jsx": "react-jsx",
+
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noUncheckedSideEffectImports": true,
+        "noImplicitAny": true,
+
+        "allowJs": false,
+        "forceConsistentCasingInFileNames": true,
+        "esModuleInterop": false,
+        "moduleDetection": "force",
+        "noFallthroughCasesInSwitch": true,
+        "allowSyntheticDefaultImports": true,
+        "types": ["node", "chrome", "vite/client", "@crxjs/vite-plugin/client"]
     },
-    "include": ["src", "ui"],
-    "references": [{ "path": "./tsconfig.node.json" }]
+    "include": ["src", "public"]
 }
