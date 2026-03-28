@@ -28,7 +28,7 @@ export const CountryInput = (prop: { text: string; state: string[]; onChange: (c
             <Typography
                 alignContent={"end"}
                 textAlign={"start"}
-                fontWeight={100}
+                fontWeight={300}
                 fontSize={12}
                 sx={{ mt: 0 }}
                 variant="subtitle2"

@@ -2,17 +2,10 @@ import ExchangeRateUtil, { CurrencyItem, ExchangeRateMap } from "@/common/exchan
 import { Button, Divider, Paper, Stack, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import AlertDialog from "../components/alertDialog";
+import Header from "../components/header";
 import ImportExport from "../components/importExport";
 import NewItemInput from "./newItemInput";
 import RateForm from "./rateForm";
-
-const renderHeader = (title: string) => (
-    <Stack spacing={2} padding={1} direction="row" alignItems="end" sx={{ userSelect: "none" }}>
-        <Typography variant="h4" fontWeight={200}>
-            {title}
-        </Typography>
-    </Stack>
-);
 
 export default function ExchangeRate() {
     const [isInitialized, setIsInitialized] = useState(false);
@@ -99,8 +92,7 @@ export default function ExchangeRate() {
 
     return (
         <Stack>
-            <Stack direction={"row"} justifyContent="space-between" alignItems="end" padding={2}>
-                {renderHeader("환율 조정")}
+            <Header title="환율 설정">
                 <ImportExport
                     target={Object.fromEntries(rates)}
                     fileName="MyExchangeRates.json"
@@ -110,10 +102,9 @@ export default function ExchangeRate() {
                         handleSaveConfirmed(true);
                     }}
                 />
-            </Stack>
-            <Divider variant="fullWidth" sx={{ mb: 2 }} />
+            </Header>
 
-            <Stack direction={"column"} paddingLeft={2} paddingTop={2} spacing={3}>
+            <Stack direction={"column"} paddingLeft={2} spacing={3}>
                 <NewItemInput onAdd={handleAddConfirmed} />
                 <Divider variant="middle" />
                 <Paper variant="elevation">

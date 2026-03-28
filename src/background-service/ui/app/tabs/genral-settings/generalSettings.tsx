@@ -10,8 +10,9 @@ import {
     DatePickToggleButton,
     WeekPicker,
     WeekPickerOverlayProps,
-} from "../components/weekPicker";
+} from "./weekPicker";
 import { CountryInput } from "./countryInput";
+import Header from "../components/header";
 
 interface GeneralSettingsProps {
     settings: React.RefObject<IMICSettings>;
@@ -47,7 +48,7 @@ const AuthorInput: React.FC<{
 );
 
 const AuthorHelpText: React.FC = () => (
-    <Typography textAlign="end" fontWeight={100} sx={{ mt: 2 }} variant="subtitle2">
+    <Typography textAlign="end" fontWeight={200} sx={{ mt: 2 }} variant="subtitle2">
         * 대소문자 구분 없음 <br />* 일부만 입력 가능 (예: Sunghoon Park -{">"} sung) <br />* 여러명 입력 가능 (예:
         sung, mi, kim) <br />
     </Typography>
@@ -160,7 +161,7 @@ const IcareSection: React.FC<IcareSectionProps> = ({
     <SectionCard>
         <Grid container width="100%" rowSpacing={1}>
             <Grid size={{ xs: 12 }}>
-                <Typography variant="h5" fontWeight={100}>
+                <Typography variant="h5" fontWeight={800}>
                     iCare
                 </Typography>
                 <Divider sx={{ mt: 1, mb: 2 }} />
@@ -259,7 +260,7 @@ const GcssSection: React.FC<GcssSectionProps> = ({
     <SectionCard>
         <Grid container width="100%" rowSpacing={1}>
             <Grid size={{ xs: 12 }}>
-                <Typography variant="h5" fontWeight={100}>
+                <Typography variant="h5" fontWeight={800}>
                     GCSS
                 </Typography>
                 <Divider sx={{ mt: 1, mb: 2 }} />
@@ -422,17 +423,6 @@ const GcssSection: React.FC<GcssSectionProps> = ({
             )}
         </Grid>
     </SectionCard>
-);
-
-const renderHeader = () => (
-    <>
-        <Stack spacing={2} padding={1} direction="row" alignItems="end" sx={{ mb: 2, userSelect: "none" }}>
-            <Typography variant="h4" fontWeight={100} color="initial">
-                기본 설정
-            </Typography>
-        </Stack>
-        <Divider sx={{ mb: 2 }} variant="fullWidth" />
-    </>
 );
 
 const WeekPickerOverlay: React.FC<WeekPickerOverlayProps> = ({
@@ -619,7 +609,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
 
     return (
         <div>
-            {renderHeader()}
+            <Header title="일반 설정" />
             <WeekPickerOverlay
                 weekpickerEnabled={weekpickerEnabled}
                 weekpickerForIcare={weekpickerForIcare}
@@ -635,7 +625,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                     void resetWeekpicker(forIcare, false);
                 }}
             />
-            <Stack spacing={5} sx={{ p: 2 }}>
+            <Stack spacing={5} sx={{ pl: 2 }}>
                 <GcssSection
                     settingsState={settingsState}
                     gcssAuthorRaw={gcssAuthorRaw}

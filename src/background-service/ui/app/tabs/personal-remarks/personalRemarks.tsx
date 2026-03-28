@@ -19,6 +19,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { IMICSettings, PersonalRemark } from "@/common/IMICSettings";
 import ImportExport from "../components/importExport";
 import { RemarkDialog } from "./remarkDialog";
+import Header from "../components/header";
 
 interface PersonalRemarksProps {
     settings: React.RefObject<IMICSettings>;
@@ -159,13 +160,9 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
 
     return (
         <div>
-            <Stack padding={1} direction="row" justifyContent="space-between" alignItems="end" sx={{ mb: 2 }}>
-                <Typography variant="h4" fontWeight={100} color="initial" sx={{ userSelect: "none" }}>
-                    iCare Personal Remarks
-                </Typography>
+            <Header title="iCare Personal Remarks">
                 <ImportExport fileName="MyPersonalRemarks.json" target={prList} onImport={onItemImported} />
-            </Stack>
-            <Divider sx={{ mb: 2 }} variant="fullWidth" />
+            </Header>
             <Stack direction="row-reverse" alignItems="end" spacing={3} marginBottom={3} pl={2} width={560}>
                 <Fab
                     color="primary"
