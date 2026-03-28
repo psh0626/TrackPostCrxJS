@@ -10,7 +10,8 @@ import { GcssItem, WorkflowItem } from "../../../content-scripts/pending-replies
 import { ServiceNames, ServiceTypes } from "../../../content-scripts/pending-replies/gcssReplies";
 import { GCSSNotification, GCSSWorkflow } from "../../../content-scripts/pending-replies/newGcssWrapper";
 import PopupTrack from "../../lib/popupTrack";
-import { MyList, StyledTextField } from "../components/components";
+import StyledTextField from "./components/styledTextField";
+import { WorkflowList } from "./popup/workflowList";
 class iCareState {
     replyItems: WorkflowItem[] = [];
     requestItems: WorkflowItem[] = [];
@@ -154,7 +155,7 @@ function PopUpApp() {
     const renderList = (show: boolean, items: any[], emptyMsg: string, props: any) => {
         if (!show) return null;
         if (!items || items.length < 1) return renderEmpty(emptyMsg);
-        return <MyList {...props} items={items} key={`popup-list-${idNumber.current++}`} />;
+        return <WorkflowList {...props} items={items} key={`popup-list-${idNumber.current++}`} />;
     };
 
     // GCSS requests
@@ -162,7 +163,7 @@ function PopUpApp() {
         if (!settings.current.GcssUnreadRequests) return null;
         if (oldGcssState.requestItems.length < 1) return renderEmpty("GCSS 도착 문의");
         return settings.current.GcssRequestServiceTypes.map((serv) => (
-            <MyList
+            <WorkflowList
                 key={`popup-list-${idNumber.current++}`}
                 items={oldGcssState.requestItems.filter((el) => el.serviceType === serv)}
                 type="requests"
@@ -178,11 +179,15 @@ function PopUpApp() {
         if (settings.current.GcssServiceTypes.length === 1) {
             if (settings.current.GcssAuthor.length <= 1) {
                 return (
-                    <MyList items={oldGcssState.replyItems} type="replies" key={`popup-list-${idNumber.current++}`} />
+                    <WorkflowList
+                        items={oldGcssState.replyItems}
+                        type="replies"
+                        key={`popup-list-${idNumber.current++}`}
+                    />
                 );
             } else {
                 return settings.current.GcssAuthor.map((user) => (
-                    <MyList
+                    <WorkflowList
                         key={`popup-list-${idNumber.current++}`}
                         items={oldGcssState.replyItems.filter((el) =>
                             el.requestAuthor.toLowerCase().includes(user.toLowerCase()),
@@ -196,7 +201,7 @@ function PopUpApp() {
         } else {
             if (settings.current.GcssAuthor.length <= 1) {
                 return settings.current.GcssServiceTypes.map((serv) => (
-                    <MyList
+                    <WorkflowList
                         key={`popup-list-${idNumber.current++}`}
                         items={oldGcssState.replyItems.filter((el) => el.serviceType === serv)}
                         type="replies"
@@ -207,7 +212,7 @@ function PopUpApp() {
             } else {
                 return settings.current.GcssServiceTypes.flatMap((serv) =>
                     settings.current.GcssAuthor.map((user) => (
-                        <MyList
+                        <WorkflowList
                             key={`popup-list-${idNumber.current++}`}
                             items={oldGcssState.replyItems.filter(
                                 (el) =>
@@ -257,10 +262,12 @@ function PopUpApp() {
         if (!settings.current.IcareUnreadReplies) return null;
         if (icareState.replyItems.length < 1) return renderEmpty("iCare 발송 회신");
         if (settings.current.IcareAuthor.length <= 1) {
-            return <MyList items={icareState.replyItems} type="replies" key={`popup-list-${idNumber.current++}`} />;
+            return (
+                <WorkflowList items={icareState.replyItems} type="replies" key={`popup-list-${idNumber.current++}`} />
+            );
         } else {
             return settings.current.IcareAuthor.map((user) => (
-                <MyList
+                <WorkflowList
                     key={`popup-list-${idNumber.current++}`}
                     items={icareState.replyItems.filter((el) => el.author.toLowerCase().includes(user.toLowerCase()))}
                     type="replies"
@@ -297,7 +304,7 @@ function PopUpApp() {
         if (!settings.current.GcssUnreadRequests) return null;
         if (newGcssState.requestItems.length < 1) return renderEmpty("New GCSS 도착 문의");
         return settings.current.GcssRequestServiceTypes.map((serv) => (
-            <MyList
+            <WorkflowList
                 key={serv}
                 items={newGcssState.requestItems.filter((el) => el.product === serv)}
                 type="requests"
@@ -312,11 +319,15 @@ function PopUpApp() {
         if (settings.current.GcssServiceTypes.length === 1) {
             if (settings.current.GcssAuthor.length <= 1) {
                 return (
-                    <MyList items={newGcssState.replyItems} type="replies" key={`popup-list-${idNumber.current++}`} />
+                    <WorkflowList
+                        items={newGcssState.replyItems}
+                        type="replies"
+                        key={`popup-list-${idNumber.current++}`}
+                    />
                 );
             } else {
                 return settings.current.GcssAuthor.map((user) => (
-                    <MyList
+                    <WorkflowList
                         key={`popup-list-${idNumber.current++}`}
                         items={newGcssState.replyItems.filter((el) =>
                             el.inquiryAuthorName.toLowerCase().includes(user.toLowerCase()),
@@ -330,7 +341,7 @@ function PopUpApp() {
         } else {
             if (settings.current.GcssAuthor.length <= 1) {
                 return settings.current.GcssServiceTypes.map((serv) => (
-                    <MyList
+                    <WorkflowList
                         key={`popup-list-${idNumber.current++}`}
                         items={newGcssState.replyItems.filter((el) => el.product === serv)}
                         type="replies"
@@ -341,7 +352,7 @@ function PopUpApp() {
             } else {
                 return settings.current.GcssServiceTypes.flatMap((serv) =>
                     settings.current.GcssAuthor.map((user) => (
-                        <MyList
+                        <WorkflowList
                             key={`popup-list-${idNumber.current++}`}
                             items={newGcssState.replyItems.filter(
                                 (el) =>

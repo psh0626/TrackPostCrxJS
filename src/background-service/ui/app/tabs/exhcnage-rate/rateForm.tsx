@@ -1,10 +1,10 @@
+import { CurrencyItem } from "@/common/exchangeRateUtil";
 import { Remove } from "@mui/icons-material";
 import { Button, Stack, Typography, useTheme } from "@mui/material";
 import { useState } from "react";
-import AlertDialog from "../../../components/alertDialog";
+import AlertDialog from "../components/alertDialog";
 import InputLayout from "./inputLayout";
 import ValueTextField from "./valueTextField";
-import { CurrencyItem } from "@/common/exchangeRateUtil";
 
 interface RateFormProps {
     rateItem: CurrencyItem;

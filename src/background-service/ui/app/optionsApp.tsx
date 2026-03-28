@@ -1,9 +1,9 @@
+import { IMICSettings } from "@/common/IMICSettings";
 import { TravelExplore } from "@mui/icons-material";
 import { AppBar, Box, Paper, Tab, Tabs, Toolbar, Typography } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
-import { IMICSettings } from "@/common/IMICSettings";
 import ExchangeRate from "./tabs/exhcnage-rate/exchangeRate";
-import { GeneralSettings } from "./tabs/generalSettings";
+import { GeneralSettings } from "./tabs/genral-settings/generalSettings";
 import { PersonalRemarks } from "./tabs/personal-remarks/personalRemarks";
 
 export default function OptionsApp() {

@@ -16,8 +16,8 @@ import {
 } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 
-import ImportExport from "../import-export/importExport";
 import { IMICSettings, PersonalRemark } from "@/common/IMICSettings";
+import ImportExport from "../components/importExport";
 import { RemarkDialog } from "./remarkDialog";
 
 interface PersonalRemarksProps {

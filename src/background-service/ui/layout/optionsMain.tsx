@@ -15,7 +15,7 @@ const myTheme = createTheme({
         secondary: orange,
     },
     typography: {
-        fontFamily: `"Pretendard Variable", sans-serif`,
+        fontFamily: `Paperozi, sans-serif`,
         fontSize: 14,
         fontWeightLight: 300,
         fontWeightRegular: 400,

@@ -10,7 +10,8 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import PopupTrack from "../../lib/popupTrack";
-import { InfoTextField, StyledTextField } from "../components/components";
+import StyledTextField from "./components/styledTextField";
+import InfoTextField from "./side-panel/infoTextField";
 
 function SidePanelApp() {
     // State for PostElement

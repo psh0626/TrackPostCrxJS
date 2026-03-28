@@ -1,14 +1,14 @@
+import ExchangeRateUtil, { CurrencyItem, ExchangeRateMap } from "@/common/exchangeRateUtil";
 import { Button, Divider, Paper, Stack, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
-import AlertDialog from "../../../components/alertDialog";
-import ImportExport from "../import-export/importExport";
+import AlertDialog from "../components/alertDialog";
+import ImportExport from "../components/importExport";
 import NewItemInput from "./newItemInput";
 import RateForm from "./rateForm";
-import ExchangeRateUtil, { ExchangeRateMap, CurrencyItem } from "@/common/exchangeRateUtil";
 
 const renderHeader = (title: string) => (
     <Stack spacing={2} padding={1} direction="row" alignItems="end" sx={{ userSelect: "none" }}>
-        <Typography variant="h4" fontWeight={100}>
+        <Typography variant="h4" fontWeight={200}>
             {title}
         </Typography>
     </Stack>

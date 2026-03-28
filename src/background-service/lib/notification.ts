@@ -9,13 +9,13 @@ import {
     isGCSSNotification,
 } from "@/content-scripts/pending-replies/newGcssWrapper";
 
-chrome.notifications.onClicked.addListener((id) => {
+chrome.notifications.onClicked.addListener(() => {
     chrome.tabs.getCurrent((tab) => {
         if (tab) chrome.windows.update(tab.windowId, { focused: true }, () => chrome.action.openPopup());
     });
 });
 
-chrome.notifications.onButtonClicked.addListener((id) => {
+chrome.notifications.onButtonClicked.addListener(() => {
     chrome.tabs.getCurrent((tab) => {
         if (tab) chrome.windows.update(tab.windowId, { focused: true }, () => chrome.action.openPopup());
     });

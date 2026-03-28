@@ -1,6 +1,6 @@
 import { Button, Divider, Stack, Typography } from "@mui/material";
 import { useState } from "react";
-import AlertDialog from "../../../components/alertDialog";
+import AlertDialog from "./alertDialog";
 
 interface ImportExportProps {
     target: any;

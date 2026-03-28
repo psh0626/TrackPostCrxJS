@@ -1,17 +1,17 @@
+import { IMICSettings } from "@/common/IMICSettings";
+import { ServiceTypes } from "@/content-scripts/pending-replies/gcssReplies";
 import { SubdirectoryArrowRight } from "@mui/icons-material";
 import { Checkbox, Divider, FormControlLabel, Paper, Stack, TextField, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import dayjs from "dayjs";
 import React, { useEffect, useRef, useState } from "react";
-import { CountryInput } from "../../components/components";
 import {
     DatePickButtonProps,
     DatePickToggleButton,
     WeekPicker,
     WeekPickerOverlayProps,
-} from "../../components/weekPicker";
-import { ServiceTypes } from "@/content-scripts/pending-replies/gcssReplies";
-import { IMICSettings } from "@/common/IMICSettings";
+} from "../components/weekPicker";
+import { CountryInput } from "./countryInput";
 
 interface GeneralSettingsProps {
     settings: React.RefObject<IMICSettings>;
@@ -635,7 +635,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                     void resetWeekpicker(forIcare, false);
                 }}
             />
-            <Stack spacing={5} sx={{p: 2}}>
+            <Stack spacing={5} sx={{ p: 2 }}>
                 <GcssSection
                     settingsState={settingsState}
                     gcssAuthorRaw={gcssAuthorRaw}

@@ -1,3 +1,8 @@
+import { requestFetch } from "@/common/findTabs";
+import { wait } from "@/content-scripts/gcssSumScript";
+import { GcssItem, isGcssItem, isWorkflowItem, WorkflowItem } from "@/content-scripts/pending-replies/dataWrapper";
+import { ServiceNames } from "@/content-scripts/pending-replies/gcssReplies";
+import { GCSSMessage, isGCSSMessage, isGCSSNotification } from "@/content-scripts/pending-replies/newGcssWrapper";
 import { ExpandMore, OpenInBrowser } from "@mui/icons-material";
 import {
     Accordion,
@@ -5,7 +10,6 @@ import {
     AccordionSummary,
     Button,
     Card,
-    Input,
     List,
     ListItem,
     ListItemButton,
@@ -14,118 +18,21 @@ import {
     Stack,
     Typography,
 } from "@mui/material";
-import { styled } from "@mui/material/styles";
-import TextField from "@mui/material/TextField";
-import { useState, useEffect } from "react";
-import { wait } from "../../../content-scripts/gcssSumScript";
-import { WorkflowItem, GcssItem, isGcssItem, isWorkflowItem } from "../../../content-scripts/pending-replies/dataWrapper";
-import { ServiceNames } from "../../../content-scripts/pending-replies/gcssReplies";
-import { GCSSMessage, isGCSSMessage, isGCSSNotification, GCSSNotification } from "../../../content-scripts/pending-replies/newGcssWrapper";
-import { requestFetch } from "@/common/findTabs";
 
-export const CountryInput = (prop: { text: string; state: string[]; onChange: (countries: string[]) => void }) => {
-    const [rawValue, setRawValue] = useState("");
-
-    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-        const changedValue = e.target.value.toUpperCase();
-        // console.log("PROP uppercase: ", changedValue);
-        setRawValue(changedValue);
-        if (!changedValue.endsWith(",")) {
-            const countries = changedValue
-                .split(",")
-                .map((el) => el.trim())
-                .filter((el) => el !== "");
-            // console.log("PROP split: ", countries);
-            prop.onChange(countries);
-        }
-    };
-
-    useEffect(() => {
-        setRawValue(prop.state.join(", "));
-        console.log("PROP LOADED");
-    }, []);
-
-    return (
-        <Stack direction="column" justifyContent="space-evenly" spacing={0} paddingX={0.5}>
-            <Typography
-                alignContent={"end"}
-                textAlign={"start"}
-                fontWeight={100}
-                fontSize={12}
-                sx={{ mt: 0 }}
-                variant="subtitle2"
-            >
-                {prop.text}
-            </Typography>
-            <Input
-                size="small"
-                sx={{ marginBottom: 0 }}
-                value={rawValue}
-                onChange={handleChange}
-                onBlur={() => setRawValue(prop.state.join(", "))}
-            ></Input>
-        </Stack>
-    );
-};
-export const StyledTextField = styled(TextField)({
-    "& .MuiInputLabel-root": { right: 0, textAlign: "center" },
-    "& .MuiInputLabel-shrink": {
-        margin: "0 auto",
-        position: "absolute",
-        right: "0",
-        left: "0",
-        top: "-3px",
-        width: "150px", // Need to give it a width so the positioning will work
-        background: "white", // Add a white bg
-        // display: "none" //if you want to hide it completly
-    },
-    "& .MuiOutlinedInput-root.Mui-focused": {
-        "& legend ": {
-            display: "none", // If you want it then you need to position it similar with above
-        },
-    },
-});
-
-interface InfoFieldType {
-    label_text: string;
-    binding_value: string;
-    binding_shrink: boolean;
-    multiline?: boolean;
-}
-export const InfoTextField: React.FC<InfoFieldType> = ({ label_text, binding_value, binding_shrink, multiline }) => {
-    const TextFieldFocused = (e: React.FocusEvent<HTMLInputElement>) => {
-        e.target.select();
-        void navigator.clipboard.writeText(e.target.value);
-    };
-    return (
-        <TextField
-            variant="outlined"
-            size="small"
-            value={binding_value}
-            label={label_text}
-            onFocus={TextFieldFocused}
-            slotProps={{
-                inputLabel: { shrink: binding_shrink },
-                input: { style: { fontSize: "14px" } },
-            }}
-            multiline={multiline}
-        />
-    );
-};
-interface MyListProps {
+interface WorkflowListProps {
     items: WorkflowItem[] | GcssItem[] | GCSSMessage[];
     type?: "replies" | "requests";
     author?: string;
     serviceType?: ServiceNames;
     key?: string;
 }
-export const MyList = ({
+export const WorkflowList = ({
     items,
     type = "replies",
     author = "",
     serviceType = ServiceNames.EMS,
     key = "",
-}: MyListProps) => {
+}: WorkflowListProps) => {
     let service = "iCare";
     let isNotification = false;
 
@@ -288,7 +195,7 @@ export const MyList = ({
                             }
                         } else {
                             secondary_string = item.itemId;
-                            if (item instanceof GCSSNotification) {
+                            if (isGCSSNotification(item)) {
                                 primary_string = `[${item.creationDate.split("T")[0].replace("-", "/")}] ${item.sendingCountry} - ${item.reasonLabel}`;
                             } else {
                                 primary_string = `${item.itemId.slice(-2) === "KR" ? item.sendingCountry : item.receivingCountry} - ${item.inquiryType} ${item.requestTypeMnemonic}`;

@@ -4,8 +4,8 @@ import { deepOrange, orange } from "@mui/material/colors";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import React from "react";
 import ReactDOM from "react-dom/client";
+import PopupHeader from "../app/popup/popupHeader";
 import PopUpApp from "../app/popupApp";
-import PopupHeader from "../app/popupHeader";
 
 const myTheme = createTheme({
     palette: {
@@ -13,7 +13,7 @@ const myTheme = createTheme({
         secondary: orange,
     },
     typography: {
-        fontFamily: `"Pretendard Variable", "Noto Sans KR Variable", sans-serif`,
+        fontFamily: `Paperozi, sans-serif`,
         fontSize: 14,
         fontWeightLight: 300,
         fontWeightRegular: 400,

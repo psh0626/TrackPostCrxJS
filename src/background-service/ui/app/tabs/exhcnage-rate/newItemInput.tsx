@@ -1,3 +1,4 @@
+import { CurrencyItem } from "@/common/exchangeRateUtil";
 import { ArrowDropDown } from "@mui/icons-material";
 import {
     Accordion,
@@ -12,10 +13,9 @@ import {
     useTheme,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import AlertDialog from "../../../components/alertDialog";
+import AlertDialog from "../components/alertDialog";
 import InputLayout from "./inputLayout";
 import ValueTextField from "./valueTextField";
-import { CurrencyItem } from "@/common/exchangeRateUtil";
 
 interface NewItemInputProps {
     onAdd?: (item: CurrencyItem) => void;
