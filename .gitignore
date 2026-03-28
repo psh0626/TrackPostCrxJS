@@ -11,7 +11,6 @@ node_modules
 dist
 dist-ssr
 publish
-release
 *.local
 
 # Editor directories and files
@@ -24,4 +23,3 @@ release
 *.njsproj
 *.sln
 *.sw?
-release/dist.zip

@@ -9,6 +9,12 @@
         "48": "icon.png",
         "128": "icon.png"
     },
+    "web_accessible_resources": [
+        {
+            "resources": ["fonts/PretendardVariable.woff2"],
+            "matches": ["<all_urls>"]
+        }
+    ],
     "options_page": "src/background-service/ui/options.html",
     "action": {
         "default_popup": "src/background-service/ui/popup.html",

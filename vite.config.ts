@@ -4,7 +4,7 @@ import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import path from "node:path";
 import { defineConfig } from "vite";
 import zip from "vite-plugin-zip-pack";
-import manifest from "./manifest.config";
+import manifest from "./manifest.json";
 
 const ReactCompilerConfig = {
     /* ... */
