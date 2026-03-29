@@ -322,7 +322,7 @@ async function main() {
 
             const recreateResult = exec(
                 "gh",
-                `release create ${tag} dist.zip --title "${title}" --notes-file "${draftPath}"`,
+                `release create ${tag} "${prePublishDir}/dist.zip" --title "${title}" --notes-file "${draftPath}"`,
                 {
                     cwd: publishDir,
                     stdio: "inherit",
@@ -341,7 +341,7 @@ async function main() {
             exec("git", "push origin main", { cwd: publishDir });
             const createResult = exec(
                 "gh",
-                `release create ${tag} dist.zip --title "${title}" --notes-file "${draftPath}"`,
+                `release create ${tag} "${prePublishDir}/dist.zip" --title "${title}" --notes-file "${draftPath}"`,
                 {
                     cwd: publishDir,
                     stdio: "inherit",
@@ -354,7 +354,7 @@ async function main() {
             }
         }
 
-        exec("git", "add publish", { cwd: __dirname });
+        exec("git", "add publish manifest.json package.json", { cwd: __dirname });
         exec("git", `commit -m "Update submodule reference"`, { cwd: __dirname });
         exec("git", "push origin main", { cwd: __dirname });
         console.log("\nRelease flow completed.");
