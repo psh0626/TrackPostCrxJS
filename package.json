@@ -1,7 +1,7 @@
 {
     "name": "track-post-ext",
     "private": true,
-    "version": "3.1.13",
+    "version": "3.1.12",
     "type": "module",
     "scripts": {
         "dev": "vite",
