@@ -271,12 +271,6 @@ async function main() {
 
         // --- 8. Prepare publish repo ---
         copyAllFiles(distDir, publishDir);
-        exec("git", "add .", { cwd: publishDir });
-        exec("git", ["commit", "-m", `chore: release ${title}`, "-m", notes], { cwd: publishDir });
-        exec("git", "push origin main", { cwd: publishDir });
-        exec("git", "add publish", { cwd: __dirname });
-        exec("git", `commit -m "Update submodule reference"`, { cwd: __dirname });
-        exec("git", "push origin main", { cwd: __dirname });
 
         // --- 9. Create or update GitHub release ---
         const releaseExists = ghExec(`release view ${tag} --json tagName`, publishDir) !== null;
@@ -293,6 +287,14 @@ async function main() {
                 console.error("Error: Failed to delete existing release.");
                 process.exit(1);
             }
+
+            exec("git", "reset HEAD~1 --hard", { cwd: publishDir });
+            exec("git", "push --force", { cwd: publishDir });
+
+            exec("git", "add .", { cwd: publishDir });
+            exec("git", ["commit", "-m", `chore: release ${title}`, "-m", notes], { cwd: publishDir });
+            exec("git", "push origin main", { cwd: publishDir });
+
 
             const headResult = exec("git", ["rev-parse", "HEAD"], { cwd: publishDir });
             if (headResult.status !== 0) {
@@ -336,6 +338,9 @@ async function main() {
             }
         } else {
             console.log(`\nCreating new release ${tag}...`);
+            exec("git", "add .", { cwd: publishDir });
+            exec("git", ["commit", "-m", `chore: release ${title}`, "-m", notes], { cwd: publishDir });
+            exec("git", "push origin main", { cwd: publishDir });
             const createResult = exec(
                 "gh",
                 `release create ${tag} dist.zip --title "${title}" --notes-file "${draftPath}"`,
@@ -351,6 +356,9 @@ async function main() {
             }
         }
 
+        exec("git", "add publish", { cwd: __dirname });
+        exec("git", `commit -m "Update submodule reference"`, { cwd: __dirname });
+        exec("git", "push origin main", { cwd: __dirname });
         console.log("\nRelease flow completed.");
     } finally {
         rl.close();
