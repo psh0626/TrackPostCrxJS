@@ -79,7 +79,7 @@ function buildMissingSections(existingBody) {
     const sections = ["Added", "Changed", "Fixed"];
     const missing = sections.filter((name) => !hasSection(existingBody, name));
     if (missing.length === 0) return "";
-    return missing.map((name) => `## ${name}\n\n- `).join("\n\n");
+    return missing.map((name) => `## ${name}\n- `).join("\n");
 }
 
 function hasUntouchedTemplatePlaceholders(notes) {
