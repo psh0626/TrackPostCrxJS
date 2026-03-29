@@ -286,7 +286,6 @@ async function main() {
             }
 
             exec("git", "reset HEAD~1", { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
-            exec("git", "push origin main --force", { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
 
             copyAllFiles(distDir, publishDir);
             exec("git", "add .", { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
@@ -295,7 +294,7 @@ async function main() {
                 stdio: "inherit",
                 encoding: "utf8",
             });
-            exec("git", "push origin main", { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
+            exec("git", "push origin main --force", { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
 
             const headResult = exec("git", ["rev-parse", "HEAD"], { cwd: publishDir });
             if (headResult.status !== 0) {
