@@ -378,6 +378,16 @@ async function main() {
         logDetail("releaseAlreadyExists", releaseExists ? "yes" : "no");
 
         if (releaseExists) {
+            const confirm = await prompt(
+                rl,
+                `Release ${tag} already exists. Do you want to recreate it with the new notes and asset? (y/n): `,
+                "y",
+            );
+            if (confirm.toLowerCase() !== "y") {
+                console.log("Release update cancelled by user.");
+                process.exit(0);
+            }
+
             console.log(`\nRecreating release ${tag} and refreshing source archives...`);
 
             runChecked(
