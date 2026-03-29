@@ -229,8 +229,8 @@ async function main() {
                 existingBody,
                 ...(missingSections ? ["", "<!-- Missing sections added below -->", missingSections] : []),
                 "",
-                commitSummaryBlock,
                 referenceBlock,
+                commitSummaryBlock,
             ].join("\n");
         } else {
             draftContent = [template, commitSummaryBlock, referenceBlock].join("\n");
@@ -269,9 +269,6 @@ async function main() {
             process.exit(1);
         }
 
-        // --- 8. Prepare publish repo ---
-        copyAllFiles(distDir, publishDir);
-
         // --- 9. Create or update GitHub release ---
         const releaseExists = ghExec(`release view ${tag} --json tagName`, publishDir) !== null;
 
@@ -291,10 +288,10 @@ async function main() {
             exec("git", "reset HEAD~1 --hard", { cwd: publishDir });
             exec("git", "push --force", { cwd: publishDir });
 
+            copyAllFiles(distDir, publishDir);
             exec("git", "add .", { cwd: publishDir });
             exec("git", ["commit", "-m", `chore: release ${title}`, "-m", notes], { cwd: publishDir });
             exec("git", "push origin main", { cwd: publishDir });
-
 
             const headResult = exec("git", ["rev-parse", "HEAD"], { cwd: publishDir });
             if (headResult.status !== 0) {
@@ -338,6 +335,7 @@ async function main() {
             }
         } else {
             console.log(`\nCreating new release ${tag}...`);
+            copyAllFiles(distDir, publishDir);
             exec("git", "add .", { cwd: publishDir });
             exec("git", ["commit", "-m", `chore: release ${title}`, "-m", notes], { cwd: publishDir });
             exec("git", "push origin main", { cwd: publishDir });
