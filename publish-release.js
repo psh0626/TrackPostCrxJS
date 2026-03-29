@@ -343,7 +343,7 @@ async function main() {
             `-r --wait "${draftPath}"`,
             {
                 cwd: __dirname,
-                stdio: "inherit",
+                stdio: "ignore",
                 encoding: "utf8",
                 shell: false,
             },
