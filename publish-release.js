@@ -380,7 +380,7 @@ async function main() {
         if (releaseExists) {
             const confirm = await prompt(
                 rl,
-                `Release ${tag} already exists. Do you want to recreate it with the new notes and asset? (y/n): `,
+                c(`Release ${tag} already exists. Do you want to recreate it with the new notes and asset? (y/n): `, ansi.red),
                 "y",
             );
             if (confirm.toLowerCase() !== "y") {
