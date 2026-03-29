@@ -113,7 +113,7 @@ function checkCommand(cmd) {
 function prompt(rl, message, prefill = "") {
     return new Promise((resolve) => {
         rl.question(c(message, ansi.bold), (answer) => resolve(stripAnsi(answer)));
-        if (prefill) rl.write(c(prefill, ansi.cyan, ansi.bold));
+        if (prefill) rl.write(prefill);
     });
 }
 
