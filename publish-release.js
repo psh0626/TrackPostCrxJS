@@ -202,7 +202,7 @@ async function main() {
         );
         commitLines = log.stdout.trim() || "- No recent commits found.";
 
-        const commitRangeTitle = `commits since ${lastCommitDate || lastTag}`;
+        const commitRangeTitle = `commits since ${lastCommitDate ? new Date(lastCommitDate).toLocaleString() : lastTag}`;
 
         const commitSummaryBlock = [
             `<!-- Commit Summary: ${commitRangeTitle} -->`,
@@ -338,7 +338,7 @@ async function main() {
             copyAllFiles(distDir, publishDir);
             exec("git", "add .", { cwd: publishDir });
             exec("git", ["commit", "-m", `chore: release ${title}`, "-m", notes], { cwd: publishDir });
-            exec("git", "push origin main", { cwd: publishDir });
+            exec("git", ["push", "origin", "main", tag], { cwd: publishDir });
             const createResult = exec(
                 "gh",
                 `release create ${tag} "${prePublishDir}/dist.zip" --title "${title}" --notes-file "${draftPath}"`,
@@ -357,6 +357,7 @@ async function main() {
         exec("git", "add publish manifest.json package.json", { cwd: __dirname });
         exec("git", `commit -m "Update submodule reference"`, { cwd: __dirname });
         exec("git", "push origin main", { cwd: __dirname });
+        exec("git", ["push", "origin"], { cwd: __dirname, stdio: "inherit", encoding: "utf8" });
         console.log("\nRelease flow completed.");
     } finally {
         rl.close();
