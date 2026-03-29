@@ -20,16 +20,20 @@ const ansi = {
     white: "\x1b[37m",
 };
 
-function colorize(text, ...styles) {
+function c(text, ...styles) {
     return `${styles.join("")}${text}${ansi.reset}`;
 }
 
+function stripAnsi(text) {
+    return text.replace(/\x1B\[[0-9;]*m/g, "");
+}
+
 function releasePrefix(color) {
-    return `${colorize("[", ansi.dim)}${colorize("release", ansi.bold, color)}${colorize("]", ansi.dim)}`;
+    return `${c("[", ansi.dim)}${c("release", ansi.bold, color)}${c("]", ansi.dim)}`;
 }
 
 function errorText(message) {
-    return colorize(`Error: ${message}`, ansi.bold, ansi.red);
+    return c(`Error: ${message}`, ansi.bold, ansi.red);
 }
 
 function formatCommand(cmd, args = "") {
@@ -45,15 +49,15 @@ function logInfo(message) {
 }
 
 function logSuccess(message) {
-    console.log(`${releasePrefix(ansi.green)} ${colorize(message, ansi.green)}`);
+    console.log(`${releasePrefix(ansi.green)} ${c(message, ansi.green)}`);
 }
 
 function logDetail(label, value) {
-    console.log(`${releasePrefix(ansi.cyan)} ${colorize(label, ansi.bold, ansi.white)}: ${colorize(value, ansi.cyan)}`);
+    console.log(`${releasePrefix(ansi.cyan)} ${c(label, ansi.bold, ansi.white)}: ${c(value, ansi.cyan)}`);
 }
 
 function logWarning(message) {
-    console.log(`${releasePrefix(ansi.yellow)} ${colorize(message, ansi.yellow)}`);
+    console.log(`${releasePrefix(ansi.yellow)} ${c(message, ansi.yellow)}`);
 }
 
 function exec(cmd, args = "", options = {}) {
@@ -79,19 +83,15 @@ function runChecked(cmd, args = "", options = {}, errorMessage = "Command failed
 
     if (result.status !== 0) {
         if (result.error) {
-            console.error(
-                `${releasePrefix(ansi.red)} ${colorize(`Command spawn error: ${result.error.message}`, ansi.red)}`,
-            );
+            console.error(`${releasePrefix(ansi.red)} ${c(`Command spawn error: ${result.error.message}`, ansi.red)}`);
         }
         if (typeof result.stdout === "string" && result.stdout.trim()) {
             console.error(
-                `${releasePrefix(ansi.magenta)} ${colorize("stdout:", ansi.bold, ansi.magenta)}\n${result.stdout.trim()}`,
+                `${releasePrefix(ansi.magenta)} ${c("stdout:", ansi.bold, ansi.magenta)}\n${result.stdout.trim()}`,
             );
         }
         if (typeof result.stderr === "string" && result.stderr.trim()) {
-            console.error(
-                `${releasePrefix(ansi.red)} ${colorize("stderr:", ansi.bold, ansi.red)}\n${result.stderr.trim()}`,
-            );
+            console.error(`${releasePrefix(ansi.red)} ${c("stderr:", ansi.bold, ansi.red)}\n${result.stderr.trim()}`);
         }
         console.error(errorText(errorMessage));
         process.exit(1);
@@ -112,8 +112,8 @@ function checkCommand(cmd) {
 
 function prompt(rl, message, prefill = "") {
     return new Promise((resolve) => {
-        rl.question(message, (answer) => resolve(answer));
-        if (prefill) rl.write(prefill);
+        rl.question(c(message, ansi.bold), (answer) => resolve(stripAnsi(answer)));
+        if (prefill) rl.write(c(prefill, ansi.cyan, ansi.bold));
     });
 }
 
@@ -198,7 +198,7 @@ async function main() {
     if (!checkCommand("code")) {
         console.error(errorText("VS Code CLI 'code' is required."));
         console.error(
-            colorize("Install via VS Code Command Palette: Shell Command: Install 'code' command in PATH", ansi.yellow),
+            c("Install via VS Code Command Palette: Shell Command: Install 'code' command in PATH", ansi.yellow),
         );
         process.exit(1);
     }
@@ -227,7 +227,7 @@ async function main() {
 
     try {
         // --- 1. Version prompt ---
-        console.log(`\nCurrent version: ${colorize(currentVersion, ansi.bold, ansi.cyan)}`);
+        console.log(`\n${c("Current version", ansi.bold)}: ${c(currentVersion, ansi.bold, ansi.green)}`);
 
         const newVersion = await prompt(rl, "Enter version: ", currentVersion);
         if (!newVersion.trim()) {
@@ -530,7 +530,7 @@ async function main() {
             { cwd: __dirname, stdio: "inherit", encoding: "utf8" },
             "Failed to push root repo refs to origin.",
         );
-        console.log(`\n${releasePrefix(ansi.green)} ${colorize("Release flow completed.", ansi.bold, ansi.green)}`);
+        console.log(`\n${releasePrefix(ansi.green)} ${c("Release flow completed.", ansi.bold, ansi.green)}`);
     } finally {
         rl.close();
         if (existsSync(draftPath)) {
