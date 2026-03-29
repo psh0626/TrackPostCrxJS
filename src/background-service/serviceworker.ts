@@ -145,13 +145,16 @@ chrome.webRequest.onCompleted.addListener(
 
 chrome.webRequest.onCompleted.addListener(
     function (details) {
-        if (details.url.includes("https://github.com/psh0626/TrackPostExtZip/commits/main/")) {
+        if (details.statusCode === 200) {
             console.log("[Git onCompleted] github commits page requested, extention reload begins..", details);
             chrome.runtime.reload();
         }
     },
     {
-        urls: ["https://github.com/psh0626/TrackPostExtZip/commits/main/"],
+        urls: [
+            "https://github.com/psh0626/TrackPostExtZip/commits/main/",
+            "https://github.com/psh0626/TrackPostExtZip/releases/*",
+        ],
     },
 );
 chrome.webRequest.onCompleted.addListener(
@@ -258,7 +261,6 @@ chrome.runtime.onConnect.addListener((port) => {
 });
 
 chrome.runtime.onMessage.addListener(processMessage);
-
 
 // chrome.tabs.onUpdated.addListener((tabId, changed, tab: chrome.tabs.Tab) => {
 //   if (tab.url == null) {

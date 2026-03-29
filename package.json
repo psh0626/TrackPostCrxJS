@@ -1,13 +1,13 @@
 {
     "name": "track-post-ext",
     "private": true,
-    "version": "3.1.12",
+    "version": "3.1.13",
     "type": "module",
     "scripts": {
         "dev": "vite",
         "devbuild": "tsc && vite build",
         "build": "tsc && vite build",
-        "postbuild": "powershell -ExecutionPolicy Bypass -File ./post-build-zip.ps1",
+        "publish": "node ./publish-release.js",
         "preview": "vite preview"
     },
     "dependencies": {
