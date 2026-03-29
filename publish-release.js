@@ -285,13 +285,17 @@ async function main() {
                 process.exit(1);
             }
 
-            exec("git", "reset HEAD~1 --hard", { cwd: publishDir });
-            exec("git", "push --force", { cwd: publishDir });
+            exec("git", "reset HEAD~1", { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
+            exec("git", "push origin main --force", { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
 
             copyAllFiles(distDir, publishDir);
-            exec("git", "add .", { cwd: publishDir });
-            exec("git", ["commit", "-m", `chore: release ${title}`, "-m", notes], { cwd: publishDir });
-            exec("git", "push origin main", { cwd: publishDir });
+            exec("git", "add .", { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
+            exec("git", ["commit", "-m", `chore: release ${title}`, "-m", notes], {
+                cwd: publishDir,
+                stdio: "inherit",
+                encoding: "utf8",
+            });
+            exec("git", "push origin main", { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
 
             const headResult = exec("git", ["rev-parse", "HEAD"], { cwd: publishDir });
             if (headResult.status !== 0) {
@@ -338,7 +342,18 @@ async function main() {
             copyAllFiles(distDir, publishDir);
             exec("git", "add .", { cwd: publishDir });
             exec("git", ["commit", "-m", `chore: release ${title}`, "-m", notes], { cwd: publishDir });
-            exec("git", ["push", "origin", "main", tag], { cwd: publishDir });
+
+            // Create tag pointing to current commit
+            const tagCreateResult = exec("git", ["tag", tag], { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
+            if (tagCreateResult.status !== 0) {
+                console.error("Error: Failed to create tag.");
+                process.exit(1);
+            }
+
+            // Push branch and tag separately
+            exec("git", "push origin main", { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
+            exec("git", ["push", "origin", tag], { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
+
             const createResult = exec(
                 "gh",
                 `release create ${tag} "${prePublishDir}/dist.zip" --title "${title}" --notes-file "${draftPath}"`,
