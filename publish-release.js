@@ -7,6 +7,55 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+const ansi = {
+    reset: "\x1b[0m",
+    bold: "\x1b[1m",
+    dim: "\x1b[2m",
+    red: "\x1b[31m",
+    green: "\x1b[32m",
+    yellow: "\x1b[33m",
+    blue: "\x1b[34m",
+    magenta: "\x1b[35m",
+    cyan: "\x1b[36m",
+    white: "\x1b[37m",
+};
+
+function colorize(text, ...styles) {
+    return `${styles.join("")}${text}${ansi.reset}`;
+}
+
+function releasePrefix(color) {
+    return `${colorize("[", ansi.dim)}${colorize("release", ansi.bold, color)}${colorize("]", ansi.dim)}`;
+}
+
+function errorText(message) {
+    return colorize(`Error: ${message}`, ansi.bold, ansi.red);
+}
+
+function formatCommand(cmd, args = "") {
+    const argList =
+        typeof args === "string"
+            ? args
+            : args.map((arg) => (String(arg).includes(" ") ? `"${arg}"` : String(arg))).join(" ");
+    return argList ? `${cmd} ${argList}` : cmd;
+}
+
+function logInfo(message) {
+    console.log(`${releasePrefix(ansi.blue)} ${message}`);
+}
+
+function logSuccess(message) {
+    console.log(`${releasePrefix(ansi.green)} ${colorize(message, ansi.green)}`);
+}
+
+function logDetail(label, value) {
+    console.log(`${releasePrefix(ansi.cyan)} ${colorize(label, ansi.bold, ansi.white)}: ${colorize(value, ansi.cyan)}`);
+}
+
+function logWarning(message) {
+    console.log(`${releasePrefix(ansi.yellow)} ${colorize(message, ansi.yellow)}`);
+}
+
 function exec(cmd, args = "", options = {}) {
     const { cwd, encoding = "utf8", stdio = "pipe", shell = false } = options;
     const execCmd = process.platform === "win32" && cmd === "npm" ? "npm.cmd" : cmd;
@@ -17,6 +66,39 @@ function exec(cmd, args = "", options = {}) {
             : args;
 
     return spawnSync(execCmd, argList, { cwd, encoding, stdio, shell });
+}
+
+function runChecked(cmd, args = "", options = {}, errorMessage = "Command failed.") {
+    const commandText = formatCommand(cmd, args);
+    const cwdText = options.cwd || process.cwd();
+
+    logInfo(`Running command: ${commandText}`);
+    logDetail("cwd", cwdText);
+
+    const result = exec(cmd, args, options);
+
+    if (result.status !== 0) {
+        if (result.error) {
+            console.error(
+                `${releasePrefix(ansi.red)} ${colorize(`Command spawn error: ${result.error.message}`, ansi.red)}`,
+            );
+        }
+        if (typeof result.stdout === "string" && result.stdout.trim()) {
+            console.error(
+                `${releasePrefix(ansi.magenta)} ${colorize("stdout:", ansi.bold, ansi.magenta)}\n${result.stdout.trim()}`,
+            );
+        }
+        if (typeof result.stderr === "string" && result.stderr.trim()) {
+            console.error(
+                `${releasePrefix(ansi.red)} ${colorize("stderr:", ansi.bold, ansi.red)}\n${result.stderr.trim()}`,
+            );
+        }
+        console.error(errorText(errorMessage));
+        process.exit(1);
+    }
+
+    logSuccess(`Command completed: ${commandText}`);
+    return result;
 }
 
 function checkCommand(cmd) {
@@ -107,13 +189,17 @@ function copyAllFiles(srcDir, destDir) {
 }
 
 async function main() {
+    logInfo("Starting publish-release flow.");
+
     if (!checkCommand("gh")) {
-        console.error("Error: GitHub CLI 'gh' is required.");
+        console.error(errorText("GitHub CLI 'gh' is required."));
         process.exit(1);
     }
     if (!checkCommand("code")) {
-        console.error("Error: VS Code CLI 'code' is required.");
-        console.error("Install via VS Code Command Palette: Shell Command: Install 'code' command in PATH");
+        console.error(errorText("VS Code CLI 'code' is required."));
+        console.error(
+            colorize("Install via VS Code Command Palette: Shell Command: Install 'code' command in PATH", ansi.yellow),
+        );
         process.exit(1);
     }
 
@@ -125,8 +211,14 @@ async function main() {
     const publishDir = join(__dirname, "publish");
     const draftPath = join(prePublishDir, ".release-notes-draft.md");
 
+    logDetail("workspace", __dirname);
+    logDetail("distDir", distDir);
+    logDetail("publishDir", publishDir);
+    logDetail("draftPath", draftPath);
+
     ensureUtf8NoBom(packagePath);
     ensureUtf8NoBom(manifestPath);
+    logSuccess("Verified package.json and manifest.json are UTF-8 without BOM.");
 
     const packageJson = readJsonFile(packagePath);
     let currentVersion = packageJson.version;
@@ -135,41 +227,39 @@ async function main() {
 
     try {
         // --- 1. Version prompt ---
-        console.log(`\nCurrent version: \x1b[36m${currentVersion}\x1b[0m`);
+        console.log(`\nCurrent version: ${colorize(currentVersion, ansi.bold, ansi.cyan)}`);
 
         const newVersion = await prompt(rl, "Enter version: ", currentVersion);
         if (!newVersion.trim()) {
-            console.error("Error: Version cannot be empty.");
+            console.error(errorText("Version cannot be empty."));
             process.exit(1);
         }
         if (newVersion.trim() === currentVersion) {
-            console.log("Version unchanged.");
+            logWarning("Version unchanged.");
         } else {
             currentVersion = newVersion.trim();
             updateVersionInFile(packagePath, currentVersion);
             updateVersionInFile(manifestPath, currentVersion);
-            console.log(`Updated version to ${currentVersion} in package.json and manifest.json`);
+            logSuccess(`Updated version to ${currentVersion} in package.json and manifest.json`);
         }
+        logDetail("selectedVersion", currentVersion);
 
         // --- 2. Build ---
         console.log("\nRunning build...");
-        const buildResult = exec("npm", "run build", { stdio: "inherit", encoding: "utf8", shell: true });
-        if (buildResult.status !== 0) {
-            if (buildResult.error) {
-                console.error(`Build spawn error: ${buildResult.error.message}`);
-            }
-            console.error("Error: Build failed.");
-            process.exit(1);
-        }
+        runChecked("npm", "run build", { stdio: "inherit", encoding: "utf8", shell: true }, "Build failed.");
+        logSuccess("Build completed successfully.");
 
         const tag = `v${currentVersion}`;
         const defaultTitle = `TrackPost ${tag}`;
         const assetPath = join(prePublishDir, "dist.zip");
+        logDetail("releaseTag", tag);
+        logDetail("releaseAsset", assetPath);
 
         if (!existsSync(assetPath)) {
-            console.error(`Error: Asset not found: ${assetPath}`);
+            console.error(errorText(`Asset not found: ${assetPath}`));
             process.exit(1);
         }
+        logSuccess("Verified release asset exists.");
 
         // --- 3. Release title ---
         const titleRaw = await prompt(rl, `\nRelease title (Enter for default): `, defaultTitle);
@@ -180,14 +270,19 @@ async function main() {
         const latestBodyRaw = ghExec("release view --json body --jq .body", publishDir);
         const existingBody = stripHtmlComments(existingBodyRaw);
         const latestBody = stripHtmlComments(latestBodyRaw);
+        logDetail("existingReleaseNotesFound", existingBody ? "yes" : "no");
+        logDetail("latestReleaseNotesFound", latestBody ? "yes" : "no");
 
         const lastTagResult = exec("git", "describe --tags --abbrev=0", { cwd: __dirname });
         const lastTag = lastTagResult.status === 0 ? lastTagResult.stdout.trim() : "";
+        logDetail("lastTag", lastTag || "<none>");
 
         let commitLines;
         const lastCommitInPublish = exec("git", ["log", "-n", "1", "--pretty=format:%ad"], { cwd: publishDir });
         const lastCommitDate = lastCommitInPublish.status === 0 ? lastCommitInPublish.stdout.trim() : null;
         const sinceArg = lastCommitDate ? `--since=${lastCommitDate}` : `--since=${lastTag}`;
+        logDetail("publishRepoLastCommitDate", lastCommitDate || "<none>");
+        logDetail("gitLogSinceArg", sinceArg);
         const log = exec(
             "git",
             [
@@ -201,8 +296,10 @@ async function main() {
             { cwd: __dirname },
         );
         commitLines = log.stdout.trim() || "- No recent commits found.";
+        logDetail("commitSummaryLength", String(commitLines.split(/\r?\n/).length));
 
         const commitRangeTitle = `commits since ${lastCommitDate ? new Date(lastCommitDate).toLocaleString() : lastTag}`;
+        logDetail("commitRangeTitle", commitRangeTitle);
 
         const commitSummaryBlock = [
             `<!-- Commit Summary: ${commitRangeTitle} -->`,
@@ -237,93 +334,127 @@ async function main() {
         }
 
         writeFileSync(draftPath, draftContent, "utf8");
+        logSuccess("Release note draft written.");
 
         // --- 6. Open in VS Code ---
         console.log("\nOpening release notes in VS Code. Save and close to continue...");
-        const openEditorResult = exec("code", `-r --wait "${draftPath}"`, {
-            cwd: __dirname,
-            stdio: "inherit",
-            encoding: "utf8",
-            shell: false,
-        });
-        if (openEditorResult.status !== 0) {
-            console.error("Error: Failed to open VS Code editor.");
-            process.exit(1);
-        }
+        runChecked(
+            "code",
+            `-r --wait "${draftPath}"`,
+            {
+                cwd: __dirname,
+                stdio: "inherit",
+                encoding: "utf8",
+                shell: false,
+            },
+            "Failed to open VS Code editor.",
+        );
+        logSuccess("Release note editor closed.");
 
         // --- 7. Validate notes ---
         const baselineNotes = draftContent.trim();
         const notes = readFileSync(draftPath, "utf8").trim();
         if (!notes) {
-            console.error("Error: Release notes are empty.");
+            console.error(errorText("Release notes are empty."));
             process.exit(1);
         }
         if (notes === baselineNotes) {
-            console.error("Error: Release notes were not edited. Please update the draft before closing VS Code.");
+            console.error(errorText("Release notes were not edited. Please update the draft before closing VS Code."));
             process.exit(1);
         }
         if (hasUntouchedTemplatePlaceholders(notes)) {
             console.error(
-                "Error: Template placeholders are still present (for example '-'). Fill out Added/Changed/Fixed sections.",
+                errorText(
+                    "Template placeholders are still present (for example '-'). Fill out Added/Changed/Fixed sections.",
+                ),
             );
             process.exit(1);
         }
+        logDetail("finalReleaseNotesLength", String(notes.split(/\r?\n/).length));
+        logSuccess("Release notes validation passed.");
 
         // --- 8. Create or update GitHub release ---
         const releaseExists = ghExec(`release view ${tag} --json tagName`, publishDir) !== null;
+        logDetail("releaseAlreadyExists", releaseExists ? "yes" : "no");
 
         if (releaseExists) {
             console.log(`\nRecreating release ${tag} and refreshing source archives...`);
 
-            const deleteResult = exec("gh", `release delete ${tag} --yes`, {
-                cwd: publishDir,
-                stdio: "inherit",
-                encoding: "utf8",
-            });
-            if (deleteResult.status !== 0) {
-                console.error("Error: Failed to delete existing release.");
-                process.exit(1);
-            }
+            runChecked(
+                "gh",
+                `release delete ${tag} --yes`,
+                {
+                    cwd: publishDir,
+                    stdio: "inherit",
+                    encoding: "utf8",
+                },
+                "Failed to delete existing release.",
+            );
 
-            exec("git", "reset HEAD~1", { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
+            runChecked(
+                "git",
+                "reset HEAD~1",
+                { cwd: publishDir, stdio: "inherit", encoding: "utf8" },
+                "Failed to rewind publish repo before recreating release.",
+            );
 
+            logInfo("Copying build output into publish repository.");
             copyAllFiles(distDir, publishDir);
-            exec("git", "add .", { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
-            exec("git", ["commit", "-m", `release ${title}`, "-m", notes], {
-                cwd: publishDir,
-                stdio: "inherit",
-                encoding: "utf8",
-            });
-            exec("git", "push origin main --force", { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
+            runChecked(
+                "git",
+                "add .",
+                { cwd: publishDir, stdio: "inherit", encoding: "utf8" },
+                "Failed to stage publish repo changes.",
+            );
+            runChecked(
+                "git",
+                ["commit", "-m", `release ${title}`, "-m", notes],
+                {
+                    cwd: publishDir,
+                    stdio: "inherit",
+                    encoding: "utf8",
+                },
+                "Failed to commit publish repo release changes.",
+            );
+            runChecked(
+                "git",
+                "push origin main --force",
+                { cwd: publishDir, stdio: "inherit", encoding: "utf8" },
+                "Failed to force-push publish repo main branch.",
+            );
 
-            const headResult = exec("git", ["rev-parse", "HEAD"], { cwd: publishDir });
-            if (headResult.status !== 0) {
-                console.error("Error: Failed to resolve latest commit SHA in publish repo.");
-                process.exit(1);
-            }
+            const headResult = runChecked(
+                "git",
+                ["rev-parse", "HEAD"],
+                { cwd: publishDir },
+                "Failed to resolve latest commit SHA in publish repo.",
+            );
             const headSha = headResult.stdout.trim();
+            logDetail("publishHeadSha", headSha);
 
-            const tagMoveResult = exec("git", ["tag", "-f", tag, headSha], {
-                cwd: publishDir,
-                stdio: "inherit",
-                encoding: "utf8",
-            });
-            if (tagMoveResult.status !== 0) {
-                console.error("Error: Failed to move tag to latest commit.");
-                process.exit(1);
-            }
+            runChecked(
+                "git",
+                ["tag", "-f", tag, headSha],
+                {
+                    cwd: publishDir,
+                    stdio: "inherit",
+                    encoding: "utf8",
+                },
+                "Failed to move tag to latest commit.",
+            );
 
-            const pushTagResult = exec("git", ["push", "origin", tag, "--force"], {
-                cwd: publishDir,
-                stdio: "inherit",
-                encoding: "utf8",
-            });
-            if (pushTagResult.status !== 0) {
-                console.error("Error: Failed to force-push updated tag.");
-                process.exit(1);
-            }
+            runChecked(
+                "git",
+                ["push", "origin", tag, "--force"],
+                {
+                    cwd: publishDir,
+                    stdio: "inherit",
+                    encoding: "utf8",
+                },
+                "Failed to force-push updated tag.",
+            );
 
-            const recreateResult = exec(
+            runChecked(
                 "gh",
                 `release create ${tag} "${prePublishDir}/dist.zip" --title "${title}" --notes-file "${draftPath}"`,
                 {
@@ -331,29 +462,43 @@ async function main() {
                     stdio: "inherit",
                     encoding: "utf8",
                 },
+                "Failed to recreate release.",
             );
-            if (recreateResult.status !== 0) {
-                console.error("Error: Failed to recreate release.");
-                process.exit(1);
-            }
         } else {
             console.log(`\nCreating new release ${tag}...`);
+            logInfo("Copying build output into publish repository.");
             copyAllFiles(distDir, publishDir);
-            exec("git", "add .", { cwd: publishDir });
-            exec("git", ["commit", "-m", `release ${title}`, "-m", notes], { cwd: publishDir });
+            runChecked("git", "add .", { cwd: publishDir }, "Failed to stage publish repo changes.");
+            runChecked(
+                "git",
+                ["commit", "-m", `release ${title}`, "-m", notes],
+                { cwd: publishDir },
+                "Failed to commit publish repo release changes.",
+            );
 
             // Create tag pointing to current commit
-            const tagCreateResult = exec("git", ["tag", tag], { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
-            if (tagCreateResult.status !== 0) {
-                console.error("Error: Failed to create tag.");
-                process.exit(1);
-            }
+            runChecked(
+                "git",
+                ["tag", tag],
+                { cwd: publishDir, stdio: "inherit", encoding: "utf8" },
+                "Failed to create tag.",
+            );
 
             // Push branch and tag separately
-            exec("git", "push origin main", { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
-            exec("git", ["push", "origin", tag], { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
+            runChecked(
+                "git",
+                "push origin main",
+                { cwd: publishDir, stdio: "inherit", encoding: "utf8" },
+                "Failed to push publish repo main branch.",
+            );
+            runChecked(
+                "git",
+                ["push", "origin", tag],
+                { cwd: publishDir, stdio: "inherit", encoding: "utf8" },
+                "Failed to push release tag.",
+            );
 
-            const createResult = exec(
+            runChecked(
                 "gh",
                 `release create ${tag} "${prePublishDir}/dist.zip" --title "${title}" --notes-file "${draftPath}"`,
                 {
@@ -361,25 +506,41 @@ async function main() {
                     stdio: "inherit",
                     encoding: "utf8",
                 },
+                "Failed to create release.",
             );
-            if (createResult.status !== 0) {
-                console.error("Error: Failed to create release.");
-                process.exit(1);
-            }
         }
 
-        exec("git", "add publish manifest.json package.json", { cwd: __dirname });
-        exec("git", `commit -m "Update submodule reference"`, { cwd: __dirname });
-        exec("git", "push origin main", { cwd: __dirname });
-        exec("git", ["push", "origin"], { cwd: __dirname, stdio: "inherit", encoding: "utf8" });
-        console.log("\nRelease flow completed.");
+        logInfo("Syncing root repository after publish release update.");
+        runChecked(
+            "git",
+            "add publish manifest.json package.json",
+            { cwd: __dirname },
+            "Failed to stage root repo release changes.",
+        );
+        runChecked(
+            "git",
+            `commit -m "Update submodule reference"`,
+            { cwd: __dirname },
+            "Failed to commit root repo release changes.",
+        );
+        runChecked("git", "push origin main", { cwd: __dirname }, "Failed to push root repo main branch.");
+        runChecked(
+            "git",
+            ["push", "origin"],
+            { cwd: __dirname, stdio: "inherit", encoding: "utf8" },
+            "Failed to push root repo refs to origin.",
+        );
+        console.log(`\n${releasePrefix(ansi.green)} ${colorize("Release flow completed.", ansi.bold, ansi.green)}`);
     } finally {
         rl.close();
-        if (existsSync(draftPath)) rmSync(draftPath);
+        if (existsSync(draftPath)) {
+            logWarning("Cleaning up release note draft.");
+            rmSync(draftPath);
+        }
     }
 }
 
 main().catch((err) => {
-    console.error(err.message || err);
+    console.error(errorText(err.message || String(err)));
     process.exit(1);
 });
