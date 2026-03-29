@@ -269,7 +269,7 @@ async function main() {
             process.exit(1);
         }
 
-        // --- 9. Create or update GitHub release ---
+        // --- 8. Create or update GitHub release ---
         const releaseExists = ghExec(`release view ${tag} --json tagName`, publishDir) !== null;
 
         if (releaseExists) {
