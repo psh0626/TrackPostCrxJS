@@ -290,7 +290,7 @@ async function main() {
 
             copyAllFiles(distDir, publishDir);
             exec("git", "add .", { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
-            exec("git", ["commit", "-m", `chore: release ${title}`, "-m", notes], {
+            exec("git", ["commit", "-m", `release ${title}`, "-m", notes], {
                 cwd: publishDir,
                 stdio: "inherit",
                 encoding: "utf8",
@@ -341,7 +341,7 @@ async function main() {
             console.log(`\nCreating new release ${tag}...`);
             copyAllFiles(distDir, publishDir);
             exec("git", "add .", { cwd: publishDir });
-            exec("git", ["commit", "-m", `chore: release ${title}`, "-m", notes], { cwd: publishDir });
+            exec("git", ["commit", "-m", `release ${title}`, "-m", notes], { cwd: publishDir });
 
             // Create tag pointing to current commit
             const tagCreateResult = exec("git", ["tag", tag], { cwd: publishDir, stdio: "inherit", encoding: "utf8" });
