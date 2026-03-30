@@ -475,6 +475,15 @@ async function main() {
                 "Failed to recreate release.",
             );
         } else {
+            const remoteTags = runChecked("git", "ls-remote --tags origin", { cwd: publishDir }).stdout.trim();
+            const tagExistsRemotely = remoteTags.split("\n").some((line) => line.endsWith(`refs/tags/${tag}`));
+            logDetail("tagExistsInRemote", tagExistsRemotely ? "yes" : "no");
+            
+            if (tagExistsRemotely) {
+                runChecked("git", `tag -d ${tag}`, { cwd: publishDir }, "Failed to delete local tag.");
+                runChecked("git", `push --delete origin ${tag}`, { cwd: publishDir }, "Failed to delete remote tag.");
+            }
+
             console.log(`\nCreating new release ${tag}...`);
             logInfo("Copying build output into publish repository.");
             copyAllFiles(distDir, publishDir);
