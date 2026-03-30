@@ -5,9 +5,8 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "devbuild": "tsc && vite build",
         "build": "tsc && vite build",
-        "publish": "node ./publish-release.js",
+        "publish": "node ./publish-release/main.js",
         "preview": "vite preview"
     },
     "dependencies": {
