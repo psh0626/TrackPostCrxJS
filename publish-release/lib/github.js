@@ -1,6 +1,6 @@
-import { exec } from "./process.js";
 import { die } from "./errors.js";
-import { releasePrefix, ansi, c, logInfo, logSuccess, logDetail } from "./log.js";
+import { ansi, c, logDetail, logInfo, logSuccess, releasePrefix } from "./log.js";
+import { exec } from "./process.js";
 
 export function parseGitHubRepoSlug(remoteUrl) {
     const normalized = remoteUrl.trim();
@@ -25,7 +25,7 @@ export function checkGhAuthAndPermissions(rootDir, publishDir) {
         }
         die("GitHub CLI is not authenticated. Run 'gh auth login' first.");
     }
-    logSuccess("GitHub CLI authentication check passed.");
+    logSuccess("GitHub CLI authentication check passed.\n");
 
     const repoDirs = [
         { name: "root", cwd: rootDir },
@@ -75,7 +75,7 @@ export function checkGhAuthAndPermissions(rootDir, publishDir) {
         }
     }
 
-    logSuccess("GitHub repository permission checks passed.");
+    logSuccess("GitHub repository permission checks passed.\n");
 }
 
 export function checkReposClean(rootDir, publishDir) {
@@ -101,6 +101,7 @@ export function checkReposClean(rootDir, publishDir) {
         }
         logSuccess(`${name} repository is clean.`);
     }
+    logInfo("\n");
 }
 
 export function ghExec(command, cwd) {

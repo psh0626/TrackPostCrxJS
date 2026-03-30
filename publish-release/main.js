@@ -3,22 +3,26 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import { createInterface } from "readline";
 import { fileURLToPath } from "url";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const workspaceDir = join(__dirname, "..");
-
+import { buildReleaseDraft } from "./lib/draft-builder.js";
 import { ReleaseError, die } from "./lib/errors.js";
 import { ensureUtf8NoBom, prompt, readJsonFile, updateVersionInFile } from "./lib/files.js";
 import { captureCheckpoint, commitTagAndRelease, rollback } from "./lib/git.js";
-import { checkGhAuthAndPermissions, checkReposClean, getPreviousReleaseBody, ghExec } from "./lib/github.js";
+import { checkGhAuthAndPermissions, checkReposClean, ghExec } from "./lib/github.js";
 import { ansi, c, errorText, logDetail, logInfo, logSuccess, logWarning, releasePrefix } from "./lib/log.js";
-import {
-    buildMissingSections,
-    hasUntouchedTemplatePlaceholders,
-    isValidVersion,
-    stripHtmlComments,
-} from "./lib/notes.js";
-import { checkCommand, exec, runChecked } from "./lib/process.js";
+import { hasUntouchedTemplatePlaceholders, isValidVersion, stripHtmlComments } from "./lib/notes.js";
+import { checkCommand, runChecked } from "./lib/process.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const workspaceDir = join(__dirname, "..");
+const packagePath = join(workspaceDir, "package.json");
+const manifestPath = join(workspaceDir, "manifest.json");
+const distDir = join(workspaceDir, "dist");
+const publishDir = join(workspaceDir, "publish");
+const prePublishDir = join(workspaceDir, "pre-publish");
+const draftPath = join(prePublishDir, ".release-notes-draft.md");
+const assetPath = join(prePublishDir, "dist.zip");
+
+const releaseNoteSections = ["Added", "Changed", "Fixed"];
 
 let rollbackState = null;
 
@@ -43,7 +47,6 @@ async function main() {
 
     if (!checkCommand("gh")) die("GitHub CLI 'gh' is required.");
 
-    const publishDir = join(workspaceDir, "publish");
     checkGhAuthAndPermissions(workspaceDir, publishDir);
     checkReposClean(workspaceDir, publishDir);
 
@@ -52,13 +55,6 @@ async function main() {
         die("VS Code CLI 'code' is required.");
     }
 
-    const packagePath = join(workspaceDir, "package.json");
-    const manifestPath = join(workspaceDir, "manifest.json");
-    const distDir = join(workspaceDir, "dist");
-    const prePublishDir = join(workspaceDir, "pre-publish");
-    const draftPath = join(prePublishDir, ".release-notes-draft.md");
-    const assetPath = join(prePublishDir, "dist.zip");
-
     logDetail("workspace", workspaceDir);
     logDetail("distDir", distDir);
     logDetail("publishDir", publishDir);
@@ -66,7 +62,7 @@ async function main() {
 
     ensureUtf8NoBom(packagePath);
     ensureUtf8NoBom(manifestPath);
-    logSuccess("Verified package.json and manifest.json are UTF-8 without BOM.");
+    logSuccess("Verified package.json and manifest.json are UTF-8 without BOM.\n");
 
     rollbackState = {
         rootDir: workspaceDir,
@@ -134,78 +130,29 @@ async function main() {
         const title = titleRaw.trim() || defaultTitle;
 
         // --- 4. Fetch existing notes & commits from repo ---
-        const existingBodyRaw = ghExec(`release view ${tag} --json body --jq .body`, publishDir);
-        const latestBodyRaw = ghExec("release view --json body --jq .body", publishDir);
-        const existingBody = stripHtmlComments(existingBodyRaw);
-        const previousBodyRaw = existingBody ? getPreviousReleaseBody(publishDir, tag) : null;
-        const latestBody = stripHtmlComments(previousBodyRaw || latestBodyRaw);
+        const {
+            draftContent,
+            existingBody,
+            referenceBody,
+            lastTag,
+            lastCommitDate,
+            sinceArg,
+            commitLines,
+            commitRangeTitle,
+        } = buildReleaseDraft({ tag, publishDir, workspaceDir, sections: releaseNoteSections });
+
         logDetail("existingReleaseNotesFound", existingBody ? "yes" : "no");
-        logDetail("referenceReleaseNotesFound", latestBody ? "yes" : "no");
-
-        const lastTagResult = exec("git", ["describe", "--tags", "--abbrev=0"], { cwd: workspaceDir });
-        const lastTag = lastTagResult.status === 0 ? lastTagResult.stdout.trim() : "";
+        logDetail("referenceReleaseNotesFound", referenceBody ? "yes" : "no");
         logDetail("lastTag", lastTag || "<none>");
-
-        const lastCommitInPublish = exec("git", ["log", "-n", "1", "--pretty=format:%ad"], { cwd: publishDir });
-        const lastCommitDate = lastCommitInPublish.status === 0 ? lastCommitInPublish.stdout.trim() : null;
-        const sinceArg = lastCommitDate ? `--since=${lastCommitDate}` : `--since=${lastTag}`;
         logDetail("publishRepoLastCommitDate", lastCommitDate || "<none>");
         logDetail("gitLogSinceArg", sinceArg);
-
-        const log = exec(
-            "git",
-            [
-                "log",
-                sinceArg,
-                "--pretty=format:Author: %an%nDate: %ad%n%s%n",
-                "--date=format:%Y-%m-%d %I:%M:%S %p",
-                "--grep=Update submodule reference",
-                "--invert-grep",
-            ],
-            { cwd: workspaceDir },
-        );
-        const commitLines = log.stdout.trim() || "- No recent commits found.";
         logDetail("commitSummaryLength", String(commitLines.split(/\r?\n/).length));
-
-        const commitRangeTitle = `commits since ${lastCommitDate ? new Date(lastCommitDate).toLocaleString() : lastTag}`;
         logDetail("commitRangeTitle", commitRangeTitle);
-
-        const commitSummaryBlock = [
-            `<!-- Commit Summary: ${commitRangeTitle} -->`,
-            "<!--",
-            "",
-            commitLines,
-            "",
-            "-->",
-        ].join("\n");
-
-        const template = ["## Added", "- ", "", "## Changed", "- ", "", "## Fixed", "- ", ""].join("\n");
-
-        const referenceBlock = latestBody
-            ? ["", "<!-- Reference: latest release note -->", "<!--", "", latestBody, "", "-->"].join("\n")
-            : "";
-
-        // --- 5. Build draft content ---
-        let draftContent;
-        if (existingBody) {
-            const missingSections = buildMissingSections(existingBody);
-            draftContent = [
-                "<!-- Existing release note for this tag (editable) -->",
-                "",
-                existingBody,
-                ...(missingSections ? ["", "<!-- Missing sections added below -->", missingSections] : []),
-                "",
-                referenceBlock,
-                commitSummaryBlock,
-            ].join("\n");
-        } else {
-            draftContent = [template, commitSummaryBlock, referenceBlock].join("\n");
-        }
 
         writeFileSync(draftPath, draftContent, "utf8");
         logSuccess("Release note draft written.");
 
-        // --- 6. Open in VS Code ---
+        // --- 5. Open in VS Code ---
         console.log("\nOpening release notes in VS Code. Save and close to continue...");
         runChecked(
             "code",
@@ -213,9 +160,9 @@ async function main() {
             { cwd: workspaceDir, stdio: "ignore", encoding: "utf8" },
             "Failed to open VS Code editor.",
         );
-        logSuccess("Release note editor closed.");
+        logSuccess("Release note editor closed.\n");
 
-        // --- 7. Validate notes ---
+        // --- 6. Validate notes ---
         const baselineNotes = draftContent.trim();
         const notes = readFileSync(draftPath, "utf8").trim();
         if (!notes) die("Release notes are empty.");
@@ -226,12 +173,12 @@ async function main() {
             die("Template placeholders are still present (for example '-'). Fill out Added/Changed/Fixed sections.");
         }
         logDetail("finalReleaseNotesLength", String(notes.split(/\r?\n/).length));
-        logSuccess("Release notes validation passed.");
+        logSuccess("Release notes validation passed.\n");
 
         // Strip HTML comments for a cleaner git commit message
         const commitBody = stripHtmlComments(notes);
 
-        // --- 8. Create or update GitHub release ---
+        // --- 7. Create or update GitHub release ---
         const releaseExists = ghExec(`release view ${tag} --json tagName`, publishDir) !== null;
         logDetail("releaseAlreadyExists", releaseExists ? "yes" : "no");
 
@@ -309,7 +256,7 @@ async function main() {
             });
         }
 
-        // --- 9. Sync root repository ---
+        // --- 8. Sync root repository ---
         logInfo("Syncing root repository after publish release update.");
         runChecked(
             "git",

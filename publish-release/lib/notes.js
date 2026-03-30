@@ -9,8 +9,7 @@ export function hasSection(body, sectionName) {
     return re.test(body);
 }
 
-export function buildMissingSections(existingBody) {
-    const sections = ["Added", "Changed", "Fixed"];
+export function buildMissingSections(existingBody, sections = ["Added", "Changed", "Fixed"]) {
     const missing = sections.filter((name) => !hasSection(existingBody, name));
     if (missing.length === 0) return "";
     return missing.map((name) => `## ${name}\n- `).join("\n");
