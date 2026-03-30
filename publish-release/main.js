@@ -10,7 +10,7 @@ const workspaceDir = join(__dirname, "..");
 import { ReleaseError, die } from "./lib/errors.js";
 import { ensureUtf8NoBom, prompt, readJsonFile, updateVersionInFile } from "./lib/files.js";
 import { captureCheckpoint, commitTagAndRelease, rollback } from "./lib/git.js";
-import { checkGhAuthAndPermissions, checkReposClean, ghExec } from "./lib/github.js";
+import { checkGhAuthAndPermissions, checkReposClean, getPreviousReleaseBody, ghExec } from "./lib/github.js";
 import { ansi, c, errorText, logDetail, logInfo, logSuccess, logWarning, releasePrefix } from "./lib/log.js";
 import {
     buildMissingSections,
@@ -137,9 +137,10 @@ async function main() {
         const existingBodyRaw = ghExec(`release view ${tag} --json body --jq .body`, publishDir);
         const latestBodyRaw = ghExec("release view --json body --jq .body", publishDir);
         const existingBody = stripHtmlComments(existingBodyRaw);
-        const latestBody = stripHtmlComments(latestBodyRaw);
+        const previousBodyRaw = existingBody ? getPreviousReleaseBody(publishDir, tag) : null;
+        const latestBody = stripHtmlComments(previousBodyRaw || latestBodyRaw);
         logDetail("existingReleaseNotesFound", existingBody ? "yes" : "no");
-        logDetail("latestReleaseNotesFound", latestBody ? "yes" : "no");
+        logDetail("referenceReleaseNotesFound", latestBody ? "yes" : "no");
 
         const lastTagResult = exec("git", ["describe", "--tags", "--abbrev=0"], { cwd: workspaceDir });
         const lastTag = lastTagResult.status === 0 ? lastTagResult.stdout.trim() : "";

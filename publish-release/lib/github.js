@@ -108,3 +108,24 @@ export function ghExec(command, cwd) {
     if (result.status === 0) return result.stdout.trim();
     return null;
 }
+
+export function getPreviousReleaseBody(cwd, currentTag) {
+    const listResult = exec("gh", ["release", "list", "--limit", "50", "--json", "tagName"], { cwd });
+    if (listResult.status !== 0 || !listResult.stdout.trim()) return null;
+
+    let releases;
+    try {
+        releases = JSON.parse(listResult.stdout);
+    } catch {
+        return null;
+    }
+
+    if (!Array.isArray(releases) || releases.length === 0) return null;
+
+    const previous = releases.find((release) => release?.tagName && release.tagName !== currentTag);
+    if (!previous?.tagName) return null;
+
+    const bodyResult = exec("gh", ["release", "view", previous.tagName, "--json", "body", "--jq", ".body"], { cwd });
+    if (bodyResult.status !== 0) return null;
+    return bodyResult.stdout.trim() || null;
+}
