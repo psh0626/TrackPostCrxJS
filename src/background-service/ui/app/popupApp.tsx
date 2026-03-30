@@ -490,7 +490,7 @@ function PopUpApp() {
                     width="100%"
                     justifyContent={"center"}
                     alignItems={"center"}
-                    sx={{ minHeight: "35px", textAlign: "center" }}
+                    sx={{ minHeight: "50px", textAlign: "center" }}
                 >
                     <Typography variant="caption" color="textDisabled" sx={{ userSelect: "none", fontWeight: "500" }}>
                         새로 온 메시지가 여기에 표시됩니다.
@@ -506,7 +506,7 @@ function PopUpApp() {
             {newGcssRenderOrder.map((item) => item.count > 0 && item.render())}
 
             {renderOrder.some((item) => item.count < 1 && item.render() !== null) ? (
-                <Divider variant="middle" sx={{ mt: "12px", mb: "7px" }}>
+                <Divider variant="middle" sx={{ mt: "7px", mb: "4px" }}>
                     <Typography variant="caption" color="initial" sx={{ userSelect: "none", fontWeight: "300" }}>
                         모두 읽음
                     </Typography>

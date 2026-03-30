@@ -2,24 +2,38 @@ import { IMICSettings } from "@/common/IMICSettings";
 import { TravelExplore } from "@mui/icons-material";
 import { AppBar, Box, Paper, Tab, Tabs, Toolbar, Typography } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
+import About from "./tabs/about/about";
 import ExchangeRate from "./tabs/exhcnage-rate/exchangeRate";
 import { GeneralSettings } from "./tabs/genral-settings/generalSettings";
 import { PersonalRemarks } from "./tabs/personal-remarks/personalRemarks";
 
+const tabs = ["general", "remarks", "exchange", "about"];
 export default function OptionsApp() {
     const settings = useRef(new IMICSettings());
     const [initialized, setInitialized] = useState(false);
     const [tabValue, setTabValue] = useState(0);
-
     useEffect(() => {
         if (!initialized) {
             void (async () => {
                 await settings.current.loadOptions();
+                const tabSelected = new URLSearchParams(window.location.search).get("tab");
+                if (tabSelected) {
+                    const tabIndex = tabs.indexOf(tabSelected);
+                    if (tabIndex >= 0) setTabValue(tabIndex);
+                }
                 console.log("options_app.tsb: settings loaded", settings.current);
                 setInitialized(true);
             })();
         }
     }, []);
+
+    useEffect(() => {
+        if (!initialized) return;
+        // set the current tab to url query for deep linking
+        const tabName = tabs[tabValue];
+        const newUrl = `${window.location.pathname}?tab=${tabName}`;
+        window.history.replaceState(null, "", newUrl);
+    }, [tabValue]);
 
     return (
         <Paper>
@@ -47,6 +61,7 @@ export default function OptionsApp() {
                         <Tab label="General" />
                         <Tab label="Personal Remarks" />
                         <Tab label="Exchange Rates" />
+                        <Tab label="About" />
                     </Tabs>
                     <Box sx={{ padding: "10px" }}>
                         <Box sx={{ display: tabValue === 0 ? "block" : "none" }}>
@@ -57,6 +72,9 @@ export default function OptionsApp() {
                         </Box>
                         <Box sx={{ display: tabValue === 2 ? "block" : "none" }}>
                             <ExchangeRate />
+                        </Box>
+                        <Box sx={{ display: tabValue === 3 ? "block" : "none" }}>
+                            <About />
                         </Box>
                     </Box>
                 </Box>
