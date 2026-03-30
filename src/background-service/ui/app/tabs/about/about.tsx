@@ -1,5 +1,5 @@
 import manifest from "@/../manifest.json";
-import { Info } from "@mui/icons-material";
+import { Info, Refresh } from "@mui/icons-material";
 import { Button, Divider, Paper, Stack, Typography } from "@mui/material";
 
 interface ButtonLinkProps {
@@ -41,9 +41,18 @@ export default function About() {
                     <Typography variant="h4" fontWeight={800}>
                         IMIC TrackPost 확장 프로그램
                     </Typography>
-                    <Typography variant="subtitle1" color="text.secondary" textAlign={"right"}>
-                        버전 {manifest.version}
-                    </Typography>
+
+                    <Button sx={{ ml: "auto", minWidth: 45 }} onClick={() => window.location.reload()}>
+                        <Refresh color="disabled" sx={{ mr: 1 }} />
+                        <Typography
+                            variant="subtitle1"
+                            color="text.secondary"
+                            textAlign={"right"}
+                            sx={{ position: "relative" }}
+                        >
+                            버전 {manifest.version}
+                        </Typography>
+                    </Button>
                 </Stack>
                 <Divider sx={{ mb: 3, borderBottomWidth: 1, bgcolor: "divider" }} />
                 <Stack spacing={3} sx={{ pl: 3.5, mb: 3 }}>
@@ -57,7 +66,7 @@ export default function About() {
                         업데이트 노트 (v3.1.11 이전)
                     </ButtonLink>
                 </Stack>
-                <Divider sx={{ mb: 0.5 }} />
+                <Divider sx={{ mb: 1 }} />
                 <Typography variant="body1" fontStyle="italic" color="textDisabled" textAlign="right">
                     developed by Park Sunghoon - pshsh0626@gmail.com
                 </Typography>

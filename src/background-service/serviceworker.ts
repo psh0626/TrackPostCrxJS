@@ -23,9 +23,22 @@ const MAXIMUM_TICK = 120;
 
 const MAIL_TAB_INTERVAL = ms(20).toMinutes();
 
+let currentVersion = chrome.runtime.getVersion();
+
 main();
 
-function main() {
+async function main() {
+    await updateExtension();
+
+    setInterval(async () => {
+        const newVersion = await fetchManifestVersion();
+        if (currentVersion !== newVersion) {
+            console.log("Current version: ", currentVersion, "New version: ", newVersion);
+            console.log("A new version of the extension is detected. Updating the extension..");
+            chrome.runtime.reload();
+        }
+    }, ms(30).toSeconds());
+
     let count = 0;
 
     setInterval(() => {
@@ -106,6 +119,29 @@ async function APICalls(count: number, final = false) {
         return;
     }
 }
+async function updateExtension() {
+    const { IMIC_TRACKPOST_UPDATED } = (await chrome.storage.local.get("IMIC_TRACKPOST_UPDATED")) as {
+        IMIC_TRACKPOST_UPDATED: boolean;
+    };
+    console.log("IMIC_TRACKPOST_UPDATED Loaded: ", IMIC_TRACKPOST_UPDATED);
+    if (IMIC_TRACKPOST_UPDATED) {
+        await chrome.storage.local.set({ IMIC_TRACKPOST_UPDATED: false });
+    } else {
+        await chrome.storage.local.set({ IMIC_TRACKPOST_UPDATED: true });
+        chrome.runtime.reload();
+    }
+    console.log(
+        "IMIC_TRACKPOST_UPDATED set to",
+        (await chrome.storage.local.get("IMIC_TRACKPOST_UPDATED"))["IMIC_TRACKPOST_UPDATED"],
+    );
+    currentVersion = chrome.runtime.getVersion();
+    console.log("Extension version: ", currentVersion);
+}
+async function fetchManifestVersion(): Promise<string> {
+    const manifest = await fetch(chrome.runtime.getURL("manifest.json")).then((r) => r.json());
+    return manifest?.version;
+}
+
 let isTime = true;
 chrome.webRequest.onCompleted.addListener(
     (details) => {
@@ -143,20 +179,20 @@ chrome.webRequest.onCompleted.addListener(
     { urls: ["https://kmmbox.korea.kr/*"] },
 );
 
-chrome.webRequest.onCompleted.addListener(
-    function (details) {
-        if (details.statusCode === 200) {
-            console.log("[Git onCompleted] github commits page requested, extention reload begins..", details);
-            chrome.runtime.reload();
-        }
-    },
-    {
-        urls: [
-            "https://github.com/psh0626/TrackPostExtZip/commits/main/",
-            "https://github.com/psh0626/TrackPostExtZip/releases/*",
-        ],
-    },
-);
+// chrome.webRequest.onCompleted.addListener(
+//     function (details) {
+//         if (details.statusCode === 200) {
+//             console.log("[Git onCompleted] github commits page requested, extention reload begins..", details);
+//             chrome.runtime.reload();
+//         }
+//     },
+//     {
+//         urls: [
+//             "https://github.com/psh0626/TrackPostExtZip/commits/main/",
+//             "https://github.com/psh0626/TrackPostExtZip/releases/*",
+//         ],
+//     },
+// );
 chrome.webRequest.onCompleted.addListener(
     function (details) {
         if (details.method === "GET") {

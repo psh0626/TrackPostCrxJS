@@ -6,7 +6,6 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import PopupHeader from "../app/popup/popupHeader";
 import PopUpApp from "../app/popupApp";
-import { Stack } from "@mui/material";
 
 const myTheme = createTheme({
     palette: {
