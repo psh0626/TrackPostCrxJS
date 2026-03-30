@@ -110,6 +110,94 @@ function checkCommand(cmd) {
     return result.status === 0;
 }
 
+function parseGitHubRepoSlug(remoteUrl) {
+    const normalized = remoteUrl.trim();
+
+    const httpsMatch = normalized.match(/^https?:\/\/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?$/i);
+    if (httpsMatch) {
+        return `${httpsMatch[1]}/${httpsMatch[2]}`;
+    }
+
+    const sshMatch = normalized.match(/^git@github\.com:([^/]+)\/([^/]+?)(?:\.git)?$/i);
+    if (sshMatch) {
+        return `${sshMatch[1]}/${sshMatch[2]}`;
+    }
+
+    return null;
+}
+
+function checkGhAuthAndPermissions(rootDir, publishDir) {
+    logInfo("Checking GitHub CLI authentication status.");
+    const authResult = exec("gh", "auth status", { cwd: rootDir });
+    if (authResult.status !== 0) {
+        if (typeof authResult.stderr === "string" && authResult.stderr.trim()) {
+            console.error(`${releasePrefix(ansi.red)} ${c("stderr:", ansi.bold, ansi.red)}\n${authResult.stderr.trim()}`);
+        }
+        console.error(errorText("GitHub CLI is not authenticated. Run 'gh auth login' first."));
+        process.exit(1);
+    }
+    logSuccess("GitHub CLI authentication check passed.");
+
+    const repoDirs = [
+        { name: "root", cwd: rootDir },
+        { name: "publish", cwd: publishDir },
+    ];
+
+    repoDirs.forEach(({ name, cwd }) => {
+        const remoteResult = exec("git", ["remote", "get-url", "origin"], { cwd });
+        if (remoteResult.status !== 0 || !remoteResult.stdout.trim()) {
+            console.error(errorText(`Failed to resolve origin remote in ${name} repository.`));
+            process.exit(1);
+        }
+
+        const remoteUrl = remoteResult.stdout.trim();
+        const slug = parseGitHubRepoSlug(remoteUrl);
+        if (!slug) {
+            console.error(errorText(`Origin remote is not a supported GitHub URL in ${name} repository: ${remoteUrl}`));
+            process.exit(1);
+        }
+
+        const repoInfoResult = exec(
+            "gh",
+            ["api", `repos/${slug}`, "--jq", '{"full_name": .full_name, "permissions": .permissions}'],
+            { cwd },
+        );
+
+        if (repoInfoResult.status !== 0 || !repoInfoResult.stdout.trim()) {
+            if (typeof repoInfoResult.stderr === "string" && repoInfoResult.stderr.trim()) {
+                console.error(
+                    `${releasePrefix(ansi.red)} ${c("stderr:", ansi.bold, ansi.red)}\n${repoInfoResult.stderr.trim()}`,
+                );
+            }
+            console.error(errorText(`Failed to fetch repository permissions for ${slug}.`));
+            process.exit(1);
+        }
+
+        let repoInfo;
+        try {
+            repoInfo = JSON.parse(repoInfoResult.stdout.trim());
+        } catch (_err) {
+            console.error(errorText(`Unable to parse repository permissions response for ${slug}.`));
+            process.exit(1);
+        }
+
+        const hasPush = Boolean(repoInfo?.permissions?.push);
+        logDetail(`${name}Repo`, repoInfo?.full_name || slug);
+        logDetail(`${name}RepoPushPermission`, hasPush ? "yes" : "no");
+
+        if (!hasPush) {
+            console.error(
+                errorText(
+                    `Authenticated GitHub account does not have push permission for ${repoInfo?.full_name || slug}.`,
+                ),
+            );
+            process.exit(1);
+        }
+    });
+
+    logSuccess("GitHub repository permission checks passed.");
+}
+
 function prompt(rl, message, prefill = "") {
     return new Promise((resolve) => {
         rl.question(c(message, ansi.bold), (answer) => resolve(stripAnsi(answer)));
@@ -195,6 +283,10 @@ async function main() {
         console.error(errorText("GitHub CLI 'gh' is required."));
         process.exit(1);
     }
+
+    const publishDir = join(__dirname, "publish");
+    checkGhAuthAndPermissions(__dirname, publishDir);
+
     if (!checkCommand("code")) {
         console.error(errorText("VS Code CLI 'code' is required."));
         console.error(
@@ -208,7 +300,6 @@ async function main() {
 
     const distDir = join(__dirname, "dist");
     const prePublishDir = join(__dirname, "pre-publish");
-    const publishDir = join(__dirname, "publish");
     const draftPath = join(prePublishDir, ".release-notes-draft.md");
 
     logDetail("workspace", __dirname);
