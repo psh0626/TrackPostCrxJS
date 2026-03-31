@@ -4,9 +4,10 @@ import { useEffect, useRef } from "react";
 interface AlertDialogProps {
     isOpen: boolean;
     onClose: (result: boolean) => void;
+    okOnly?: boolean;
     content?: React.ReactElement | string;
 }
-export default function AlertDialog({ isOpen, onClose, content }: AlertDialogProps) {
+export default function AlertDialog({ isOpen, onClose, okOnly = false, content }: AlertDialogProps) {
     const dialogDiv = useRef<HTMLDivElement | null>(null);
     const isDragging = useRef(false);
     const dragOrigin = useRef({ mouseX: 0, mouseY: 0, elemTop: 0, elemLeft: 0 });
@@ -87,7 +88,7 @@ export default function AlertDialog({ isOpen, onClose, content }: AlertDialogPro
             <DialogTitle sx={{ userSelect: "none" }}>확인</DialogTitle>
             <DialogContent>{renderContent()}</DialogContent>
             <DialogActions>
-                <Button onClick={() => onClose(false)}>취소</Button>
+                {!okOnly && <Button onClick={() => onClose(false)}>취소</Button>}
                 <Button
                     autoFocus
                     variant="contained"
