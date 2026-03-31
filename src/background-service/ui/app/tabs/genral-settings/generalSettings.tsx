@@ -442,7 +442,7 @@ const WeekPickerOverlay: React.FC<WeekPickerOverlayProps> = ({
     if (!icareOutboundEnabled && !gcssOutboundEnabled) return null;
 
     return (
-        <Paper sx={{ position: "absolute", top: "30vh", left: "750px" }}>
+        <Paper sx={{ position: "absolute", top: weekpickerForIcare ? "730px" : "250px", left: "785px" }}>
             <WeekPicker
                 targetState={
                     weekpickerForIcare
