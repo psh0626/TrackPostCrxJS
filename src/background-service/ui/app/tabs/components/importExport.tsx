@@ -230,7 +230,7 @@ export default function ImportExport({ target, fileName = "MySettings.json", onE
                 variant="caption"
                 color="textSecondary"
                 textAlign="center"
-                sx={{ position: "absolute", top: -20, left: -118, width: "300px" }}
+                sx={{ position: "absolute", top: -20, left: -82, width: "300px" }}
             >
                 JSON 파일을 드래그해서 불러올 수 있습니다.
             </Typography>
