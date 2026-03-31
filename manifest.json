@@ -45,7 +45,9 @@
         "https://gcss-uat.ipc.be/*",
         "https://kmmbox.korea.kr/*",
         "https://mail.posa.or.kr/*",
-        "http://localhost:5173/"
+        "http://localhost:5173/",
+        "https://github.com/psh0626/TrackPostExtZip/commits/*",
+        "https://github.com/psh0626/TrackPostExtZip/releases/*"
     ],
     "content_scripts": [
         {
