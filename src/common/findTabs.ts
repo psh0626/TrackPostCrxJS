@@ -55,7 +55,10 @@ export async function findActive(tabs: chrome.tabs.Tab[]) {
     if (activeTab.frozen === false && activeTab.discarded === false) return activeTab;
 
     console.log("No active tab found, reloading first tab: ", activeTab);
-    if (activeTab.id) chrome.tabs.reload(activeTab.id);
+    if (activeTab.id) {
+        await chrome.tabs.update(activeTab.id, { frozen: false, discarded: false });
+        await chrome.tabs.reload(activeTab.id);
+    }
     return activeTab;
 }
 
