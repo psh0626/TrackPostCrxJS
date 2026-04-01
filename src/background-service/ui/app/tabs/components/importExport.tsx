@@ -1,4 +1,5 @@
 import { Button, Divider, Stack, Typography } from "@mui/material";
+import dayjs from "dayjs";
 import { useEffect, useRef, useState } from "react";
 import AlertDialog from "./alertDialog";
 
@@ -136,7 +137,10 @@ export default function ImportExport({ target, fileName = "MySettings.json", onE
         const vlink = document.createElement("a");
         const vurl = window.URL.createObjectURL(vblob);
         vlink.setAttribute("href", vurl);
-        vlink.setAttribute("download", fileName);
+        const [name, ext] = fileName.split(".");
+        const timestamp = dayjs().format("YYYYMMDD");
+        const finalFileName = `${name}-${timestamp}.${ext}`;
+        vlink.setAttribute("download", finalFileName);
         vlink.click();
         vlink.remove();
         onExport?.();
@@ -214,7 +218,7 @@ export default function ImportExport({ target, fileName = "MySettings.json", onE
     }, [isDragging]);
 
     return (
-        <Stack ref={rootRef} direction="column" spacing={0.4} sx={{ position: "relative" }}>
+        <Stack ref={rootRef} direction="column" spacing={0.4} >
             <Divider sx={{ userSelect: "none" }}>
                 <Typography variant="caption">설정</Typography>
             </Divider>
@@ -230,9 +234,9 @@ export default function ImportExport({ target, fileName = "MySettings.json", onE
                 variant="caption"
                 color="textSecondary"
                 textAlign="center"
-                sx={{ position: "absolute", top: -20, left: -82, width: "300px" }}
+                sx={{ position: "absolute", top: "74px", left: "174px", width: "300px" }}
             >
-                JSON 파일을 드래그해서 불러올 수 있습니다.
+                JSON 파일을 드래그해서 설정을 불러올 수 있습니다.
             </Typography>
             {isDragging && (
                 <Stack

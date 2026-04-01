@@ -303,12 +303,14 @@ export class WorkflowItem {
                 return "Damaged/missing";
             case "Missent/redirected/transit":
                 return "Missent";
+            case "Unexplained return of the item":
+                return "Unex. Return";
             case "Customs investigation":
                 return "Customs";
             case "COD amount not received":
                 return "COD";
             default:
-                return reqTypeString; // or return a default value if you prefer
+                return reqTypeString;
         }
     }
 

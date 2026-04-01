@@ -90,12 +90,51 @@ export default function ExchangeRate() {
         }
     };
 
+    const exampleCalculation = () => {
+        const egAmount = 34.26;
+        const egCurrency = "USD";
+        const inKRW = rates.get(egCurrency)?.valueInKRW;
+        if (!inKRW) return null;
+
+        const convertedAmount = egAmount * inKRW;
+        const sdr = rates.get("SDR")?.valueInKRW ?? 1;
+        if (!sdr) return null;
+
+        const convertedToSDR = (convertedAmount / sdr).toFixed(2);
+        const finalString = `${egAmount} ${egCurrency}를 SDR로 환산하는 과정
+            1. (${egCurrency} → KRW) ${egAmount} × ${inKRW.toLocaleString()} = ${convertedAmount.toLocaleString()} KRW
+            2. (KRW → SDR) ${convertedAmount.toLocaleString()} ÷ ${sdr.toLocaleString()} = ${convertedToSDR} SDR
+            3. (소수점 올림) ${convertedToSDR} SDR → ${Math.ceil(Number(convertedToSDR))} SDR`;
+        return (
+            <Stack sx={{ ml: 2 }}>
+                <Paper variant="outlined" sx={{ p: 2, mt: 2, mb: 2 }}>
+                    <Typography variant="h6" fontWeight={200} color="textSecondary" gutterBottom>
+                        SDR 계산 예시
+                    </Typography>
+                    <Divider sx={{ mb: 1 }} />
+                    {finalString.split("\n").map((line, idx) => (
+                        <Typography
+                            variant="caption"
+                            color="textSecondary"
+                            letterSpacing={0.5}
+                            sx={{ pl: 0.7 }}
+                            key={idx}
+                        >
+                            {line}
+                            <br />
+                        </Typography>
+                    ))}
+                </Paper>
+            </Stack>
+        );
+    };
+
     return (
         <Stack>
             <Header title="환율 설정">
                 <ImportExport
                     target={Object.fromEntries(rates)}
-                    fileName="MyExchangeRates.json"
+                    fileName="ExchangeRates.json"
                     onImport={(importedRates) => {
                         const newRates = new Map<string, CurrencyItem>(Object.entries(importedRates));
                         setRates(newRates);
@@ -133,15 +172,17 @@ export default function ExchangeRate() {
                 <Button variant="outlined" onClick={onSaveClick}>
                     저장
                 </Button>
-                <Typography variant="body2" color="textSecondary">
-                    {lastUpdated && `마지막 저장: ${lastUpdated.toLocaleString()}`}
-                </Typography>
-                <AlertDialog
-                    content="환율 정보를 저장하시겠습니까?"
-                    isOpen={isAlertOpen.saveButton}
-                    onClose={handleSaveConfirmed}
-                />
             </Stack>
+
+            <Typography variant="body2" color="textSecondary" textAlign="end" my={1.5} mr={0.3}>
+                {lastUpdated && `마지막 저장: ${lastUpdated.toLocaleString()}`}
+            </Typography>
+            {exampleCalculation()}
+            <AlertDialog
+                content="환율 정보를 저장하시겠습니까?"
+                isOpen={isAlertOpen.saveButton}
+                onClose={handleSaveConfirmed}
+            />
         </Stack>
     );
 }
