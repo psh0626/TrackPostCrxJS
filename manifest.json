@@ -46,8 +46,7 @@
         "https://kmmbox.korea.kr/*",
         "https://mail.posa.or.kr/*",
         "http://localhost:5173/",
-        "https://github.com/psh0626/TrackPostExtZip/commits/*",
-        "https://github.com/psh0626/TrackPostExtZip/releases/*"
+        "https://github.com/psh0626/TrackPostExtZip/*"
     ],
     "content_scripts": [
         {
