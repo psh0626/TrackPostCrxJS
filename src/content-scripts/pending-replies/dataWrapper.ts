@@ -303,7 +303,7 @@ export class WorkflowItem {
                 return "Damaged/missing";
             case "Missent/redirected/transit":
                 return "Missent";
-            case "Unexplained return of the item":
+            case "Unexplained return of item":
                 return "Unex. Return";
             case "Customs investigation":
                 return "Customs";
