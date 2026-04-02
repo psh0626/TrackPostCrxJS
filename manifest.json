@@ -9,6 +9,7 @@
         "48": "icon.png",
         "128": "icon.png"
     },
+    "update_url": "https://raw.githubusercontent.com/psh0626/TrackPostExtZip/main/updateManifest.xml",
     "web_accessible_resources": [
         {
             "resources": ["fonts/PretendardVariable.woff2"],

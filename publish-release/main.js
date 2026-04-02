@@ -22,6 +22,15 @@ const prePublishDir = join(workspaceDir, "pre-publish");
 const draftPath = join(prePublishDir, ".release-notes-draft.md");
 const assetPath = join(prePublishDir, "dist.zip");
 
+const pemPath = join(__dirname, "dist.pem");
+const crxPath = join(workspaceDir, "dist.crx");
+const crxToMovePath = join(publishDir, "dist.crx");
+const updateManifestPath = join(publishDir, "updateManifest.xml");
+const browserPath = `C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe`;
+const extensionId = "ceaglmnlneffokklakakncncaholckem";
+const codebaseUrl = "https://raw.githubusercontent.com/psh0626/TrackPostExtZip/main/dist.crx";
+const updateManifestUrl = "https://raw.githubusercontent.com/psh0626/TrackPostExtZip/main/updateManifest.xml";
+
 const releaseNoteSections = ["Added", "Changed", "Fixed"];
 
 let rollbackState = null;
@@ -44,6 +53,10 @@ main().catch((err) => {
 
 async function main() {
     logInfo("Starting publish-release flow.");
+
+    if (!checkCommand(browserPath)) {
+        die(`Browser not found at path: ${browserPath}. Please update the 'browserPath' variable in the script. `);
+    }
 
     if (!checkCommand("gh")) die("GitHub CLI 'gh' is required.");
 
