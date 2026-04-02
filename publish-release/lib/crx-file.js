@@ -14,7 +14,7 @@ const packageJsonPath = path.join(workspaceDir, "package.json");
 const pemPath = path.join(__dirname, "dist.pem");
 const crxToMovePath = path.join(publishDir, "dist.crx");
 const updateManifestPath = path.join(publishDir, "updateManifest.xml");
-const browserPath = `C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe`;
+const browserPath = `"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"`;
 const extensionId = "ceaglmnlneffokklakakncncaholckem";
 const codebaseUrl = "https://raw.githubusercontent.com/psh0626/TrackPostExtZip/main/dist.crx";
 
