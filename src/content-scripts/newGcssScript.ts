@@ -9,6 +9,7 @@ import GcssLoadingMask from "./inject-dom/newGcssLoadingMask";
 import newGcssInsertAuthorColumn from "./inject-dom/newGcssSumUtil";
 import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
 import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
+import "./serviceAwakener";
 
 (async () => {
     console.log("Content script loaded at: " + document.readyState);

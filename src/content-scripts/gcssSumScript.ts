@@ -1,3 +1,4 @@
+import "./serviceAwakener";
 // Global map to store authors as they are retrieved
 const authorCellMap: Record<string, HTMLElement[] | undefined> = {};
 const fetchedItemsAuthors: Record<string, string> = {};
@@ -41,7 +42,7 @@ async function getQuery(itemId: string): Promise<string> {
     const [item] = result
         .filter(
             (el: { workflowType: string; originCountry: string }) =>
-                el.originCountry === "KR" && el.workflowType.includes("Q")
+                el.originCountry === "KR" && el.workflowType.includes("Q"),
         )
         .map((el: { workflowType: string; author: string }) => ({
             author: el.author,
@@ -126,12 +127,12 @@ export default async function insertAuthorColumn() {
     for (let i = 0; i < maxAttempts; i++) {
         if (document.querySelector("tbody")) {
             console.log(
-                `Document ready at ${i + 1} attempts (${Math.round(performance.now() - beforeTime)} ms), proceeding with insertion.`
+                `Document ready at ${i + 1} attempts (${Math.round(performance.now() - beforeTime)} ms), proceeding with insertion.`,
             );
             break;
         } else if (i === maxAttempts - 1) {
             console.log(
-                `document not ready after ${maxAttempts} attempts (${Math.round(performance.now() - beforeTime)} ms), aborting insertion.`
+                `document not ready after ${maxAttempts} attempts (${Math.round(performance.now() - beforeTime)} ms), aborting insertion.`,
             );
             return;
         }

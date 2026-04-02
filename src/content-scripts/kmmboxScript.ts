@@ -1,5 +1,6 @@
 import { MSG, CMD } from "@/common/message-hub/Message";
 import { ms } from "@/common/TimespanExtension";
+import "./serviceAwakener";
 
 void (() => {
     let isFetching = false;

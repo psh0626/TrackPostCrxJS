@@ -1,3 +1,5 @@
+import "./serviceAwakener";
+
 const updateTitle = (ms = 1000) => {
     setTimeout(() => {
         const currentURL = new URL(location.href);
@@ -33,7 +35,7 @@ setInterval(
             console.log("Unread mail updated");
         }
     },
-    1000 * 60 * 3
+    1000 * 60 * 3,
 );
 
 console.log("POSA mail script loaded.");

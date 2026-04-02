@@ -42,7 +42,7 @@ export default function About() {
                         IMIC TrackPost 확장 프로그램
                     </Typography>
 
-                    <Button sx={{ ml: "auto", minWidth: 45 }} onClick={() => window.location.reload()}>
+                    <Button sx={{ ml: "auto", minWidth: 45 }} onClick={() => chrome.runtime.reload()}>
                         <Refresh color="disabled" sx={{ mr: 1 }} />
                         <Typography
                             variant="subtitle1"

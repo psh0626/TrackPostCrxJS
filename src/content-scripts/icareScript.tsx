@@ -4,6 +4,7 @@ import { PostElement } from "@/common/PostUtil";
 import IcareInjectUtil from "./inject-dom/icareInjectUtil";
 import InjectUtil from "./inject-dom/injectUtil";
 import { IcareAPI2 } from "./pending-replies/icareReplies";
+import "./serviceAwakener";
 
 void (async () => {
     const settings = new IMICSettings();

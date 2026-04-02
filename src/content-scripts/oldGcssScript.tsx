@@ -5,6 +5,7 @@ import { PostElement } from "@/common/PostUtil";
 import InjectUtil from "./inject-dom/injectUtil";
 import OldGcssInjectUtil from "./inject-dom/oldGcssInjectUtil";
 import { GcssAPI } from "./pending-replies/gcssReplies";
+import "./serviceAwakener";
 
 (async () => {
     const settings = new IMICSettings();
