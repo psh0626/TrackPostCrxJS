@@ -19,7 +19,7 @@ const extensionId = "ceaglmnlneffokklakakncncaholckem";
 const codebaseUrl = "https://raw.githubusercontent.com/psh0626/TrackPostExtZip/main/dist.crx";
 
 export function createCrxAndUpdateManifest() {
-    if (!checkCommand(browserPath)) {
+    if (!fs.existsSync(browserPath)) {
         die(`Browser not found at path: ${browserPath}. Please update the 'browserPath' variable in the script. `);
     }
 
