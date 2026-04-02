@@ -5,10 +5,10 @@ import { exec } from "./process.js";
 export function parseGitHubRepoSlug(remoteUrl) {
     const normalized = remoteUrl.trim();
 
-    const httpsMatch = normalized.match(/^https?:\/\/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?$/i);
+    const httpsMatch = normalized.match(/^https?:\/\/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?\/?$/i);
     if (httpsMatch) return `${httpsMatch[1]}/${httpsMatch[2]}`;
 
-    const sshMatch = normalized.match(/^git@github\.com:([^/]+)\/([^/]+?)(?:\.git)?$/i);
+    const sshMatch = normalized.match(/^git@github\.com:([^/]+)\/([^/]+?)(?:\.git)?\/?$/i);
     if (sshMatch) return `${sshMatch[1]}/${sshMatch[2]}`;
 
     return null;
@@ -41,7 +41,7 @@ export function checkGhAuthAndPermissions(rootDir, publishDir) {
         const remoteUrl = remoteResult.stdout.trim();
         const slug = parseGitHubRepoSlug(remoteUrl);
         if (!slug) {
-            die(`Origin remote is not a supported GitHub URL in ${name} repository: ${remoteUrl}`);
+            die(`Origin remote is not a supported GitHub URL in ${name} repository: ${remoteUrl} / slug: ${slug}`);
         }
 
         const repoInfoResult = exec(
