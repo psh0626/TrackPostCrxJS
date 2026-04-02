@@ -1,4 +1,6 @@
 import { spawnSync } from "child_process";
+import { existsSync } from "fs";
+import { isAbsolute } from "path";
 import { releasePrefix, ansi, c, errorText, formatCommand, logInfo, logSuccess, logDetail } from "./log.js";
 import { ReleaseError } from "./errors.js";
 
@@ -44,10 +46,18 @@ export function runChecked(cmd, args = "", options = {}, errorMessage = "Command
 }
 
 export function checkCommand(cmd) {
+    const normalized = typeof cmd === "string" ? cmd.trim() : "";
+    if (!normalized) return false;
+
+    const unquoted = normalized.replace(/^['"]|['"]$/g, "");
+    if (isAbsolute(unquoted) || unquoted.includes("/") || unquoted.includes("\\")) {
+        return existsSync(unquoted);
+    }
+
     if (process.platform === "win32") {
-        const result = exec("where", cmd);
+        const result = exec("where", unquoted);
         return result.status === 0;
     }
-    const result = exec("which", cmd);
+    const result = exec("which", unquoted);
     return result.status === 0;
 }
