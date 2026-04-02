@@ -1,8 +1,7 @@
 {
     "compilerOptions": {
-        "baseUrl": ".",
         "paths": {
-            "@/*": ["src/*"]
+            "@/*": ["./src/*"]
         },
 
         "target": "ESNext",
@@ -24,13 +23,12 @@
         "noUncheckedSideEffectImports": true,
         "noImplicitAny": true,
 
-        "allowJs": false,
+        "allowJs": true,
         "forceConsistentCasingInFileNames": true,
-        "esModuleInterop": false,
         "moduleDetection": "force",
         "noFallthroughCasesInSwitch": true,
         "allowSyntheticDefaultImports": true,
         "types": ["node", "chrome", "vite/client", "@crxjs/vite-plugin/client"]
     },
-    "include": ["src", "public"]
+    "include": ["src", "public", "publish-release"]
 }

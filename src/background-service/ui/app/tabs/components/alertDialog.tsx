@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 
 interface AlertDialogProps {
     isOpen: boolean;
-    onClose: (result: boolean) => void;
+    onClose?: (result: boolean) => void;
     okOnly?: boolean;
     content?: React.ReactElement | string;
 }
@@ -62,7 +62,7 @@ export default function AlertDialog({ isOpen, onClose, okOnly = false, content }
         <Dialog
             open={isOpen}
             onChange={onChange}
-            onClose={() => onClose(false)}
+            onClose={() => onClose?.(false)}
             PaperComponent={(props) => {
                 return (
                     <div
@@ -88,13 +88,13 @@ export default function AlertDialog({ isOpen, onClose, okOnly = false, content }
             <DialogTitle sx={{ userSelect: "none" }}>확인</DialogTitle>
             <DialogContent>{renderContent()}</DialogContent>
             <DialogActions>
-                {!okOnly && <Button onClick={() => onClose(false)}>취소</Button>}
+                {!okOnly && <Button onClick={() => onClose?.(false)}>취소</Button>}
                 <Button
                     autoFocus
                     variant="contained"
                     color="primary"
                     onClick={() => {
-                        onClose(true);
+                        onClose?.(true);
                     }}
                 >
                     확인

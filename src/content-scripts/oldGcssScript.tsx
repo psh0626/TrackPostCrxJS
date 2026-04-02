@@ -6,6 +6,7 @@ import InjectUtil from "./inject-dom/injectUtil";
 import OldGcssInjectUtil from "./inject-dom/oldGcssInjectUtil";
 import { GcssAPI } from "./pending-replies/gcssReplies";
 import "./serviceAwakener";
+import { wait } from "@/common/utils";
 
 (async () => {
     const settings = new IMICSettings();
@@ -64,7 +65,7 @@ import "./serviceAwakener";
                         window.location.href = currentURL.href.replace("/multiview/", `/${getMailService(itemId)}/`);
                         break;
                     }
-                    await InjectUtil.wait(100);
+                    await wait(100);
                 }
             }
         } else if (currentURL.pathname.includes("/create/") || currentURL.pathname.includes("/reactivate/")) {

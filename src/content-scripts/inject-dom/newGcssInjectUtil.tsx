@@ -1,7 +1,7 @@
-
 import ExchangeRateUtil from "@/common/exchangeRateUtil";
-import { MSG, CMD } from "@/common/message-hub/Message";
+import { CMD, MSG } from "@/common/message-hub/Message";
 import { PostElement } from "@/common/PostUtil";
+import { wait } from "@/common/utils";
 import { GcssPrefillObject } from "../pending-replies/newGcssWrapper";
 import FloatingHelper from "./floatingHelper";
 import InjectUtil from "./injectUtil";
@@ -161,7 +161,7 @@ async function selectAutoCompleteOption(input: HTMLInputElement, optionText: str
     const option: HTMLLIElement | null = await new Promise(async (resolve) => {
         const maxTrial = 30;
         const waitTime = 100;
-        await InjectUtil.wait(100);
+        wait(100);
         for (let i = 0; i < maxTrial; i++) {
             const foundOption = Array.from(document.querySelectorAll("li")).find((el) => el.textContent === optionText);
             if (foundOption) {
@@ -173,7 +173,7 @@ async function selectAutoCompleteOption(input: HTMLInputElement, optionText: str
             }
             input.value = optionText;
             simulateSelectClick(input);
-            await InjectUtil.wait(waitTime);
+            await wait(waitTime);
         }
         console.log(
             `[selectAutoCompleteOption] ${input.getAttribute("aria-labelledby")} Auto-complete option with text='${optionText}' not found after waiting ${(maxTrial * waitTime) / 1000} seconds`,
@@ -219,7 +219,7 @@ export async function injectConvertedValue(
     // Retry setting value until it sticks
     for (let i = 0; i < 5; i++) {
         valueInput.value = sdrValue;
-        await InjectUtil.wait(100);
+        await wait(100);
         if (valueInput.value === sdrValue) break;
     }
 
@@ -279,7 +279,7 @@ export async function waitUntilRequestTypeSelected(): Promise<boolean> {
         return false;
     }
     do {
-        await InjectUtil.wait(100);
+        await wait(100);
     } while (!requestType.value);
     console.log("Request type selected:", requestType.value);
     return true;
@@ -292,7 +292,7 @@ export async function waitUntilRequestTypeChanged(): Promise<boolean> {
     }
     const initialValue = requestType.value;
     do {
-        await InjectUtil.wait(100);
+        await wait(100);
     } while (requestType.value === initialValue);
     console.log("Request type changed to:", requestType.value);
     return true;
@@ -486,7 +486,7 @@ export async function applyPostElementFormValues(
     postElement: PostElement | null,
 ) {
     if (formInfo.level !== "L1Q") {
-        InjectUtil.wait(500).then(async () => {
+        wait(500).then(async () => {
             document.querySelector(".overflow-auto")?.scrollTo({ behavior: "smooth", top: 2480 });
         });
         return;
@@ -525,17 +525,17 @@ export async function applyPostElementFormValues(
 
     const callCenterSelect = await tryGetSelect("messageRouting.receivingCallCenterUpuCode");
 
-    InjectUtil.wait(500).then(async () => {
+    wait(500).then(async () => {
         document.querySelector(".overflow-auto")?.scrollTo({ behavior: "smooth", top: 200 });
         if (callCenterSelect?.textContent === "Select Destination Call Center") {
-            await InjectUtil.wait(500);
+            await wait(500);
             simulateSelectClick(callCenterSelect);
         }
     });
 }
 
 export function finalizeInjectRequestForm(perfMarks: PerformanceMark[]) {
-    InjectUtil.wait(1000).then(() => {
+    wait(1000).then(() => {
         GcssLoadingMask.hideLoadingMask();
         perfMarks.push(performance.mark("End Loading Mask"));
         const perfMeasures = perfMarks.map((currentMark, idx, marks) => {

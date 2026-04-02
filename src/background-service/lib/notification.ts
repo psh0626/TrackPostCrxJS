@@ -8,17 +8,19 @@ import {
     isGCSSMessage,
     isGCSSNotification,
 } from "@/content-scripts/pending-replies/newGcssWrapper";
-
+async function whenNotificationClicked() {
+    const tab = await chrome.tabs.getCurrent();
+    if (tab) {
+        await chrome.windows.update(tab.windowId, { focused: true });
+        await chrome.action.openPopup({ windowId: tab.windowId });
+    }
+}
 chrome.notifications.onClicked.addListener(() => {
-    chrome.tabs.getCurrent((tab) => {
-        if (tab) chrome.windows.update(tab.windowId, { focused: true }, () => chrome.action.openPopup());
-    });
+    whenNotificationClicked();
 });
 
 chrome.notifications.onButtonClicked.addListener(() => {
-    chrome.tabs.getCurrent((tab) => {
-        if (tab) chrome.windows.update(tab.windowId, { focused: true }, () => chrome.action.openPopup());
-    });
+    whenNotificationClicked();
 });
 async function checkFetchError() {
     type FetchError = {

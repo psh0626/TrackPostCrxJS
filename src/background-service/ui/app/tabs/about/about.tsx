@@ -1,6 +1,8 @@
 import manifest from "@/../manifest.json";
 import { Info, Refresh } from "@mui/icons-material";
 import { Button, Divider, Paper, Stack, Typography } from "@mui/material";
+import { useState } from "react";
+import AlertDialog from "../components/alertDialog";
 import "./about.css";
 
 interface ButtonLinkProps {
@@ -34,6 +36,7 @@ function ButtonLink({ href, color, children }: ButtonLinkProps) {
 }
 
 export default function About() {
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
     return (
         <Stack>
             <Paper className="gradient-border" elevation={8} sx={{ p: 1.5, ml: 7, mt: 7 }}>
@@ -42,7 +45,18 @@ export default function About() {
                         IMIC TrackPost 확장 프로그램
                     </Typography>
 
-                    <Button sx={{ ml: "auto", minWidth: 45 }} onClick={() => chrome.runtime.reload()}>
+                    <Button
+                        sx={{ ml: "auto", minWidth: 45 }}
+                        onClick={() =>
+                            chrome.runtime.requestUpdateCheck().then((result) => {
+                                if (result.status === "update_available") {
+                                    chrome.runtime.reload();
+                                } else {
+                                    setIsAlertOpen(true);
+                                }
+                            })
+                        }
+                    >
                         <Refresh color="disabled" sx={{ mr: 1 }} />
                         <Typography
                             variant="subtitle1"
@@ -65,10 +79,22 @@ export default function About() {
                     </ButtonLink>
                 </Stack>
                 <Divider sx={{ mb: 1 }} />
-                <Typography variant="body2" fontStyle="italic" color="textDisabled" textAlign="right" sx={{ mb: 1, mr: .5}}>
+                <Typography
+                    variant="body2"
+                    fontStyle="italic"
+                    color="textDisabled"
+                    textAlign="right"
+                    sx={{ mb: 1, mr: 0.5 }}
+                >
                     developed by Park Sunghoon - pshsh0626@gmail.com
                 </Typography>
             </Paper>
+            <AlertDialog
+                content="현재 최신 버전입니다."
+                okOnly={true}
+                isOpen={isAlertOpen}
+                onClose={() => setIsAlertOpen(false)}
+            />
         </Stack>
     );
 }

@@ -1,7 +1,8 @@
-import { requestFetch } from "@/common/findTabs";
+import { getAllServiceTabs, requestFetch } from "@/common/findTabs";
 import { CMD, MSG } from "@/common/message-hub/Message";
 import processMessage from "@/common/message-hub/MessageHub";
 import { ms } from "@/common/TimespanExtension";
+import { wait } from "@/common/utils";
 import { GcssItem, isGcssItem, WorkflowItem } from "../content-scripts/pending-replies/dataWrapper";
 import { ServiceTypes } from "../content-scripts/pending-replies/gcssReplies";
 import { GCSSMessage } from "../content-scripts/pending-replies/newGcssWrapper";
@@ -29,15 +30,6 @@ main();
 
 async function main() {
     await updateExtension();
-
-    setInterval(async () => {
-        const newVersion = await fetchManifestVersion();
-        if (currentVersion !== newVersion) {
-            console.log("Current version: ", currentVersion, "New version: ", newVersion);
-            console.log("A new version of the extension is detected. Updating the extension..");
-            chrome.runtime.reload();
-        }
-    }, ms(30).toSeconds());
 
     let count = 0;
 
@@ -137,10 +129,49 @@ async function updateExtension() {
     currentVersion = chrome.runtime.getVersion();
     console.log("Extension version: ", currentVersion);
 }
-async function fetchManifestVersion(): Promise<string> {
-    const manifest = await fetch(chrome.runtime.getURL("manifest.json")).then((r) => r.json());
-    return manifest?.version;
-}
+
+// TODO: onInstalled check for update and show notification about new features
+chrome.runtime.onUpdateAvailable.addListener((details) => {
+    console.log(`A new version (${details.version}) of the extension is available. Reloading to update...`);
+    chrome.runtime.reload();
+});
+
+chrome.runtime.onInstalled.addListener(async (details) => {
+    const openNewTab = (url: string) => chrome.tabs.create({ url: url, active: true });
+    const waitTime = ms(5).toSeconds();
+    switch (details.reason) {
+        case "install":
+        case "update":
+            const tabs = await getAllServiceTabs(false);
+            const reloads = tabs
+                .map((tab) => {
+                    if (!tab.id) return null;
+                    return chrome.tabs.reload(tab.id);
+                })
+                .filter((p) => p !== null);
+            const notifs = await chrome.notifications.getAll();
+            const clears = Object.keys(notifs).map((id) => {
+                return chrome.notifications.clear(id);
+            });
+            await Promise.all([...reloads, ...clears]);
+            await chrome.notifications.create(details.reason.toUpperCase(), {
+                type: "basic",
+                iconUrl: "icon.png",
+                title: "IMIC TrackPost",
+                message: `IMIC TrackPost 확장 프로그램이 ${details.reason === "install" ? "설치" : "업데이트"}되었습니다. 5초 뒤 안내 페이지가 열립니다!`,
+            });
+            break;
+    }
+    if (details.reason === "install") {
+        console.log("Extension installed with version", chrome.runtime.getVersion());
+        await wait(waitTime);
+        await openNewTab("https://github.com/psh0626/TrackPostExtZip/");
+    } else if (details.reason === "update") {
+        console.log("Extension updated to version from", details.previousVersion, "to", chrome.runtime.getVersion());
+        await wait(waitTime);
+        await openNewTab("https://github.com/psh0626/TrackPostExtZip/releases");
+    }
+});
 
 let isTime = true;
 chrome.webRequest.onCompleted.addListener(

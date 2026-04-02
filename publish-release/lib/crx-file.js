@@ -1,8 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
+import { die } from "./errors.js";
 import { readJsonFile } from "./files.js";
-import { runChecked } from "./process.js";
+import { checkCommand, runChecked } from "./process.js";
 
 const __dirname = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const workspaceDir = path.join(__dirname, "..");
@@ -17,12 +18,12 @@ const browserPath = `C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msed
 const extensionId = "ceaglmnlneffokklakakncncaholckem";
 const codebaseUrl = "https://raw.githubusercontent.com/psh0626/TrackPostExtZip/main/dist.crx";
 
-test();
+export function createCrxAndUpdateManifest() {
+    if (!checkCommand(browserPath)) {
+        die(`Browser not found at path: ${browserPath}. Please update the 'browserPath' variable in the script. `);
+    }
 
-function test() {
     const packageJson = readJsonFile(packageJsonPath);
-    console.log("Package name:", packageJson.name);
-    console.log("Package version:", packageJson.version);
 
     makeCrxFile(browserPath, { srcDir: distDir, pemPath: pemPath, outPath: crxToMovePath });
     makeUpdateManifest({ appid: extensionId, version: packageJson.version, codebase: codebaseUrl }, updateManifestPath);

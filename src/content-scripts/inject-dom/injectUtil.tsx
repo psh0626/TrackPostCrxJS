@@ -1,3 +1,4 @@
+import { wait } from "@/common/utils";
 import { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -178,9 +179,6 @@ class InjectUtil {
             });
         }
     }
-    static async wait(ms: number): Promise<void> {
-        return new Promise((resolve) => setTimeout(resolve, ms));
-    }
     static async waitUntil<T>(
         condition: () => T | null,
         maxTries: number = 50,
@@ -194,7 +192,7 @@ class InjectUtil {
             if (result) {
                 return result;
             }
-            await this.wait(waitTime);
+            await wait(waitTime);
         }
         // console.log(
         //     `[waitUntil] Condition not met after ${maxTries} tries.\n`,

@@ -2,8 +2,8 @@ import ExchangeRateUtil from "@/common/exchangeRateUtil";
 import { IMICSettings } from "@/common/IMICSettings";
 import { CMD, MSG } from "@/common/message-hub/Message";
 import { PostElement } from "@/common/PostUtil";
+import { wait } from "@/common/utils";
 import "@/content-scripts/fonts";
-import InjectUtil from "./inject-dom/injectUtil";
 import * as GcssHelper from "./inject-dom/newGcssInjectUtil";
 import GcssLoadingMask from "./inject-dom/newGcssLoadingMask";
 import newGcssInsertAuthorColumn from "./inject-dom/newGcssSumUtil";
@@ -108,7 +108,7 @@ import "./serviceAwakener";
                 GcssLoadingMask.showLoadingMask();
                 console.log("Request type changed, reinjecting form with new request type conditions");
 
-                await InjectUtil.wait(1500);
+                await wait(1500);
                 await injectRequestForm(postElement, prefillData);
             }
         } else if (url.pathname.includes("/update-messages/")) {

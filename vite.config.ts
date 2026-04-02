@@ -23,9 +23,10 @@ export default defineConfig(() => {
             babel({ presets: [reactCompilerPreset()] }),
             crx({ manifest }),
             zip({ outDir: "pre-publish", outFileName: "dist.zip" }),
+            // TODO: remove zip plugin.
         ],
         build: {
-            rollupOptions: {
+            rolldownOptions: {
                 input: {
                     sidepanel: "/src/background-service/ui/sidepanel.html",
                     options: "/src/background-service/ui/options.html",

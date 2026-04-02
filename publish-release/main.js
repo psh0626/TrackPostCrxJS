@@ -3,33 +3,24 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import { createInterface } from "readline";
 import { fileURLToPath } from "url";
+import { createCrxAndUpdateManifest } from "./lib/crx-file.js";
 import { buildReleaseDraft } from "./lib/draft-builder.js";
 import { ReleaseError, die } from "./lib/errors.js";
-import { ensureUtf8NoBom, prompt, readJsonFile, updateVersionInFile } from "./lib/files.js";
+import { prompt, readJsonFile } from "./lib/files.js";
 import { captureCheckpoint, commitTagAndRelease, rollback } from "./lib/git.js";
 import { checkGhAuthAndPermissions, checkReposClean, ghExec } from "./lib/github.js";
 import { ansi, c, errorText, logDetail, logInfo, logSuccess, logWarning, releasePrefix } from "./lib/log.js";
-import { hasUntouchedTemplatePlaceholders, isValidVersion, stripHtmlComments } from "./lib/notes.js";
+import { hasUntouchedTemplatePlaceholders, stripHtmlComments } from "./lib/notes.js";
 import { checkCommand, runChecked } from "./lib/process.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const workspaceDir = join(__dirname, "..");
 const packagePath = join(workspaceDir, "package.json");
-const manifestPath = join(workspaceDir, "manifest.json");
 const distDir = join(workspaceDir, "dist");
 const publishDir = join(workspaceDir, "publish");
 const prePublishDir = join(workspaceDir, "pre-publish");
 const draftPath = join(prePublishDir, ".release-notes-draft.md");
 const assetPath = join(prePublishDir, "dist.zip");
-
-const pemPath = join(__dirname, "dist.pem");
-const crxPath = join(workspaceDir, "dist.crx");
-const crxToMovePath = join(publishDir, "dist.crx");
-const updateManifestPath = join(publishDir, "updateManifest.xml");
-const browserPath = `C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe`;
-const extensionId = "ceaglmnlneffokklakakncncaholckem";
-const codebaseUrl = "https://raw.githubusercontent.com/psh0626/TrackPostExtZip/main/dist.crx";
-const updateManifestUrl = "https://raw.githubusercontent.com/psh0626/TrackPostExtZip/main/updateManifest.xml";
 
 const releaseNoteSections = ["Added", "Changed", "Fixed"];
 
@@ -52,11 +43,15 @@ main().catch((err) => {
 });
 
 async function main() {
-    logInfo("Starting publish-release flow.");
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
 
-    if (!checkCommand(browserPath)) {
-        die(`Browser not found at path: ${browserPath}. Please update the 'browserPath' variable in the script. `);
+    const proceed = (await prompt(rl, `${c("Start publishing release? (y/n): ", ansi.bold)}`, "y")).toLowerCase();
+    if (proceed !== "y") {
+        console.log("Release flow cancelled by user.");
+        process.exit(0);
     }
+
+    logInfo("Starting publish-release flow.");
 
     if (!checkCommand("gh")) die("GitHub CLI 'gh' is required.");
 
@@ -73,10 +68,6 @@ async function main() {
     logDetail("publishDir", publishDir);
     logDetail("draftPath", draftPath);
 
-    ensureUtf8NoBom(packagePath);
-    ensureUtf8NoBom(manifestPath);
-    logSuccess("Verified package.json and manifest.json are UTF-8 without BOM.\n");
-
     rollbackState = {
         rootDir: workspaceDir,
         publishDir,
@@ -91,42 +82,19 @@ async function main() {
     };
     logSuccess("Rollback checkpoint set.");
 
-    const packageJson = readJsonFile(packagePath);
-    let currentVersion = packageJson.version;
-
-    const rl = createInterface({ input: process.stdin, output: process.stdout });
-
     const sigintHandler = () => {
         console.error(`\n${releasePrefix(ansi.yellow)} ${c("Interrupted by user (Ctrl+C).", ansi.bold, ansi.yellow)}`);
         rollback(rollbackState);
         process.exit(1);
     };
+
     rl.on("SIGINT", sigintHandler);
     process.on("SIGINT", sigintHandler);
 
+    const packageJson = readJsonFile(packagePath);
+    const currentVersion = packageJson.version;
+
     try {
-        // --- 1. Version prompt ---
-        console.log(`\n${c("Current version", ansi.bold)}: ${c(currentVersion, ansi.bold, ansi.green)}`);
-
-        const newVersion = (await prompt(rl, "Enter version: ", currentVersion)).trim();
-        if (!newVersion) die("Version cannot be empty.");
-        if (!isValidVersion(newVersion)) die(`Invalid version format: "${newVersion}". Expected: major.minor.patch`);
-
-        if (newVersion === currentVersion) {
-            logWarning("Version unchanged.");
-        } else {
-            currentVersion = newVersion;
-            updateVersionInFile(packagePath, currentVersion);
-            updateVersionInFile(manifestPath, currentVersion);
-            logSuccess(`Updated version to ${currentVersion} in package.json and manifest.json`);
-        }
-        logDetail("selectedVersion", currentVersion);
-
-        // --- 2. Build ---
-        console.log("\nRunning build...");
-        runChecked("npm", "run build", { stdio: "inherit", encoding: "utf8", shell: true }, "Build failed.");
-        logSuccess("Build completed successfully.");
-
         const tag = `v${currentVersion}`;
         rollbackState.tag = tag;
         const defaultTitle = `TrackPost ${tag}`;
@@ -137,6 +105,10 @@ async function main() {
         logSuccess("Verified release asset exists.");
 
         if (!existsSync(distDir)) die(`Build output directory not found: ${distDir}`);
+        logSuccess("Verified build output directory exists.");
+
+        createCrxAndUpdateManifest();
+        logSuccess(`Created dist.crx file and updateManifest.xml to version ${currentVersion}`);
 
         // --- 3. Release title ---
         const titleRaw = await prompt(rl, `\nRelease title (Enter for default): `, defaultTitle);
