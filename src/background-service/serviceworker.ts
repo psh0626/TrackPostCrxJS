@@ -29,7 +29,20 @@ let currentVersion = chrome.runtime.getVersion();
 main();
 
 async function main() {
+    const lastVersion = (await chrome.storage.local.get("IMIC_EXTENSION_VERSION"))?.IMIC_EXTENSION_VERSION as
+        | string
+        | undefined;
+    if (lastVersion && lastVersion !== currentVersion) {
+        console.log(`Extension updated from version ${lastVersion} to ${currentVersion}.`);
+        await chrome.storage.local.set({ IMIC_EXTENSION_VERSION: currentVersion });
+        await whenExtensionInstalled({ reason: "update", previousVersion: lastVersion, id: chrome.runtime.id });
+    }
+
     await updateExtension();
+
+    setInterval(() => {
+        updateExtension();
+    }, ms(60).toMinutes());
 
     let count = 0;
 
@@ -111,32 +124,36 @@ async function APICalls(count: number, final = false) {
         return;
     }
 }
-async function updateExtension() {
-    const { IMIC_TRACKPOST_UPDATED } = (await chrome.storage.local.get("IMIC_TRACKPOST_UPDATED")) as {
-        IMIC_TRACKPOST_UPDATED: boolean;
-    };
-    console.log("IMIC_TRACKPOST_UPDATED Loaded: ", IMIC_TRACKPOST_UPDATED);
-    if (IMIC_TRACKPOST_UPDATED) {
-        await chrome.storage.local.set({ IMIC_TRACKPOST_UPDATED: false });
-    } else {
-        await chrome.storage.local.set({ IMIC_TRACKPOST_UPDATED: true });
-        chrome.runtime.reload();
+export async function updateExtension() {
+    const updateStatus = await chrome.runtime.requestUpdateCheck();
+    console.log("[updateExtension] Update check result: ", updateStatus, "Current version: ", currentVersion);
+    switch (updateStatus.status) {
+        case "update_available":
+            console.log("[updateExtension] An update is available. Reloading to update...");
+            await chrome.storage.local.set({ IMIC_EXTENSION_VERSION: currentVersion });
+            chrome.runtime.reload();
+            break;
+        case "no_update":
+            console.log("[updateExtension] No update available. Current version is up to date.");
+            break;
+        case "throttled":
+            console.warn("[updateExtension] Update check throttled. Please try again later.");
+            break;
     }
-    console.log(
-        "IMIC_TRACKPOST_UPDATED set to",
-        (await chrome.storage.local.get("IMIC_TRACKPOST_UPDATED"))["IMIC_TRACKPOST_UPDATED"],
-    );
-    currentVersion = chrome.runtime.getVersion();
-    console.log("Extension version: ", currentVersion);
 }
 
-chrome.runtime.onUpdateAvailable.addListener(({ version }) => {
-    console.log(`A new version (${version}) of the extension is available. Reloading to update...`);
+chrome.runtime.onUpdateAvailable.addListener(async ({ version }) => {
+    console.log(`[updateExtension] A new version (${version}) of the extension is available. Reloading to update...`);
+    await chrome.storage.local.set({ IMIC_EXTENSION_VERSION: currentVersion });
     chrome.runtime.reload();
 });
 
 chrome.runtime.onInstalled.addListener(async (details) => {
-    console.log("Extension installed/updated with details: ", details);
+    await whenExtensionInstalled(details);
+});
+
+async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) {
+    console.log("[updateExtension] Extension installed/updated with details: ", details);
     const openNewTab = (url: string) => chrome.tabs.create({ url: url, active: true });
     const waitTime = ms(5).toSeconds();
     switch (details.reason) {
@@ -155,7 +172,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
             });
             await Promise.all([...reloads, ...clears]);
             const openedWindows = await chrome.windows.getAll({ populate: true });
-            console.log("Opened windows: ", openedWindows);
+            console.log("[updateExtension] Opened windows: ", openedWindows);
             if (openedWindows.length > 0) {
                 await chrome.notifications.create(details.reason.toUpperCase(), {
                     type: "basic",
@@ -167,15 +184,20 @@ chrome.runtime.onInstalled.addListener(async (details) => {
             break;
     }
     if (details.reason === "install") {
-        console.log("Extension installed with version", chrome.runtime.getVersion());
+        console.log("[updateExtension] Extension installed with version", chrome.runtime.getVersion());
         await wait(waitTime);
         await openNewTab("https://github.com/psh0626/TrackPostExtZip/");
     } else if (details.reason === "update") {
-        console.log("Extension updated to version from", details.previousVersion, "to", chrome.runtime.getVersion());
+        console.log(
+            "[updateExtension] Extension updated to version from",
+            details.previousVersion,
+            "to",
+            chrome.runtime.getVersion(),
+        );
         await wait(waitTime);
         await openNewTab("https://github.com/psh0626/TrackPostExtZip/releases");
     }
-});
+}
 
 let isTime = true;
 chrome.webRequest.onCompleted.addListener(
