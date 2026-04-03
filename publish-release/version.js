@@ -3,7 +3,7 @@ import { createInterface } from "readline";
 import { fileURLToPath } from "url";
 import { die } from "./lib/errors.js";
 import { ensureUtf8NoBom, prompt, readJsonFile, updateVersionInFile } from "./lib/files.js";
-import { ansi, c, logDetail, logSuccess, logWarning } from "./lib/log.js";
+import { ansi, c } from "./lib/log.js";
 import { isValidVersion } from "./lib/notes.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -11,12 +11,28 @@ const workspaceDir = join(__dirname, "..");
 const packagePath = join(workspaceDir, "package.json");
 const manifestPath = join(workspaceDir, "manifest.json");
 
+function buildPrefix(color) {
+    return `${c("[", ansi.dim)}${c("Build", ansi.bold, color)}${c("]", ansi.dim)}`;
+}
+
+function logBuildSuccess(message) {
+    console.log(`${buildPrefix(ansi.green)} ${c(message, ansi.green)}`);
+}
+
+function logBuildWarning(message) {
+    console.log(`${buildPrefix(ansi.yellow)} ${c(message, ansi.yellow)}`);
+}
+
+function logBuildDetail(label, value) {
+    console.log(`${buildPrefix(ansi.cyan)} ${c(label, ansi.bold, ansi.white)}: ${c(value, ansi.cyan)}`);
+}
+
 main();
 
 async function main() {
     ensureUtf8NoBom(packagePath);
     ensureUtf8NoBom(manifestPath);
-    logSuccess("Verified package.json and manifest.json are UTF-8 without BOM.");
+    logBuildSuccess("Verified package.json and manifest.json are UTF-8 without BOM.");
 
     const packageJson = readJsonFile(packagePath);
     let currentVersion = packageJson.version;
@@ -37,14 +53,14 @@ async function main() {
     if (!isValidVersion(newVersion)) die(`Invalid version format: "${newVersion}". Expected: major.minor.patch`);
 
     if (newVersion === currentVersion) {
-        logWarning("Version unchanged.");
+        logBuildWarning("Version unchanged.");
     } else {
         currentVersion = newVersion;
         updateVersionInFile(packagePath, currentVersion);
         updateVersionInFile(manifestPath, currentVersion);
-        logSuccess(`Updated version to ${currentVersion} in package.json and manifest.json`);
+        logBuildSuccess(`Updated version to ${currentVersion} in package.json and manifest.json`);
     }
 
-    logDetail("selectedVersion", currentVersion);
+    logBuildDetail("selectedVersion", currentVersion);
     rl.close();
 }

@@ -81,6 +81,8 @@ export function checkGhAuthAndPermissions(rootDir, publishDir) {
 export function checkReposClean(rootDir, publishDir) {
     logInfo("Checking that both repositories have no uncommitted changes.");
 
+    const allowedRootDirtyFiles = new Set(["manifest.json", "package.json"]);
+
     const repos = [
         { name: "root", cwd: rootDir },
         { name: "publish", cwd: publishDir },
@@ -93,6 +95,21 @@ export function checkReposClean(rootDir, publishDir) {
         }
         const dirty = result.stdout.trim();
         if (dirty) {
+            const dirtyFiles = dirty
+                .split(/\r?\n/)
+                .map((line) => line.slice(3).trim().replace(/^"|"$/g, ""))
+                .map((path) => path.includes(" -> ") ? path.split(" -> ").at(-1) : path);
+
+            const allowDirtyRootVersionFiles =
+                name === "root" &&
+                dirtyFiles.length > 0 &&
+                dirtyFiles.every((file) => allowedRootDirtyFiles.has(file));
+
+            if (allowDirtyRootVersionFiles) {
+                logInfo("Root repository has only manifest.json/package.json changes; continuing.");
+                continue;
+            }
+
             console.error(
                 `${releasePrefix(ansi.red)} ${c(`Uncommitted changes in ${name} repository:`, ansi.bold, ansi.red)}`,
             );

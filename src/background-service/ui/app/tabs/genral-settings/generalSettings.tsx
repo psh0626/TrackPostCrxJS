@@ -609,13 +609,16 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                 <ImportExport
                     target={settingsState}
                     fileName="MyGeneralSettings.json"
-                    onImport={(imported) => {
-                        settings.current = imported;
+                    onImport={(imported: IMICSettings) => {
                         setSettingsState(() => {
                             const updated = { ...imported } as IMICSettings;
+                            if (!Array.isArray(updated.PersonalRemarks) || updated.PersonalRemarks.length === 0) {
+                                updated.PersonalRemarks = settings.current.PersonalRemarks;
+                            }
+                            settings.current = updated;
+                            SaveSettings(false, updated, "IMPORT");
                             return updated;
                         });
-                        SaveSettings(true, imported, "Import").catch(console.error);
                     }}
                 />
             </Header>

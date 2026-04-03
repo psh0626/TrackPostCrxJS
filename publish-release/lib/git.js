@@ -112,7 +112,7 @@ export function rollback(state) {
 export function commitTagAndRelease({
     publishDir,
     distDir,
-    assetPath,
+    assetPaths,
     tag,
     title,
     commitBody,
@@ -165,7 +165,7 @@ export function commitTagAndRelease({
 
     runChecked(
         "gh",
-        ["release", "create", tag, assetPath, "--title", title, "--notes-file", draftPath],
+        ["release", "create", tag, ...assetPaths, "--title", title, "--notes-file", draftPath],
         { cwd: publishDir, stdio: "inherit", encoding: "utf8" },
         "Failed to create release.",
     );

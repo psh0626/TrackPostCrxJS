@@ -21,6 +21,11 @@ const publishDir = join(workspaceDir, "publish");
 const prePublishDir = join(workspaceDir, "pre-publish");
 const draftPath = join(prePublishDir, ".release-notes-draft.md");
 const assetPath = join(prePublishDir, "dist.zip");
+const crxAssetPath = join(publishDir, "dist.crx");
+const installScriptAssetPath = join(publishDir, "TrackPost-install.bat");
+const uninstallScriptAssetPath = join(publishDir, "TrackPost-uninstall.bat");
+
+const releaseAssetPaths = [assetPath, crxAssetPath, installScriptAssetPath, uninstallScriptAssetPath];
 
 const releaseNoteSections = ["Added", "Changed", "Fixed"];
 
@@ -56,6 +61,7 @@ async function main() {
     if (!checkCommand("gh")) die("GitHub CLI 'gh' is required.");
 
     checkGhAuthAndPermissions(workspaceDir, publishDir);
+    
     checkReposClean(workspaceDir, publishDir);
 
     if (!checkCommand("code")) {
@@ -99,10 +105,12 @@ async function main() {
         rollbackState.tag = tag;
         const defaultTitle = `TrackPost ${tag}`;
         logDetail("releaseTag", tag);
-        logDetail("releaseAsset", assetPath);
+        logDetail("releaseAssets", releaseAssetPaths.join(", "));
 
-        if (!existsSync(assetPath)) die(`Asset not found: ${assetPath}`);
-        logSuccess("Verified release asset exists.");
+        for (const releaseAssetPath of releaseAssetPaths) {
+            if (!existsSync(releaseAssetPath)) die(`Asset not found: ${releaseAssetPath}`);
+        }
+        logSuccess("Verified release assets exist.");
 
         if (!existsSync(distDir)) die(`Build output directory not found: ${distDir}`);
         logSuccess("Verified build output directory exists.");
@@ -199,7 +207,7 @@ async function main() {
             commitTagAndRelease({
                 publishDir,
                 distDir,
-                assetPath,
+                assetPaths: releaseAssetPaths,
                 tag,
                 title,
                 commitBody,
@@ -231,7 +239,7 @@ async function main() {
             commitTagAndRelease({
                 publishDir,
                 distDir,
-                assetPath,
+                assetPaths: releaseAssetPaths,
                 tag,
                 title,
                 commitBody,
