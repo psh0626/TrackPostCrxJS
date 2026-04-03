@@ -130,13 +130,13 @@ async function updateExtension() {
     console.log("Extension version: ", currentVersion);
 }
 
-// TODO: onInstalled check for update and show notification about new features
-chrome.runtime.onUpdateAvailable.addListener((details) => {
-    console.log(`A new version (${details.version}) of the extension is available. Reloading to update...`);
+chrome.runtime.onUpdateAvailable.addListener(({version}) => {
+    console.log(`A new version (${version}) of the extension is available. Reloading to update...`);
     chrome.runtime.reload();
 });
 
 chrome.runtime.onInstalled.addListener(async (details) => {
+    console.log("Extension installed/updated with details: ", details);
     const openNewTab = (url: string) => chrome.tabs.create({ url: url, active: true });
     const waitTime = ms(5).toSeconds();
     switch (details.reason) {

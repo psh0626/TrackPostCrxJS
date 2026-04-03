@@ -10,8 +10,10 @@ import {
 } from "@/content-scripts/pending-replies/newGcssWrapper";
 async function whenNotificationClicked() {
     const tab = await chrome.tabs.getCurrent();
+    console.log(`[whenNotificationClicked] Current tab: `, tab);
     if (tab) {
-        await chrome.windows.update(tab.windowId, { focused: true });
+        console.log(`[whenNotificationClicked] Tab's window: `, await chrome.windows.get(tab.windowId));
+        await chrome.windows.update(tab.windowId, { drawAttention: true });
         await chrome.action.openPopup({ windowId: tab.windowId });
     }
 }
