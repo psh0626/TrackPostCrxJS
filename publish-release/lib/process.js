@@ -45,9 +45,9 @@ export function runChecked(cmd, args = "", options = {}, errorMessage = "Command
 
 export function checkCommand(cmd) {
     if (process.platform === "win32") {
-        const result = exec("where", unquoted);
+        const result = exec("where", cmd);
         return result.status === 0;
     }
-    const result = exec("which", unquoted);
+    const result = exec("which", cmd);
     return result.status === 0;
 }
