@@ -99,9 +99,9 @@ export default function ImportExport({ target, fileName = "MySettings.json", onE
     const dragDepthRef = useRef(0);
     const rootRef = useRef<HTMLDivElement | null>(null);
 
-    useEffect(() => {
-        console.log("IS ALERT OPEN", isAlertOpen);
-    }, [isAlertOpen]);
+    // useEffect(() => {
+    //     console.log("IS ALERT OPEN", isAlertOpen);
+    // }, [isAlertOpen]);
     function isVisibleOnScreen() {
         if (!rootRef.current) return false;
         return rootRef.current.offsetParent !== null;
@@ -119,12 +119,12 @@ export default function ImportExport({ target, fileName = "MySettings.json", onE
                     return;
                 }
 
-                console.log("Importing data: ", importedData);
+                console.log("[ImportExport] Importing data: ", importedData);
                 onImport?.(importedData);
                 setFailureMessage("설정 불러오기 실패!");
                 setIsAlertOpen({ success: true, failure: false });
             } catch (e) {
-                console.error(e);
+                console.error("[ImportExport] Error importing data:", e);
                 setFailureMessage("JSON 형식이 올바르지 않거나 읽을 수 없는 파일입니다.");
                 setIsAlertOpen({ success: false, failure: true });
             }
@@ -133,6 +133,7 @@ export default function ImportExport({ target, fileName = "MySettings.json", onE
     }
 
     const onExportClicked = () => {
+        console.log("[ImportExport] Exporting settings:", target);
         const vblob = new Blob([JSON.stringify(target, null, 2)], { type: "application/json" });
         const vlink = document.createElement("a");
         const vurl = window.URL.createObjectURL(vblob);
@@ -218,7 +219,7 @@ export default function ImportExport({ target, fileName = "MySettings.json", onE
     }, [isDragging]);
 
     return (
-        <Stack ref={rootRef} direction="column" spacing={0.4} >
+        <Stack ref={rootRef} direction="column" spacing={0.4}>
             <Divider sx={{ userSelect: "none" }}>
                 <Typography variant="caption">설정</Typography>
             </Divider>

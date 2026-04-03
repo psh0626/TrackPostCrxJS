@@ -5,14 +5,10 @@ import { Checkbox, Divider, FormControlLabel, Paper, Stack, TextField, Typograph
 import Grid from "@mui/material/Grid";
 import dayjs from "dayjs";
 import React, { useEffect, useRef, useState } from "react";
-import {
-    DatePickButtonProps,
-    DatePickToggleButton,
-    WeekPicker,
-    WeekPickerOverlayProps,
-} from "./weekPicker";
-import { CountryInput } from "./countryInput";
 import Header from "../components/header";
+import ImportExport from "../components/importExport";
+import { CountryInput } from "./countryInput";
+import { DatePickButtonProps, DatePickToggleButton, WeekPicker, WeekPickerOverlayProps } from "./weekPicker";
 
 interface GeneralSettingsProps {
     settings: React.RefObject<IMICSettings>;
@@ -609,7 +605,20 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
 
     return (
         <div>
-            <Header title="일반 설정" />
+            <Header title="일반 설정">
+                <ImportExport
+                    target={settingsState}
+                    fileName="MyGeneralSettings.json"
+                    onImport={(imported) => {
+                        settings.current = imported;
+                        setSettingsState(() => {
+                            const updated = { ...imported } as IMICSettings;
+                            return updated;
+                        });
+                        SaveSettings(true, imported, "Import").catch(console.error);
+                    }}
+                />
+            </Header>
             <WeekPickerOverlay
                 weekpickerEnabled={weekpickerEnabled}
                 weekpickerForIcare={weekpickerForIcare}

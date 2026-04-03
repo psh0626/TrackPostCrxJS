@@ -17,9 +17,9 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 
 import { IMICSettings, PersonalRemark } from "@/common/IMICSettings";
+import Header from "../components/header";
 import ImportExport from "../components/importExport";
 import { RemarkDialog } from "./remarkDialog";
-import Header from "../components/header";
 
 interface PersonalRemarksProps {
     settings: React.RefObject<IMICSettings>;
@@ -155,6 +155,7 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
     }
 
     function onItemImported(importedPrList: PersonalRemark[]) {
+        settings.current.PersonalRemarks = importedPrList;
         setPrList(importedPrList);
     }
 
