@@ -130,7 +130,7 @@ async function updateExtension() {
     console.log("Extension version: ", currentVersion);
 }
 
-chrome.runtime.onUpdateAvailable.addListener(({version}) => {
+chrome.runtime.onUpdateAvailable.addListener(({ version }) => {
     console.log(`A new version (${version}) of the extension is available. Reloading to update...`);
     chrome.runtime.reload();
 });
@@ -154,12 +154,16 @@ chrome.runtime.onInstalled.addListener(async (details) => {
                 return chrome.notifications.clear(id);
             });
             await Promise.all([...reloads, ...clears]);
-            await chrome.notifications.create(details.reason.toUpperCase(), {
-                type: "basic",
-                iconUrl: "icon.png",
-                title: "IMIC TrackPost",
-                message: `IMIC TrackPost 확장 프로그램이 ${details.reason === "install" ? "설치" : "업데이트"}되었습니다. 5초 뒤 안내 페이지가 열립니다!`,
-            });
+            const openedWindows = await chrome.windows.getAll({ populate: true });
+            console.log("Opened windows: ", openedWindows);
+            if (openedWindows.length > 0) {
+                await chrome.notifications.create(details.reason.toUpperCase(), {
+                    type: "basic",
+                    iconUrl: "icon.png",
+                    title: "IMIC TrackPost",
+                    message: `IMIC TrackPost 확장 프로그램이 ${details.reason === "install" ? "설치" : "업데이트"}되었습니다. 5초 뒤 안내 페이지가 열립니다!`,
+                });
+            }
             break;
     }
     if (details.reason === "install") {
