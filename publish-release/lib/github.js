@@ -81,8 +81,6 @@ export function checkGhAuthAndPermissions(rootDir, publishDir) {
 export function checkReposClean(rootDir, publishDir) {
     logInfo("Checking that both repositories have no uncommitted changes.");
 
-    const allowedRootDirtyFiles = new Set(["manifest.json", "package.json"]);
-
     const repos = [
         { name: "root", cwd: rootDir },
         { name: "publish", cwd: publishDir },
@@ -95,19 +93,44 @@ export function checkReposClean(rootDir, publishDir) {
         }
         const dirty = result.stdout.trim();
         if (dirty) {
-            const dirtyFiles = dirty
-                .split(/\r?\n/)
-                .map((line) => line.slice(3).trim().replace(/^"|"$/g, ""))
-                .map((path) => path.includes(" -> ") ? path.split(" -> ").at(-1) : path);
+            if (name === "root") {
+                const disallowedTracked = exec(
+                    "git",
+                    [
+                        "diff",
+                        "--name-only",
+                        "HEAD",
+                        "--",
+                        ".",
+                        ":(exclude)manifest.json",
+                        ":(exclude)package.json",
+                    ],
+                    { cwd },
+                );
+                const disallowedUntracked = exec(
+                    "git",
+                    [
+                        "ls-files",
+                        "--others",
+                        "--exclude-standard",
+                        "--",
+                        ".",
+                        ":(exclude)manifest.json",
+                        ":(exclude)package.json",
+                    ],
+                    { cwd },
+                );
 
-            const allowDirtyRootVersionFiles =
-                name === "root" &&
-                dirtyFiles.length > 0 &&
-                dirtyFiles.every((file) => allowedRootDirtyFiles.has(file));
+                const allowDirtyRootVersionFiles =
+                    disallowedTracked.status === 0 &&
+                    disallowedUntracked.status === 0 &&
+                    !disallowedTracked.stdout.trim() &&
+                    !disallowedUntracked.stdout.trim();
 
-            if (allowDirtyRootVersionFiles) {
-                logInfo("Root repository has only manifest.json/package.json changes; continuing.");
-                continue;
+                if (allowDirtyRootVersionFiles) {
+                    logInfo("Root repository has only manifest.json/package.json changes; continuing.");
+                    continue;
+                }
             }
 
             console.error(
