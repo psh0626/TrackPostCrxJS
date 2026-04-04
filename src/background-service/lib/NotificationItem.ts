@@ -1,5 +1,8 @@
 type NotificationCreateOptions = chrome.notifications.NotificationCreateOptions;
-type NotificationItemData = Omit<NotificationItem, "show">;
+type NotificationItemData = { notificationId?: string } & SetRequired<
+    chrome.notifications.NotificationOptions,
+    "title" | "message"
+>;
 
 export default class NotificationItem implements NotificationCreateOptions {
     appIconMaskUrl?: string | undefined;
@@ -17,12 +20,13 @@ export default class NotificationItem implements NotificationCreateOptions {
     type: "progress" | "list" | "basic" | "image";
     title: string;
     message: string;
-    iconUrl: string;
+    iconUrl: string = "icon.png";
     constructor(obj: NotificationItemData) {
-        this.notificationId = obj.notificationId;
+        Object.assign(this, obj);
         this.title = obj.title;
         this.message = obj.message;
-        this.type = obj.type;
+        this.notificationId = obj.notificationId ?? "IMIC_NOTIFICATION";
+        this.type = obj.type ?? "basic";
         this.iconUrl = obj.iconUrl ?? "icon.png";
     }
     show() {

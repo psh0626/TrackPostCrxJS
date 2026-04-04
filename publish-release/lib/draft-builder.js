@@ -10,29 +10,36 @@ export function buildReleaseDraft({ tag, publishDir, workspaceDir, sections = ["
     const previousBodyRaw = existingBody ? getPreviousReleaseBody(publishDir, tag) : null;
     const referenceBody = stripHtmlComments(previousBodyRaw || latestBodyRaw);
 
-    const lastTagResult = exec("git", ["describe", "--tags", "--abbrev=0"], { cwd: workspaceDir });
+    const lastTagResult = exec("git", ["describe", "--tags", "--abbrev=0"], { cwd: publishDir });
     const lastTag = lastTagResult.status === 0 ? lastTagResult.stdout.trim() : "";
 
-    const lastCommitInPublish = exec("git", ["log", "-n", "1", "--pretty=format:%ad"], { cwd: publishDir });
+    const lastTagDateResult = lastTag
+        ? exec("git", ["for-each-ref", `refs/tags/${lastTag}`, "--format=%(creatordate:iso-strict)"], {
+              cwd: publishDir,
+          })
+        : { status: 1, stdout: "" };
+    const lastTagDate = lastTagDateResult.status === 0 ? lastTagDateResult.stdout.trim() : null;
+
+    const lastCommitInPublish = exec("git", ["log", "-n", "1", "--pretty=format:%aI"], { cwd: publishDir });
     const lastCommitDate = lastCommitInPublish.status === 0 ? lastCommitInPublish.stdout.trim() : null;
-    const sinceArg = lastTag ? `${lastTag}..HEAD` : lastCommitDate ? `--since=${lastCommitDate}` : "";
+    const sinceArg = lastTagDate ? `--since=${lastTagDate}` : lastCommitDate ? `--since=${lastCommitDate}` : "";
 
     const commitLogs = exec(
         "git",
         [
             "log",
             ...(sinceArg ? [sinceArg] : []),
-            "--pretty=format:Author: %an%nDate: %ad%n%s%n",
+            "--pretty=format:Author: %an%nDate: %ad%n%B%n---",
             "--date=format:%Y-%m-%d %I:%M:%S %p",
             "--grep=Update submodule reference",
             "--invert-grep",
         ],
         { cwd: workspaceDir },
     );
-    const commitLines = commitLogs.stdout.trim() || "- No recent commits found.";
+    const commitLines = commitLogs.stdout.trim().replace(/\n---$/, "") || "- No recent commits found.";
 
-    const commitRangeTitle = lastTag
-        ? `commits since tag ${lastTag}`
+    const commitRangeTitle = lastTagDate
+        ? `commits since tag ${lastTag} (${new Date(lastTagDate).toLocaleString()})`
         : lastCommitDate
           ? `commits since ${new Date(lastCommitDate).toLocaleString()}`
           : "recent commits";
@@ -72,6 +79,7 @@ export function buildReleaseDraft({ tag, publishDir, workspaceDir, sections = ["
         existingBody,
         referenceBody,
         lastTag,
+        lastTagDate,
         lastCommitDate,
         sinceArg,
         commitLines,

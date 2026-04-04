@@ -57,14 +57,15 @@ async function main() {
     if (!newVersion) die("Version cannot be empty.");
     if (!isValidVersion(newVersion)) die(`Invalid version format: "${newVersion}". Expected: major.minor.patch`);
 
+    console.log("");
     if (newVersion === currentVersion) {
-        logBuildWarning(`\n${c("Version unchanged.", ansi.bold, ansi.yellow)}`);
+        logBuildWarning(`${c("Version unchanged.", ansi.bold, ansi.yellow)}`);
     } else {
         currentVersion = newVersion;
         updateVersionInFile(packagePath, currentVersion);
         updateVersionInFile(manifestPath, currentVersion);
         logBuildSuccess(
-            `\nUpdated version from ${c(currentVersion, ansi.bold, ansi.white)} to ${c(currentVersion, ansi.bold, ansi.blue)} in package.json and manifest.json`,
+            `Updated version from ${c(currentVersion, ansi.bold, ansi.white)} to ${c(currentVersion, ansi.bold, ansi.blue)} in package.json and manifest.json`,
         );
         exec("git", ["add", "."], { cwd: workspaceDir, stdio: "pipe" });
         exec("git", ["commit", "-m", `Update version to ${currentVersion}`], { cwd: workspaceDir, stdio: "pipe" });

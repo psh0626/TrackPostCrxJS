@@ -1,17 +1,17 @@
-import { useEffect, useRef, useState } from "react";
-
 import { IMICSettings } from "@/common/IMICSettings";
 import { CMD } from "@/common/message-hub/Message";
 import { CheckCircle } from "@mui/icons-material";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { useEffect, useRef, useState } from "react";
 import { GcssItem, WorkflowItem } from "../../../content-scripts/pending-replies/dataWrapper";
 import { ServiceNames, ServiceTypes } from "../../../content-scripts/pending-replies/gcssReplies";
 import { GCSSNotification, GCSSWorkflow } from "../../../content-scripts/pending-replies/newGcssWrapper";
 import PopupTrack from "../../lib/popupTrack";
 import StyledTextField from "./components/styledTextField";
 import { WorkflowList } from "./popup/workflowList";
+
 class iCareState {
     replyItems: WorkflowItem[] = [];
     requestItems: WorkflowItem[] = [];
@@ -154,14 +154,14 @@ function PopUpApp() {
     // Generic list renderer
     const renderList = (show: boolean, items: any[], emptyMsg: string, props: any) => {
         if (!show) return null;
-        if (!items || items.length < 1) return renderEmpty(emptyMsg);
+        if (!items || items.length < 1) return emptyMsg ? renderEmpty(emptyMsg) : null;
         return <WorkflowList {...props} items={items} key={`popup-list-${idNumber.current++}`} />;
     };
 
     // GCSS requests
     const renderOldGcssRequests = () => {
         if (!settings.current.GcssUnreadRequests) return null;
-        if (oldGcssState.requestItems.length < 1) return renderEmpty("GCSS 도착 문의");
+        if (oldGcssState.requestItems.length < 1) return null;
         return settings.current.GcssRequestServiceTypes.map((serv) => (
             <WorkflowList
                 key={`popup-list-${idNumber.current++}`}
@@ -175,7 +175,7 @@ function PopUpApp() {
     // GCSS replies
     const renderOldGcssReplies = () => {
         if (!settings.current.GcssUnreadReplies) return null;
-        if (oldGcssState.replyItems.length < 1) return renderEmpty("GCSS 발송 회신");
+        if (oldGcssState.replyItems.length < 1) return null;
         if (settings.current.GcssServiceTypes.length === 1) {
             if (settings.current.GcssAuthor.length <= 1) {
                 return (
@@ -234,7 +234,7 @@ function PopUpApp() {
         renderList(
             settings.current.GcssUnreadRequests && settings.current.GcssUnreadNotificationInbound,
             oldGcssState.notifInItems,
-            "GCSS 도착 통지",
+            "",
             {
                 type: "requests",
                 service: "GCSS",
@@ -246,63 +246,15 @@ function PopUpApp() {
         renderList(
             settings.current.GcssUnreadReplies && settings.current.GcssUnreadNotificationOutbound,
             oldGcssState.notifOutItems,
-            "GCSS 발송 통지",
+            "",
             {
                 type: "replies",
                 service: "GCSS",
             },
         );
-
-    const renderIcareRequests = () =>
-        renderList(settings.current.IcareUnreadRequests, icareState.requestItems, "iCare 도착 문의", {
-            type: "requests",
-            service: "iCare",
-        });
-    const renderIcareReplies = () => {
-        if (!settings.current.IcareUnreadReplies) return null;
-        if (icareState.replyItems.length < 1) return renderEmpty("iCare 발송 회신");
-        if (settings.current.IcareAuthor.length <= 1) {
-            return (
-                <WorkflowList items={icareState.replyItems} type="replies" key={`popup-list-${idNumber.current++}`} />
-            );
-        } else {
-            return settings.current.IcareAuthor.map((user) => (
-                <WorkflowList
-                    key={`popup-list-${idNumber.current++}`}
-                    items={icareState.replyItems.filter((el) => el.author.toLowerCase().includes(user.toLowerCase()))}
-                    type="replies"
-                    author={user}
-                />
-            ));
-        }
-    };
-    // iCare inbound notifications
-    const renderIcareInboundNotifications = () =>
-        renderList(
-            settings.current.IcareUnreadRequests && settings.current.IcareUnreadNotificationInbound,
-            icareState.notifInItems,
-            "iCare 도착 통지",
-            {
-                type: "requests",
-                service: "iCare",
-            },
-        );
-
-    // iCare outbound notifications
-    const renderIcareOutboundNotifications = () =>
-        renderList(
-            settings.current.IcareUnreadReplies && settings.current.IcareUnreadNotificationOutbound,
-            icareState.notifOutItems,
-            "iCare 발송 통지",
-            {
-                type: "replies",
-                service: "iCare",
-            },
-        );
-
     const renderNewGcssRequests = () => {
         if (!settings.current.GcssUnreadRequests) return null;
-        if (newGcssState.requestItems.length < 1) return renderEmpty("New GCSS 도착 문의");
+        if (newGcssState.requestItems.length < 1) return null;
         return settings.current.GcssRequestServiceTypes.map((serv) => (
             <WorkflowList
                 key={serv}
@@ -315,7 +267,7 @@ function PopUpApp() {
 
     const renderNewGcssReplies = () => {
         if (!settings.current.GcssUnreadReplies) return null;
-        if (newGcssState.replyItems.length < 1) return renderEmpty("New GCSS 발송 회신");
+        if (newGcssState.replyItems.length < 1) return null;
         if (settings.current.GcssServiceTypes.length === 1) {
             if (settings.current.GcssAuthor.length <= 1) {
                 return (
@@ -372,7 +324,7 @@ function PopUpApp() {
         renderList(
             settings.current.GcssUnreadRequests && settings.current.GcssUnreadNotificationInbound,
             newGcssState.notifInItems,
-            "New GCSS 도착 통지",
+            "",
             {
                 type: "requests",
                 service: "GCSS",
@@ -382,32 +334,112 @@ function PopUpApp() {
         renderList(
             settings.current.GcssUnreadReplies && settings.current.GcssUnreadNotificationOutbound,
             newGcssState.notifOutItems,
-            "New GCSS 발송 통지",
+            "",
             {
                 type: "replies",
                 service: "GCSS",
             },
         );
+
+    const renderIcareRequests = () =>
+        renderList(settings.current.IcareUnreadRequests, icareState.requestItems, "iCare 도착 문의", {
+            type: "requests",
+            service: "iCare",
+        });
+    const renderIcareReplies = () => {
+        if (!settings.current.IcareUnreadReplies) return null;
+        if (icareState.replyItems.length < 1) return renderEmpty("iCare 발송 회신");
+        if (settings.current.IcareAuthor.length <= 1) {
+            return (
+                <WorkflowList items={icareState.replyItems} type="replies" key={`popup-list-${idNumber.current++}`} />
+            );
+        } else {
+            return settings.current.IcareAuthor.map((user) => (
+                <WorkflowList
+                    key={`popup-list-${idNumber.current++}`}
+                    items={icareState.replyItems.filter((el) => el.author.toLowerCase().includes(user.toLowerCase()))}
+                    type="replies"
+                    author={user}
+                />
+            ));
+        }
+    };
+    // iCare inbound notifications
+    const renderIcareInboundNotifications = () =>
+        renderList(
+            settings.current.IcareUnreadRequests && settings.current.IcareUnreadNotificationInbound,
+            icareState.notifInItems,
+            "iCare 도착 통지",
+            {
+                type: "requests",
+                service: "iCare",
+            },
+        );
+
+    // iCare outbound notifications
+    const renderIcareOutboundNotifications = () =>
+        renderList(
+            settings.current.IcareUnreadReplies && settings.current.IcareUnreadNotificationOutbound,
+            icareState.notifOutItems,
+            "iCare 발송 통지",
+            {
+                type: "replies",
+                service: "iCare",
+            },
+        );
+
     const renderOrder = [
         {
-            key: "oldGcssRequests",
-            count: oldGcssState.requestItems.length,
-            render: renderOldGcssRequests,
+            key: "newGcssRequests",
+            count: newGcssState.requestItems.length,
+            render: renderNewGcssRequests,
         },
         {
-            key: "oldGcssReplies",
-            count: oldGcssState.replyItems.length,
-            render: renderOldGcssReplies,
+            key: "newGcssReplies",
+            count: newGcssState.replyItems.length,
+            render: renderNewGcssReplies,
         },
         {
-            key: "oldGcssInboundNotifications",
-            count: oldGcssState.notifInItems.length,
-            render: renderOldGcssInboundNotifications,
+            key: "newGcssInboundNotifications",
+            count: newGcssState.notifInItems.length,
+            render: renderNewGcssInboundNotifications,
         },
         {
-            key: "oldGcssOutboundNotifications",
-            count: oldGcssState.notifOutItems.length,
-            render: renderOldGcssOutboundNotifications,
+            key: "newGcssOutboundNotifications",
+            count: newGcssState.notifOutItems.length,
+            render: renderNewGcssOutboundNotifications,
+        },
+        {
+            key: "gcssRequests",
+            count: oldGcssState.requestItems.length + newGcssState.requestItems.length,
+            render: () =>
+                oldGcssState.requestItems.length + newGcssState.requestItems.length > 0
+                    ? renderOldGcssRequests()
+                    : renderEmpty("GCSS 도착 문의"),
+        },
+        {
+            key: "gcssReplies",
+            count: oldGcssState.replyItems.length + newGcssState.replyItems.length,
+            render: () =>
+                oldGcssState.replyItems.length + newGcssState.replyItems.length > 0
+                    ? renderOldGcssReplies()
+                    : renderEmpty("GCSS 발송 문의"),
+        },
+        {
+            key: "gcssInboundNotifications",
+            count: oldGcssState.notifInItems.length + newGcssState.notifInItems.length,
+            render: () =>
+                oldGcssState.notifInItems.length + newGcssState.notifInItems.length > 0
+                    ? renderOldGcssInboundNotifications()
+                    : renderEmpty("GCSS 도착 통지"),
+        },
+        {
+            key: "gcssOutboundNotifications",
+            count: oldGcssState.notifOutItems.length + newGcssState.notifOutItems.length,
+            render: () =>
+                oldGcssState.notifOutItems.length + newGcssState.notifOutItems.length > 0
+                    ? renderOldGcssOutboundNotifications()
+                    : renderEmpty("GCSS 발송 통지"),
         },
         {
             key: "icareRequests",
@@ -428,28 +460,6 @@ function PopUpApp() {
             key: "icareOutboundNotifications",
             count: icareState.notifOutItems.length,
             render: renderIcareOutboundNotifications,
-        },
-    ];
-    const newGcssRenderOrder = [
-        {
-            key: "newGcssRequests",
-            count: newGcssState.requestItems.length,
-            render: renderNewGcssRequests,
-        },
-        {
-            key: "newGcssReplies",
-            count: newGcssState.replyItems.length,
-            render: renderNewGcssReplies,
-        },
-        {
-            key: "newGcssInboundNotifications",
-            count: newGcssState.notifInItems.length,
-            render: renderNewGcssInboundNotifications,
-        },
-        {
-            key: "newGcssOutboundNotifications",
-            count: newGcssState.notifOutItems.length,
-            render: renderNewGcssOutboundNotifications,
         },
     ];
 
@@ -485,7 +495,7 @@ function PopUpApp() {
             />
 
             <Divider style={{ margin: "15px 0" }} />
-            {renderOrder.every((el) => el.count < 1) && newGcssRenderOrder.every((el) => el.count < 1) && (
+            {renderOrder.every((el) => el.count < 1) && (
                 <Stack
                     width="100%"
                     justifyContent={"center"}
@@ -497,13 +507,7 @@ function PopUpApp() {
                     </Typography>
                 </Stack>
             )}
-            {renderOrder.map((item) => item.count > 0 && item.render())}
-
-            {renderOrder.some((item) => item.count > 0) &&
-            (newGcssState.replyItems.length > 0 || newGcssState.requestItems.length > 0) ? (
-                <Divider variant="middle" sx={{ m: "15px" }}></Divider>
-            ) : null}
-            {newGcssRenderOrder.map((item) => item.count > 0 && item.render())}
+            {renderOrder.filter((item) => item.render() !== null).map((item) => item.count > 0 && item.render())}
 
             {renderOrder.some((item) => item.count < 1 && item.render() !== null) ? (
                 <Divider variant="middle" sx={{ mt: "7px", mb: "4px" }}>
@@ -511,7 +515,10 @@ function PopUpApp() {
                         모두 읽음
                     </Typography>
                 </Divider>
-            ) : null}
+            ) : (
+                <Divider variant="middle" sx={{ m: "15px" }}></Divider>
+            )}
+
             <Stack direction="row" width="100%" justifyContent="center" sx={{ alignSelf: "center" }}>
                 <div
                     style={{

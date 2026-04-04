@@ -73,7 +73,7 @@ async function main() {
     logDetail("workspace", workspaceDir);
     logDetail("publishDir", publishDir);
     logDetail("draftPath", draftPath);
-    console.log("\n");
+    console.log("");
 
     logInfo("Setting up rollback checkpoint.");
     rollbackState = {
@@ -103,13 +103,14 @@ async function main() {
     const currentVersion = packageJson.version;
 
     try {
+        logInfo("Creating CRX file and updating manifest for release...");
         createCrxAndUpdateManifest();
         logSuccess(`Created dist.crx file and updateManifest.xml to version ${currentVersion}\n`);
 
         // --- Release title ---
 
         releaseAssetPaths.forEach((asset, idx) => {
-            logDetail(`releaseAsset ${idx + 1}:`, asset);
+            logDetail(`releaseAsset ${idx + 1}`, asset);
             if (!existsSync(asset)) die(`Asset not found: ${asset}`);
         });
         logSuccess("Verified release assets exist.\n");
@@ -137,7 +138,7 @@ async function main() {
             commitRangeTitle,
         } = buildReleaseDraft({ tag, publishDir, workspaceDir, sections: releaseNoteSections });
 
-        console.log("\n");
+        console.log("");
         logDetail("existingReleaseNotesFound", existingBody ? "yes" : "no");
         logDetail("referenceReleaseNotesFound", referenceBody ? "yes" : "no");
         logDetail("lastTag", lastTag || "<none>");

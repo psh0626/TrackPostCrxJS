@@ -10,21 +10,20 @@ import {
 } from "@/content-scripts/pending-replies/newGcssWrapper";
 import NotificationItem from "./NotificationItem";
 async function whenNotificationClicked() {
-    const tab = await chrome.tabs.getCurrent();
-    console.log(`[whenNotificationClicked] Current tab: `, tab);
-    if (tab) {
-        console.log(`[whenNotificationClicked] Tab's window: `, await chrome.windows.get(tab.windowId));
-        await chrome.windows.update(tab.windowId, { drawAttention: true });
-        await chrome.action.openPopup({ windowId: tab.windowId });
+    const window = await chrome.windows.getLastFocused({ populate: true });
+    console.log(`[whenNotificationClicked] Last focused window: `, window);
+    if (window && window.id) {
+        await chrome.windows.update(window.id, { focused: true });
+        await chrome.action.openPopup({ windowId: window.id });
     }
 }
 chrome.notifications.onClicked.addListener(() => {
     whenNotificationClicked();
 });
 
-chrome.notifications.onButtonClicked.addListener(() => {
-    whenNotificationClicked();
-});
+// chrome.notifications.onButtonClicked.addListener(() => {
+//     whenNotificationClicked();
+// });
 
 export default async function createNotification(force_update = false) {
     const settings = new IMICSettings();
@@ -106,16 +105,15 @@ export default async function createNotification(force_update = false) {
     const err_msg = fetch_error ? (fetch_error.GCSS ? "(GCSS 에러)\n" : "(i-Care 에러)\n") : "";
 
     const newItem = new NotificationItem({
-        notificationId: String(CMD.ICARE_UNREAD_REPLIES),
+        notificationId: "IMIC_PENDING_MESSAGES",
         type: "list",
         priority: 2,
         requireInteraction: true,
-        iconUrl: "icon.png",
         title: `${err_msg}IMIC 알림: ${current_num}개 메시지 대기`,
         message: `GCSS/iCare 읽지 않은 메시지가 ${current_num}개 있습니다.`,
-        contextMessage: `GCSS/Icare unread replies: ${current_num}`,
+        contextMessage: `GCSS/iCare unread replies: ${current_num}`,
         items: combined,
-        buttons: [{ title: "확인" }],
+        // buttons: [{ title: "확인" }],
     });
 
     if (force_update) {

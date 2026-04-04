@@ -104,7 +104,7 @@ async function APICalls(count: number, final = false) {
         }
 
         if (hasImportantUnread || count % MAXIMUM_TICK === 0) {
-            console.log("There are important unread items. Forcing notification update.");
+            console.log("[APICalls] There are important unread items. Forcing notification update.");
             await createNotification(true);
         }
     }
@@ -114,7 +114,7 @@ async function APICalls(count: number, final = false) {
             await chrome.action.setBadgeText({ text: "?" });
         } else {
             setTimeout(async () => {
-                console.log("Global timer could not find icare or gcss tab. Retrying in 2 seconds..");
+                console.log("[APICalls] Global timer could not find icare or gcss tab. Retrying in 2 seconds..");
                 await APICalls(count, true);
             }, ms("2").toSeconds());
         }
@@ -123,7 +123,7 @@ async function APICalls(count: number, final = false) {
 }
 export async function updateExtension() {
     const updateStatus = await chrome.runtime.requestUpdateCheck();
-    console.log("[updateExtension] Update check result: ", updateStatus, "Current version: ", currentVersion);
+    console.log("[updateExtension] Update check result: ", { currentVersion: currentVersion, ...updateStatus });
     switch (updateStatus.status) {
         case "update_available":
             console.log("[updateExtension] An update is available. Reloading to update...");
@@ -154,37 +154,36 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
         currentVersion: currentVersion,
         ...details,
     });
-    const openNewTab = (url: string) => chrome.tabs.create({ url: url, active: true });
-    const waitTime = ms(5).toSeconds();
-    switch (details.reason) {
-        case "install":
-        case "update":
-            await Promise.all([reloadAllServiceTabs(), clearAllNotifications()]);
-            const openedWindows = await chrome.windows.getAll({ populate: true });
-            if (openedWindows.length > 0) {
-                await new NotificationItem({
-                    notificationId: details.reason.toUpperCase(),
-                    type: "basic",
-                    iconUrl: "icon.png",
-                    title: "IMIC TrackPost",
-                    message: `확장 프로그램이 ${details.reason === "install" ? "설치" : "업데이트"} 되었습니다.`,
-                }).show();
-            }
-            break;
+
+    const openedWindows = await chrome.windows.getAll({ populate: true });
+    if (openedWindows.length === 0 || ["chrome_update", "shared_module_update"].includes(details.reason)) {
+        return;
     }
-    if (details.reason === "install") {
-        console.log("[whenExtensionInstalled] Extension installed with version", chrome.runtime.getVersion());
+
+    const waitTime = ms(3).toSeconds();
+    const openNewTab = (url: string) => chrome.tabs.create({ url: url, active: true });
+    const showNotificationAndOpenTab = async (url: string) => {
+        await new NotificationItem({
+            title: "IMIC TrackPost",
+            message: `확장 프로그램이 ${details.reason === "install" ? "설치" : "업데이트"} 되었습니다.`,
+        }).show();
         await wait(waitTime);
-        await openNewTab("https://github.com/psh0626/TrackPostExtZip/");
-    } else if (details.reason === "update" && details.previousVersion !== currentVersion) {
+        await openNewTab(url);
+    };
+
+    await Promise.all([reloadAllServiceTabs(), clearAllNotifications()]);
+
+    if (details.reason === "install") {
+        console.log("[whenExtensionInstalled] Extension installed with version", currentVersion);
+        await showNotificationAndOpenTab("https://github.com/psh0626/TrackPostExtZip/");
+    } else if (details.previousVersion !== currentVersion) {
         console.log(
             "[whenExtensionInstalled] Extension updated to version from",
             details.previousVersion,
             "to",
-            chrome.runtime.getVersion(),
+            currentVersion,
         );
-        await wait(waitTime);
-        await openNewTab("https://github.com/psh0626/TrackPostExtZip/releases");
+        await showNotificationAndOpenTab("https://github.com/psh0626/TrackPostExtZip/releases");
     }
 }
 
