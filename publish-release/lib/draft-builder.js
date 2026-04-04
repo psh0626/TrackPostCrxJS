@@ -68,6 +68,7 @@ export function buildReleaseDraft({ tag, publishDir, workspaceDir, sections = ["
             ...(missingSections ? ["", "<!-- Missing sections added below -->", missingSections] : []),
             "",
             referenceBlock,
+            "",
             commitSummaryBlock,
         ].join("\n");
     } else {
