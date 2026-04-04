@@ -22,14 +22,7 @@ interface ButtonLinkProps {
 
 function ButtonLink({ href, color, children }: ButtonLinkProps) {
     const openLink = async () => {
-        const tab = await chrome.tabs.create({ active: true, url: href });
-        chrome.scripting.executeScript({
-            target: { tabId: tab.id! },
-            world: "MAIN",
-            func: () => {
-                document.querySelector("div[itemtype*='abstract']")?.scrollIntoView({ behavior: "smooth" });
-            },
-        });
+        await chrome.tabs.create({ active: true, url: href });
     };
     return (
         <Button variant="text" sx={{ justifyContent: "flex-start", paddingLeft: 0 }} onClick={openLink}>

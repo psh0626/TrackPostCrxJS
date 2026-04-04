@@ -176,14 +176,7 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
     if (details.reason === "install") {
         console.log("[whenExtensionInstalled] Extension installed with version", chrome.runtime.getVersion());
         await wait(waitTime);
-        const tab = await openNewTab("https://github.com/psh0626/TrackPostExtZip/");
-        await chrome.scripting.executeScript({
-            target: { tabId: tab.id! },
-            world: "MAIN",
-            func: () => {
-                document.querySelector("div[itemtype*='abstract']")?.scrollIntoView({ behavior: "smooth" });
-            },
-        });
+        await openNewTab("https://github.com/psh0626/TrackPostExtZip/");
     } else if (details.reason === "update" && details.previousVersion !== currentVersion) {
         console.log(
             "[whenExtensionInstalled] Extension updated to version from",
@@ -239,6 +232,13 @@ chrome.webRequest.onCompleted.addListener(
             tabs.forEach(async (tab) => {
                 if (!tab.id || !tab.url) return;
 
+                await chrome.scripting.executeScript({
+                    target: { tabId: tab.id },
+                    world: "MAIN",
+                    func: () => {
+                        document.querySelector("div[itemtype*='abstract']")?.scrollIntoView({ behavior: "smooth" });
+                    },
+                });
                 const reload = new URL(tab.url).searchParams.get("reload");
                 if (reload === "true") {
                     console.log(
@@ -261,10 +261,7 @@ chrome.webRequest.onCompleted.addListener(
         }
     },
     {
-        urls: [
-            "https://github.com/psh0626/TrackPostExtZip/commits/*",
-            "https://github.com/psh0626/TrackPostExtZip/releases/*",
-        ],
+        urls: ["https://github.com/psh0626/TrackPostExtZip/*"],
     },
 );
 

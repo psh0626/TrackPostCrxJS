@@ -26,6 +26,7 @@ export default class NotificationItem implements NotificationCreateOptions {
         this.iconUrl = obj.iconUrl ?? "icon.png";
     }
     show() {
-        return chrome.notifications.create(this.notificationId, this);
+        const { notificationId, ...options } = this;
+        return chrome.notifications.create(this.notificationId, options);
     }
 }
