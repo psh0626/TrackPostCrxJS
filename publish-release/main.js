@@ -16,7 +16,6 @@ import { checkCommand, runChecked } from "./lib/process.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const workspaceDir = join(__dirname, "..");
 const packagePath = join(workspaceDir, "package.json");
-const distDir = join(workspaceDir, "dist");
 const publishDir = join(workspaceDir, "publish");
 const prePublishDir = join(workspaceDir, "pre-publish");
 const draftPath = join(prePublishDir, ".release-notes-draft.md");
@@ -50,18 +49,20 @@ main().catch((err) => {
 async function main() {
     const rl = createInterface({ input: process.stdin, output: process.stdout });
 
-    const proceed = (await prompt(rl, `${c("Start publishing release? (y/n): ", ansi.bold)}`, "y")).toLowerCase();
+    const proceed = (
+        await prompt(rl, `\n${releasePrefix(ansi.blue)} ${c("Start publishing release? (y/n): ", ansi.bold)}`, "y")
+    ).toLowerCase();
     if (proceed !== "y") {
         console.log("Release flow cancelled by user.");
         process.exit(0);
     }
 
-    logInfo("Starting publish-release flow.");
+    logInfo("Starting publish-release flow.\n");
 
     if (!checkCommand("gh")) die("GitHub CLI 'gh' is required.");
 
     checkGhAuthAndPermissions(workspaceDir, publishDir);
-    
+
     checkReposClean(workspaceDir, publishDir);
 
     if (!checkCommand("code")) {
@@ -70,10 +71,11 @@ async function main() {
     }
 
     logDetail("workspace", workspaceDir);
-    logDetail("distDir", distDir);
     logDetail("publishDir", publishDir);
     logDetail("draftPath", draftPath);
+    console.log("\n");
 
+    logInfo("Setting up rollback checkpoint.");
     rollbackState = {
         rootDir: workspaceDir,
         publishDir,
@@ -86,7 +88,7 @@ async function main() {
         rootMainPushed: false,
         rolledBack: false,
     };
-    logSuccess("Rollback checkpoint set.");
+    logSuccess("Rollback checkpoint set.\n");
 
     const sigintHandler = () => {
         console.error(`\n${releasePrefix(ansi.yellow)} ${c("Interrupted by user (Ctrl+C).", ansi.bold, ansi.yellow)}`);
@@ -101,28 +103,29 @@ async function main() {
     const currentVersion = packageJson.version;
 
     try {
+        createCrxAndUpdateManifest();
+        logSuccess(`Created dist.crx file and updateManifest.xml to version ${currentVersion}\n`);
+
+        // --- Release title ---
+
+        releaseAssetPaths.forEach((asset, idx) => {
+            logDetail(`releaseAsset ${idx + 1}:`, asset);
+            if (!existsSync(asset)) die(`Asset not found: ${asset}`);
+        });
+        logSuccess("Verified release assets exist.\n");
+
         const tag = `v${currentVersion}`;
         rollbackState.tag = tag;
         const defaultTitle = `TrackPost ${tag}`;
         logDetail("releaseTag", tag);
-        logDetail("releaseAssets", releaseAssetPaths.join(", "));
-
-        for (const releaseAssetPath of releaseAssetPaths) {
-            if (!existsSync(releaseAssetPath)) die(`Asset not found: ${releaseAssetPath}`);
-        }
-        logSuccess("Verified release assets exist.");
-
-        if (!existsSync(distDir)) die(`Build output directory not found: ${distDir}`);
-        logSuccess("Verified build output directory exists.");
-
-        createCrxAndUpdateManifest();
-        logSuccess(`Created dist.crx file and updateManifest.xml to version ${currentVersion}`);
-
-        // --- 3. Release title ---
-        const titleRaw = await prompt(rl, `\nRelease title (Enter for default): `, defaultTitle);
+        const titleRaw = await prompt(
+            rl,
+            `${releasePrefix(ansi.blue)} ${c("Release title (Enter for default): ", ansi.bold)}`,
+            defaultTitle,
+        );
         const title = titleRaw.trim() || defaultTitle;
 
-        // --- 4. Fetch existing notes & commits from repo ---
+        // --- Fetch existing notes & commits from repo ---
         const {
             draftContent,
             existingBody,
@@ -134,19 +137,24 @@ async function main() {
             commitRangeTitle,
         } = buildReleaseDraft({ tag, publishDir, workspaceDir, sections: releaseNoteSections });
 
+        console.log("\n");
         logDetail("existingReleaseNotesFound", existingBody ? "yes" : "no");
         logDetail("referenceReleaseNotesFound", referenceBody ? "yes" : "no");
         logDetail("lastTag", lastTag || "<none>");
-        logDetail("publishRepoLastCommitDate", lastCommitDate || "<none>");
-        logDetail("gitLogSinceArg", sinceArg);
+        logDetail("publishRepoLastCommitDateFallback", lastCommitDate || "<none>");
+        logDetail(
+            "commitRangeSource",
+            lastTag ? `tag:${lastTag}` : lastCommitDate ? `publish-last-commit:${lastCommitDate}` : "repo-history",
+        );
+        logDetail("gitLogRange", sinceArg || "<none>");
         logDetail("commitSummaryLength", String(commitLines.split(/\r?\n/).length));
         logDetail("commitRangeTitle", commitRangeTitle);
 
         writeFileSync(draftPath, draftContent, "utf8");
-        logSuccess("Release note draft written.");
+        logSuccess("Release note draft written.\n");
 
         // --- 5. Open in VS Code ---
-        console.log("\nOpening release notes in VS Code. Save and close to continue...");
+        logInfo("Opening release notes in VS Code. Save and close to continue...");
         runChecked(
             "code",
             ["-r", "--wait", draftPath],
@@ -249,24 +257,14 @@ async function main() {
 
         // --- 8. Sync root repository ---
         logInfo("Syncing root repository after publish release update.");
-        runChecked(
-            "git",
-            ["add", "publish"],
-            { cwd: workspaceDir },
-            "Failed to stage root repo release changes.",
-        );
+        runChecked("git", ["add", "publish"], { cwd: workspaceDir }, "Failed to stage root repo release changes.");
         runChecked(
             "git",
             ["commit", "-m", "Update submodule reference"],
             { cwd: workspaceDir },
             "Failed to commit root repo release changes.",
         );
-        runChecked(
-            "git",
-            ["push", "origin", "main"],
-            { cwd: workspaceDir, stdio: "inherit", encoding: "utf8" },
-            "Failed to push root repo main branch.",
-        );
+        runChecked("git", ["push", "origin", "main"], { cwd: workspaceDir }, "Failed to push root repo main branch.");
         rollbackState.rootMainPushed = true;
 
         console.log(`\n${releasePrefix(ansi.green)} ${c("Release flow completed.", ansi.bold, ansi.green)}`);

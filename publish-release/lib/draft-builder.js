@@ -15,13 +15,13 @@ export function buildReleaseDraft({ tag, publishDir, workspaceDir, sections = ["
 
     const lastCommitInPublish = exec("git", ["log", "-n", "1", "--pretty=format:%ad"], { cwd: publishDir });
     const lastCommitDate = lastCommitInPublish.status === 0 ? lastCommitInPublish.stdout.trim() : null;
-    const sinceArg = lastCommitDate ? `--since=${lastCommitDate}` : `--since=${lastTag}`;
+    const sinceArg = lastTag ? `${lastTag}..HEAD` : lastCommitDate ? `--since=${lastCommitDate}` : "";
 
     const commitLogs = exec(
         "git",
         [
             "log",
-            sinceArg,
+            ...(sinceArg ? [sinceArg] : []),
             "--pretty=format:Author: %an%nDate: %ad%n%s%n",
             "--date=format:%Y-%m-%d %I:%M:%S %p",
             "--grep=Update submodule reference",
@@ -31,7 +31,11 @@ export function buildReleaseDraft({ tag, publishDir, workspaceDir, sections = ["
     );
     const commitLines = commitLogs.stdout.trim() || "- No recent commits found.";
 
-    const commitRangeTitle = `commits since ${lastCommitDate ? new Date(lastCommitDate).toLocaleString() : lastTag}`;
+    const commitRangeTitle = lastTag
+        ? `commits since tag ${lastTag}`
+        : lastCommitDate
+          ? `commits since ${new Date(lastCommitDate).toLocaleString()}`
+          : "recent commits";
     const commitSummaryBlock = [
         `<!-- Commit Summary: ${commitRangeTitle} -->`,
         "<!--",

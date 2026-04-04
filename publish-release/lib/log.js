@@ -32,7 +32,8 @@ export function formatCommand(cmd, args = "") {
         typeof args === "string"
             ? args
             : args.map((arg) => (String(arg).includes(" ") ? `"${arg}"` : String(arg))).join(" ");
-    return argList ? `${cmd} ${argList}` : cmd;
+    const finalArgs = argList.replace(/[\r\n]+/g, " ");
+    return finalArgs ? `${cmd} ${finalArgs.length > 50 ? finalArgs.slice(0, 50) + "..." : finalArgs}` : cmd;
 }
 
 export function logInfo(message) {

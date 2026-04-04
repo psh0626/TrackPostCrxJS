@@ -85,15 +85,7 @@ function isSlugVersionFiles() {
     );
     const disallowedUntracked = exec(
         "git",
-        [
-            "ls-files",
-            "--others",
-            "--exclude-standard",
-            "--",
-            ".",
-            ":(exclude)manifest.json",
-            ":(exclude)package.json",
-        ],
+        ["ls-files", "--others", "--exclude-standard", "--", ".", ":(exclude)manifest.json", ":(exclude)package.json"],
         { cwd },
     );
 
@@ -137,7 +129,6 @@ export function checkReposClean(rootDir, publishDir) {
         }
         logSuccess(`${name} repository is clean.`);
     }
-    logInfo("\n");
 }
 
 export function ghExec(command, cwd) {
