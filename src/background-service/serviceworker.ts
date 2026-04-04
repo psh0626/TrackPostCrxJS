@@ -78,8 +78,7 @@ async function main() {
     );
 }
 async function APICalls(count: number, final = false) {
-    const today = new Date();
-    console.log(`${today.toLocaleTimeString("ko-KR")}: Ticking Global Timer: `, count, " times");
+    console.log(`[APICalls] Ticking Global Timer: `, count, " times");
     if (count % UPDATE_CHECK_TICK === 0) {
         const services = [
             CMD.GCSS_UNREAD_REPLIES,

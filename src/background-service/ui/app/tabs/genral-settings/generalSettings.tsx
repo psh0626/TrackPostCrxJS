@@ -486,11 +486,11 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
 
     async function SaveSettings(immediately = true, mySettings: IMICSettings | null = null, from = "") {
         if (mySettings) {
-            console.log("saving from specific settings for", from, mySettings);
-            Object.assign(settings.current, mySettings);
+            console.log("saving specific settings from", from, mySettings);
+            Object.assign(settings.current, { ...mySettings, PersonalRemarks: settings.current.PersonalRemarks });
         } else {
             console.trace("saving from settingsState", settingsState);
-            Object.assign(settings.current, settingsState);
+            Object.assign(settings.current, { ...settingsState, PersonalRemarks: settings.current.PersonalRemarks });
         }
         await settings.current.saveOptions(immediately);
     }
@@ -512,10 +512,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                     case "GcssOutboundNotificationCountries":
                     case "IcareOutboundNotificationExcludedCountries":
                     case "GcssOutboundNotificationExcludedCountries":
-                        void SaveSettings(false, updated);
+                        void SaveSettings(false, updated, "updateSetting - " + key);
                         break;
                     default:
-                        void SaveSettings(true, updated);
+                        void SaveSettings(true, updated, "updateSetting - " + key);
                         break;
                 }
             } else initialized.current = true;
@@ -616,7 +616,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                                 updated.PersonalRemarks = settings.current.PersonalRemarks;
                             }
                             settings.current = updated;
-                            SaveSettings(false, updated, "IMPORT");
+                            SaveSettings(true, updated, "IMPORT");
                             return updated;
                         });
                     }}

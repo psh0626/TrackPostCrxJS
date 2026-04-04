@@ -7,12 +7,8 @@ export default function processMessage(
     sender: chrome.runtime.MessageSender,
     SendResponse: (response?: unknown) => void,
 ) {
-    console.log(
-        "[MessageHub] message received from sender: ",
-        new URL(sender?.tab?.url || "")?.host,
-        "\ncontent: ",
-        Message,
-    );
+    const host = sender?.tab?.url ? new URL(sender.tab.url).host : sender;
+    console.log("[MessageHub] message received from sender: ", host, "\ncontent: ", Message);
     type FetchError = {
         ICARE: boolean;
         GCSS: boolean;

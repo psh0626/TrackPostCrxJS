@@ -111,7 +111,6 @@ export function rollback(state) {
 
 export function commitTagAndRelease({
     publishDir,
-    distDir,
     assetPaths,
     tag,
     title,
@@ -121,7 +120,6 @@ export function commitTagAndRelease({
     rollbackState: rs,
 }) {
     logInfo("Copying build output into publish repository.");
-    copyAllFiles(distDir, publishDir);
 
     runChecked(
         "git",

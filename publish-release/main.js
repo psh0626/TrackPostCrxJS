@@ -206,7 +206,6 @@ async function main() {
 
             commitTagAndRelease({
                 publishDir,
-                distDir,
                 assetPaths: releaseAssetPaths,
                 tag,
                 title,
@@ -238,7 +237,6 @@ async function main() {
             console.log(`\nCreating new release ${tag}...`);
             commitTagAndRelease({
                 publishDir,
-                distDir,
                 assetPaths: releaseAssetPaths,
                 tag,
                 title,
@@ -253,7 +251,7 @@ async function main() {
         logInfo("Syncing root repository after publish release update.");
         runChecked(
             "git",
-            ["add", "publish", "manifest.json", "package.json"],
+            ["add", "publish"],
             { cwd: workspaceDir },
             "Failed to stage root repo release changes.",
         );
