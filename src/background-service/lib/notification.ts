@@ -10,8 +10,16 @@ import {
 } from "@/content-scripts/pending-replies/newGcssWrapper";
 import NotificationItem from "./NotificationItem";
 async function whenNotificationClicked() {
-    const window = await chrome.windows.getLastFocused({ populate: true });
-    console.log(`[whenNotificationClicked] Last focused window: `, window);
+    const windows = await chrome.windows.getAll({ populate: true });
+    const window = windows.find(
+        (w) =>
+            w.tabs &&
+            w.tabs.some((t) => {
+                const url = (t.url ?? "").toLowerCase();
+                return ["gcss", "icare"].some((keyword) => url.includes(keyword));
+            }),
+    );
+    console.log(`[whenNotificationClicked] Found window: `, window);
     if (window && window.id) {
         await chrome.windows.update(window.id, { focused: true });
         await chrome.action.openPopup({ windowId: window.id });
