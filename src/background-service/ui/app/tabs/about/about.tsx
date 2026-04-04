@@ -77,7 +77,7 @@ export default function About() {
                         color="textDisabled"
                         href="https://github.com/psh0626/TrackPostExtZip/releases/tag/v3.1.12"
                     >
-                        업데이트 노트 (v3.1.11 이전)
+                        업데이트 노트 (v3.1.12 이전)
                     </ButtonLink>
                 </Stack>
                 <Divider sx={{ mb: 1 }} />
