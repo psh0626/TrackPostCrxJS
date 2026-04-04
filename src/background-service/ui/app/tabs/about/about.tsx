@@ -73,7 +73,10 @@ export default function About() {
                     <ButtonLink href="https://github.com/psh0626/TrackPostExtZip/releases">
                         업데이트 노트 (v3.1.12 이후)
                     </ButtonLink>
-                    <ButtonLink color="textDisabled" href="https://github.com/psh0626/TrackPostExtZip/commits/main/">
+                    <ButtonLink
+                        color="textDisabled"
+                        href="https://github.com/psh0626/TrackPostExtZip/releases/tag/v3.1.12"
+                    >
                         업데이트 노트 (v3.1.11 이전)
                     </ButtonLink>
                 </Stack>
