@@ -94,3 +94,14 @@ export async function requestFetch() {
 
     return tabs;
 }
+
+export async function reloadAllServiceTabs() {
+    const tabs = await getAllServiceTabs(false);
+    const reloads = tabs
+        .map((tab) => {
+            if (!tab.id) return null;
+            return chrome.tabs.reload(tab.id);
+        })
+        .filter((p) => p !== null);
+    await Promise.all([...reloads]);
+}

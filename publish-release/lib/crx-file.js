@@ -29,7 +29,6 @@ export function createCrxAndUpdateManifest() {
     makeUpdateManifest({ appid: extensionId, version: packageJson.version, codebase: codebaseUrl }, updateManifestPath);
 }
 
-// make update manifest file
 export function makeUpdateManifest({ appid, version, codebase }, outPath) {
     const manifestRaw = [
         `<?xml version="1.0" encoding="UTF-8"?>`,

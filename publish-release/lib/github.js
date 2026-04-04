@@ -77,7 +77,34 @@ export function checkGhAuthAndPermissions(rootDir, publishDir) {
 
     logSuccess("GitHub repository permission checks passed.\n");
 }
+function isSlugVersionFiles() {
+    const disallowedTracked = exec(
+        "git",
+        ["diff", "--name-only", "HEAD", "--", ".", ":(exclude)manifest.json", ":(exclude)package.json"],
+        { cwd },
+    );
+    const disallowedUntracked = exec(
+        "git",
+        [
+            "ls-files",
+            "--others",
+            "--exclude-standard",
+            "--",
+            ".",
+            ":(exclude)manifest.json",
+            ":(exclude)package.json",
+        ],
+        { cwd },
+    );
 
+    const allowDirtyRootVersionFiles =
+        disallowedTracked.status === 0 &&
+        disallowedUntracked.status === 0 &&
+        !disallowedTracked.stdout.trim() &&
+        !disallowedUntracked.stdout.trim();
+
+    return allowDirtyRootVersionFiles;
+}
 export function checkReposClean(rootDir, publishDir) {
     logInfo("Checking that both repositories have no uncommitted changes.");
 
@@ -93,45 +120,14 @@ export function checkReposClean(rootDir, publishDir) {
         }
         const dirty = result.stdout.trim();
         if (dirty) {
-            if (name === "root") {
-                const disallowedTracked = exec(
-                    "git",
-                    [
-                        "diff",
-                        "--name-only",
-                        "HEAD",
-                        "--",
-                        ".",
-                        ":(exclude)manifest.json",
-                        ":(exclude)package.json",
-                    ],
-                    { cwd },
-                );
-                const disallowedUntracked = exec(
-                    "git",
-                    [
-                        "ls-files",
-                        "--others",
-                        "--exclude-standard",
-                        "--",
-                        ".",
-                        ":(exclude)manifest.json",
-                        ":(exclude)package.json",
-                    ],
-                    { cwd },
-                );
+            // if (name === "root") {
+            //     const allowDirtyRootVersionFiles = isSlugVersionFiles();
 
-                const allowDirtyRootVersionFiles =
-                    disallowedTracked.status === 0 &&
-                    disallowedUntracked.status === 0 &&
-                    !disallowedTracked.stdout.trim() &&
-                    !disallowedUntracked.stdout.trim();
-
-                if (allowDirtyRootVersionFiles) {
-                    logInfo("Root repository has only manifest.json/package.json changes; continuing.");
-                    continue;
-                }
-            }
+            //     if (allowDirtyRootVersionFiles) {
+            //         logInfo("Root repository has only manifest.json/package.json changes; continuing.");
+            //         continue;
+            //     }
+            // }
 
             console.error(
                 `${releasePrefix(ansi.red)} ${c(`Uncommitted changes in ${name} repository:`, ansi.bold, ansi.red)}`,

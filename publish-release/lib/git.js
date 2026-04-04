@@ -126,14 +126,14 @@ export function commitTagAndRelease({
     runChecked(
         "git",
         ["add", "."],
-        { cwd: publishDir, stdio: "inherit", encoding: "utf8" },
+        { cwd: publishDir, stdio: "pipe", encoding: "utf8" },
         "Failed to stage publish repo changes.",
     );
 
     runChecked(
         "git",
         ["commit", "-m", `release ${title}`, "-m", commitBody],
-        { cwd: publishDir, stdio: "inherit", encoding: "utf8" },
+        { cwd: publishDir, stdio: "pipe", encoding: "utf8" },
         "Failed to commit publish repo release changes.",
     );
 
@@ -143,14 +143,14 @@ export function commitTagAndRelease({
     runChecked(
         "git",
         ["tag", ...(force ? ["-f"] : []), tag],
-        { cwd: publishDir, stdio: "inherit", encoding: "utf8" },
+        { cwd: publishDir, stdio: "pipe", encoding: "utf8" },
         `Failed to ${force ? "update" : "create"} tag.`,
     );
 
     runChecked(
         "git",
         ["push", "origin", "main", ...(force ? ["--force"] : [])],
-        { cwd: publishDir, stdio: "inherit", encoding: "utf8" },
+        { cwd: publishDir, stdio: "pipe", encoding: "utf8" },
         "Failed to push publish repo main branch.",
     );
     if (rs) rs.publishMainPushed = true;
@@ -158,7 +158,7 @@ export function commitTagAndRelease({
     runChecked(
         "git",
         ["push", "origin", tag, ...(force ? ["--force"] : [])],
-        { cwd: publishDir, stdio: "inherit", encoding: "utf8" },
+        { cwd: publishDir, stdio: "pipe", encoding: "utf8" },
         "Failed to push release tag.",
     );
     if (rs) rs.tagPushed = true;
@@ -166,7 +166,7 @@ export function commitTagAndRelease({
     runChecked(
         "gh",
         ["release", "create", tag, ...assetPaths, "--title", title, "--notes-file", draftPath],
-        { cwd: publishDir, stdio: "inherit", encoding: "utf8" },
+        { cwd: publishDir, stdio: "pipe", encoding: "utf8" },
         "Failed to create release.",
     );
     if (rs) rs.releaseCreated = true;

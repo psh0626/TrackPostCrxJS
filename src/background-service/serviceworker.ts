@@ -1,4 +1,4 @@
-import { getAllServiceTabs, requestFetch } from "@/common/findTabs";
+import { reloadAllServiceTabs, requestFetch } from "@/common/findTabs";
 import { CMD, MSG } from "@/common/message-hub/Message";
 import processMessage from "@/common/message-hub/MessageHub";
 import { ms } from "@/common/TimespanExtension";
@@ -6,7 +6,8 @@ import { wait } from "@/common/utils";
 import { GcssItem, isGcssItem, WorkflowItem } from "../content-scripts/pending-replies/dataWrapper";
 import { ServiceTypes } from "../content-scripts/pending-replies/gcssReplies";
 import { GCSSMessage } from "../content-scripts/pending-replies/newGcssWrapper";
-import createNotification, { getStorageItems } from "./lib/notification";
+import createNotification, { clearAllNotifications, getStorageItems } from "./lib/notification";
+import NotificationItem from "./lib/NotificationItem";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
 void chrome.action.setBadgeBackgroundColor({ color: "#424242" });
@@ -33,7 +34,7 @@ async function main() {
         | string
         | undefined;
     if (lastVersion && lastVersion !== currentVersion) {
-        console.log(`Extension updated from version ${lastVersion} to ${currentVersion}.`);
+        console.log(`[Main] Extension updated from version ${lastVersion} to ${currentVersion}.`);
         await chrome.storage.local.set({ IMIC_EXTENSION_VERSION: currentVersion });
         await whenExtensionInstalled({ reason: "update", previousVersion: lastVersion, id: chrome.runtime.id });
     }
@@ -42,7 +43,7 @@ async function main() {
 
     setInterval(() => {
         updateExtension();
-    }, ms(60).toMinutes());
+    }, ms(3).toHours());
 
     let count = 0;
 
@@ -51,10 +52,7 @@ async function main() {
         void APICalls(++count);
     }, GLOBAL_INTERVAL);
 
-    console.log(
-        new Date().toLocaleTimeString() + " Global Timer has been started. Interval: ",
-        ms(GLOBAL_INTERVAL).toSecondsString(),
-    );
+    console.log("Global Timer has been started. Interval: ", ms(GLOBAL_INTERVAL).toSecondsString());
 
     const mailTabFunc = async () => {
         const [ext_mail_tab] = await chrome.tabs.query({
@@ -153,43 +151,42 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 });
 
 async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) {
-    console.log("[updateExtension] Extension installed/updated with details: ", details);
+    console.log("[whenExtensionInstalled] Extension installed/updated with details: ", {
+        currentVersion: currentVersion,
+        ...details,
+    });
     const openNewTab = (url: string) => chrome.tabs.create({ url: url, active: true });
     const waitTime = ms(5).toSeconds();
     switch (details.reason) {
         case "install":
         case "update":
-            const tabs = await getAllServiceTabs(false);
-            const reloads = tabs
-                .map((tab) => {
-                    if (!tab.id) return null;
-                    return chrome.tabs.reload(tab.id);
-                })
-                .filter((p) => p !== null);
-            const notifs = await chrome.notifications.getAll();
-            const clears = Object.keys(notifs).map((id) => {
-                return chrome.notifications.clear(id);
-            });
-            await Promise.all([...reloads, ...clears]);
+            await Promise.all([reloadAllServiceTabs(), clearAllNotifications()]);
             const openedWindows = await chrome.windows.getAll({ populate: true });
-            console.log("[updateExtension] Opened windows: ", openedWindows);
             if (openedWindows.length > 0) {
-                await chrome.notifications.create(details.reason.toUpperCase(), {
+                await new NotificationItem({
+                    notificationId: details.reason.toUpperCase(),
                     type: "basic",
                     iconUrl: "icon.png",
                     title: "IMIC TrackPost",
-                    message: `IMIC TrackPost 확장 프로그램이 ${details.reason === "install" ? "설치" : "업데이트"}되었습니다. 5초 뒤 안내 페이지가 열립니다!`,
-                });
+                    message: `확장 프로그램이 ${details.reason === "install" ? "설치" : "업데이트"} 되었습니다.`,
+                }).show();
             }
             break;
     }
     if (details.reason === "install") {
-        console.log("[updateExtension] Extension installed with version", chrome.runtime.getVersion());
+        console.log("[whenExtensionInstalled] Extension installed with version", chrome.runtime.getVersion());
         await wait(waitTime);
-        await openNewTab("https://github.com/psh0626/TrackPostExtZip/");
-    } else if (details.reason === "update") {
+        const tab = await openNewTab("https://github.com/psh0626/TrackPostExtZip/");
+        await chrome.scripting.executeScript({
+            target: { tabId: tab.id! },
+            world: "MAIN",
+            func: () => {
+                document.querySelector("div[itemtype*='abstract']")?.scrollIntoView({ behavior: "smooth" });
+            },
+        });
+    } else if (details.reason === "update" && details.previousVersion !== currentVersion) {
         console.log(
-            "[updateExtension] Extension updated to version from",
+            "[whenExtensionInstalled] Extension updated to version from",
             details.previousVersion,
             "to",
             chrome.runtime.getVersion(),

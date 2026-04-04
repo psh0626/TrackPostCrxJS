@@ -5,6 +5,7 @@ import { die } from "./lib/errors.js";
 import { ensureUtf8NoBom, prompt, readJsonFile, updateVersionInFile } from "./lib/files.js";
 import { ansi, c } from "./lib/log.js";
 import { isValidVersion } from "./lib/notes.js";
+import { exec } from "./lib/process.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const workspaceDir = join(__dirname, "..");
@@ -59,6 +60,8 @@ async function main() {
         updateVersionInFile(packagePath, currentVersion);
         updateVersionInFile(manifestPath, currentVersion);
         logBuildSuccess(`Updated version to ${currentVersion} in package.json and manifest.json`);
+        exec("git", ["add", "."], { cwd: workspaceDir, stdio: "pipe" });
+        exec("git", ["commit", "-m", `Update version to ${currentVersion}`], { cwd: workspaceDir, stdio: "pipe" });
     }
 
     logBuildDetail("selectedVersion", currentVersion);

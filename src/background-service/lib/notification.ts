@@ -8,6 +8,7 @@ import {
     isGCSSMessage,
     isGCSSNotification,
 } from "@/content-scripts/pending-replies/newGcssWrapper";
+import NotificationItem from "./NotificationItem";
 async function whenNotificationClicked() {
     const tab = await chrome.tabs.getCurrent();
     console.log(`[whenNotificationClicked] Current tab: `, tab);
@@ -24,85 +25,6 @@ chrome.notifications.onClicked.addListener(() => {
 chrome.notifications.onButtonClicked.addListener(() => {
     whenNotificationClicked();
 });
-async function checkFetchError() {
-    type FetchError = {
-        ICARE: boolean;
-        GCSS: boolean;
-    };
-    const err: FetchError | undefined = (await chrome.storage.session.get("FETCH_ERROR")).FETCH_ERROR as FetchError;
-    if (!err) return false;
-    if (err.GCSS || err.ICARE) {
-        return err;
-    }
-    return false;
-}
-
-interface StorageItem {
-    key: string;
-    items: WorkflowItem[] | GcssItem[];
-    setting: boolean;
-}
-
-export async function getStorageItems<T>(key: string): Promise<T[]> {
-    const dict = await chrome.storage.session.get(key);
-    return (dict[key] as T[]) || [];
-}
-async function gatherStorageItems(items: StorageItem[]): Promise<(WorkflowItem | GcssItem | GCSSMessage)[]> {
-    const results: (WorkflowItem | GcssItem | GCSSMessage)[] = [];
-
-    for (const item of items) {
-        if (!item.setting) continue;
-        const storedItems = await getStorageItems<WorkflowItem | GcssItem | GCSSWorkflow | GCSSNotification>(item.key);
-        if (Array.isArray(storedItems)) {
-            results.push(...storedItems);
-        }
-    }
-
-    return results;
-}
-
-function mapToNotificationItem(item: WorkflowItem | GcssItem | GCSSMessage): chrome.notifications.NotificationItem {
-    const isOutbound = (isWorkflowItem(item) ? item.trackingId : item.itemId).slice(-2) === "KR";
-
-    if (isGcssItem(item)) {
-        // Old GCSS format
-        const thisItem = new GcssItem(item);
-        if (thisItem.messageType === "NQ") {
-            return {
-                title: `GCSS NQ ${isOutbound ? "발송" : "도착"}`,
-                message: `${thisItem.itemId} ${isOutbound ? "(" + thisItem.originCountry + ")" : ""}`,
-            };
-        }
-        return {
-            title: `GCSS ${thisItem.workflowLevel} ${isOutbound ? "발송" : "도착"}`,
-            message: `${thisItem.itemId} ${isOutbound ? "(" + thisItem.destinationCountry + ")" : ""}`,
-        };
-    } else if (isGCSSMessage(item)) {
-        // New GCSS format
-        if (isGCSSNotification(item)) {
-            return {
-                title: `N-GCSS NQ ${isOutbound ? "발송" : "도착"}`,
-                message: `${item.itemId} ${isOutbound ? "(" + item.sendingCountry + ")" : ""}`,
-            };
-        }
-        return {
-            title: `N-GCSS ${item.inquiryType} ${isOutbound ? "발송" : "도착"}`,
-            message: `${item.itemId} ${isOutbound ? "(" + item.sendingCountry + ")" : ""}`,
-        };
-    } else {
-        // iCare format
-        if (item.isNotification) {
-            return {
-                title: `iCare NQ ${isOutbound ? "발송" : "도착"}`,
-                message: `${item.trackingId} ${isOutbound ? "(" + item.requestingOperator.substring(0, 2) + ")" : ""}`,
-            };
-        }
-        return {
-            title: `iCare L${item.currentLevel} ${isOutbound ? "발송" : "도착"}`,
-            message: `${item.trackingId} ${isOutbound ? "(" + item.replyingOperator.substring(0, 2) + ")" : ""}`,
-        };
-    }
-}
 
 export default async function createNotification(force_update = false) {
     const settings = new IMICSettings();
@@ -183,7 +105,8 @@ export default async function createNotification(force_update = false) {
     // Create notification
     const err_msg = fetch_error ? (fetch_error.GCSS ? "(GCSS 에러)\n" : "(i-Care 에러)\n") : "";
 
-    const options: chrome.notifications.NotificationCreateOptions = {
+    const newItem = new NotificationItem({
+        notificationId: String(CMD.ICARE_UNREAD_REPLIES),
         type: "list",
         priority: 2,
         requireInteraction: true,
@@ -193,17 +116,99 @@ export default async function createNotification(force_update = false) {
         contextMessage: `GCSS/Icare unread replies: ${current_num}`,
         items: combined,
         buttons: [{ title: "확인" }],
-    };
+    });
 
-    if (!force_update) {
-        void chrome.notifications.create(String(CMD.ICARE_UNREAD_REPLIES), options);
-        return;
+    if (force_update) {
+        await clearAllNotifications();
+    }
+    await newItem.show();
+
+    return true;
+}
+
+async function checkFetchError() {
+    type FetchError = {
+        ICARE: boolean;
+        GCSS: boolean;
+    };
+    const err: FetchError | undefined = (await chrome.storage.session.get("FETCH_ERROR")).FETCH_ERROR as FetchError;
+    if (!err) return false;
+    if (err.GCSS || err.ICARE) {
+        return err;
+    }
+    return false;
+}
+
+interface StorageItem {
+    key: string;
+    items: WorkflowItem[] | GcssItem[];
+    setting: boolean;
+}
+
+export async function getStorageItems<T>(key: string): Promise<T[]> {
+    const dict = await chrome.storage.session.get(key);
+    return (dict[key] as T[]) || [];
+}
+async function gatherStorageItems(items: StorageItem[]): Promise<(WorkflowItem | GcssItem | GCSSMessage)[]> {
+    const results: (WorkflowItem | GcssItem | GCSSMessage)[] = [];
+
+    for (const item of items) {
+        if (!item.setting) continue;
+        const storedItems = await getStorageItems<WorkflowItem | GcssItem | GCSSWorkflow | GCSSNotification>(item.key);
+        if (Array.isArray(storedItems)) {
+            results.push(...storedItems);
+        }
     }
 
-    chrome.notifications.clear(String(CMD.ICARE_UNREAD_REPLIES), () => {
-        // ensure we call the overload that accepts (notificationId: string, options: NotificationCreateOptions)
-        // and satisfy TypeScript by asserting the options shape
-        void chrome.notifications.create(String(CMD.ICARE_UNREAD_REPLIES), options);
+    return results;
+}
+
+function mapToNotificationItem(item: WorkflowItem | GcssItem | GCSSMessage): chrome.notifications.NotificationItem {
+    const isOutbound = (isWorkflowItem(item) ? item.trackingId : item.itemId).slice(-2) === "KR";
+
+    if (isGcssItem(item)) {
+        // Old GCSS format
+        const thisItem = new GcssItem(item);
+        if (thisItem.messageType === "NQ") {
+            return {
+                title: `GCSS NQ ${isOutbound ? "발송" : "도착"}`,
+                message: `${thisItem.itemId} ${isOutbound ? "(" + thisItem.originCountry + ")" : ""}`,
+            };
+        }
+        return {
+            title: `GCSS ${thisItem.workflowLevel} ${isOutbound ? "발송" : "도착"}`,
+            message: `${thisItem.itemId} ${isOutbound ? "(" + thisItem.destinationCountry + ")" : ""}`,
+        };
+    } else if (isGCSSMessage(item)) {
+        // New GCSS format
+        if (isGCSSNotification(item)) {
+            return {
+                title: `N-GCSS NQ ${isOutbound ? "발송" : "도착"}`,
+                message: `${item.itemId} ${isOutbound ? "(" + item.sendingCountry + ")" : ""}`,
+            };
+        }
+        return {
+            title: `N-GCSS ${item.inquiryType} ${isOutbound ? "발송" : "도착"}`,
+            message: `${item.itemId} ${isOutbound ? "(" + item.sendingCountry + ")" : ""}`,
+        };
+    } else {
+        // iCare format
+        if (item.isNotification) {
+            return {
+                title: `iCare NQ ${isOutbound ? "발송" : "도착"}`,
+                message: `${item.trackingId} ${isOutbound ? "(" + item.requestingOperator.substring(0, 2) + ")" : ""}`,
+            };
+        }
+        return {
+            title: `iCare L${item.currentLevel} ${isOutbound ? "발송" : "도착"}`,
+            message: `${item.trackingId} ${isOutbound ? "(" + item.replyingOperator.substring(0, 2) + ")" : ""}`,
+        };
+    }
+}
+export async function clearAllNotifications() {
+    const notifs = await chrome.notifications.getAll();
+    const clears = Object.keys(notifs).map((id) => {
+        return chrome.notifications.clear(id);
     });
-    return true;
+    await Promise.all(clears);
 }

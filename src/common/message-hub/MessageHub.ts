@@ -9,7 +9,7 @@ export default function processMessage(
 ) {
     console.log(
         "[MessageHub] message received from sender: ",
-        new URL(sender.tab?.url || "")?.host,
+        new URL(sender?.tab?.url || "")?.host,
         "\ncontent: ",
         Message,
     );
