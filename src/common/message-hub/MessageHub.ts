@@ -1,5 +1,7 @@
 import { PostAPI } from "@/common/PostUtil";
 import createNotification from "../../background-service/lib/notification";
+import { IMICSettings } from "../IMICSettings";
+import StorageKey from "../StorageKey";
 import { CMD, MSG } from "./Message";
 
 export default function processMessage(
@@ -33,31 +35,29 @@ export default function processMessage(
         case CMD.GCSS_UNREAD_REPLIES:
         case CMD.NEW_GCSS_UNREAD_REQUESTS:
         case CMD.NEW_GCSS_UNREAD_REPLIES:
+            const fetchErrorKey = new StorageKey("FETCH_ERROR");
             if (["?ICARE", "?GCSS"].includes(Message.Param)) {
                 void (async () => {
                     const err_msg = Message.Param.replace("?", "") as keyof FetchError;
                     const which_one: FetchError = { ICARE: false, GCSS: false };
                     which_one[err_msg] = true;
                     console.log("Unable to fetch/communicate data from", which_one);
-                    await chrome.storage.session.set({ FETCH_ERROR: which_one });
+                    await fetchErrorKey.fromSession.set(which_one);
                     await chrome.action.setBadgeText({ text: "?" });
                 })();
                 return;
             }
             void (async () => {
-                const err: FetchError | undefined = (await chrome.storage.session.get("FETCH_ERROR"))
-                    .FETCH_ERROR as FetchError;
+                const err = await fetchErrorKey.fromSession.get<FetchError>();
 
                 if (Message.Command === CMD.ICARE_UNREAD_REPLIES || Message.Command === CMD.ICARE_UNREAD_REQUESTS) {
                     if (err) err.ICARE = false;
-                    await chrome.storage.session.set({ FETCH_ERROR: err });
+                    await fetchErrorKey.fromSession.set(err);
                 } else {
                     if (err) err.GCSS = false;
-                    await chrome.storage.session.set({ FETCH_ERROR: err });
+                    await fetchErrorKey.fromSession.set(err);
                 }
-                const session_store: { [key: string]: any[] } = {};
-                session_store[Message.Command] = Message.Param;
-                await chrome.storage.session.set(session_store);
+                await new StorageKey(Message.Command).fromSession.set(Message.Param);
                 await createNotification();
             })();
             return;
@@ -69,52 +69,36 @@ export default function processMessage(
         case CMD.ICARE_UNREAD_NOTIF_INBOUND:
         case CMD.ICARE_UNREAD_NOTIF_OUTBOUND:
             void (async () => {
-                const session_store: { [key: string]: any[] } = {};
-                session_store[Message.Command] = Message.Param;
-                await chrome.storage.session.set(session_store);
+                await new StorageKey(Message.Command).fromSession.set(Message.Param);
                 await createNotification(false);
             })();
             return;
 
         case CMD.SAVE_ICARE_USER_ID:
-            void chrome.storage.sync.set({ IcareUserId: Message.Param }).then(() => {
+            new StorageKey("IcareUserId").fromSession.set(Message.Param).then(() => {
                 console.log("Icare User ID Saved: ", { IcareUserId: Message.Param });
             });
             return;
         case CMD.LOAD_ICARE_USER_ID:
             void (async () => {
-                const dict = await chrome.storage.sync.get("IcareUserId");
-                console.log("sending response for user id: ", dict.IcareUserId);
-                SendResponse(dict.IcareUserId);
+                const dict = await new StorageKey("IcareUserId").fromSession.get<string>();
+                console.log("sending response for user id: ", dict);
+                SendResponse(dict);
             })();
             return true;
 
         case CMD.SAVE_OPTIONS:
             void (async () => {
-                await chrome.storage.local.set({ IMICSettings: Message.Param });
+                await new StorageKey("IMICSettings").fromLocal.set(Message.Param);
             })();
             return false;
         case CMD.LOAD_OPTIONS:
             void (async () => {
-                const dict = await chrome.storage.local.get("IMICSettings");
-                console.log("sending response for IMIC Settings: ", dict.IMICSettings);
-                SendResponse(dict.IMICSettings);
+                const dict = await new StorageKey("IMICSettings").fromLocal.get<IMICSettings>();
+                console.log("sending response for IMIC Settings: ", dict);
+                SendResponse(dict);
             })();
             return true;
-        case CMD.KMMBOX_REFRESH:
-            chrome.scripting.executeScript({
-                injectImmediately: true,
-                target: { tabId: sender.tab!.id! },
-                world: "MAIN",
-                func: (folderId: string, unreadCount: number, lastCount: number) => {
-                    if (unreadCount !== lastCount) {
-                        (window as any).FolderTreePanel.getNodeById(folderId).ui.updateMsgNum(unreadCount);
-                        if (unreadCount !== 0) (window as any).Handler.mailListGroupStore.reload();
-                    }
-                },
-                args: [Message.Param.fId, Message.Param.count, Message.Param.lastCount],
-            });
-            return false;
         // case CMD.NEW_GCSS_MONITOR_PREFILL_REQUEST:
         //     const prefillMonitor = (details: chrome.webRequest.OnCompletedDetails) => {
         //         console.log("Prefill monitor triggered for: ", details.url);

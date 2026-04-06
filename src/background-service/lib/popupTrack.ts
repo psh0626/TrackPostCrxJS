@@ -1,3 +1,5 @@
+import StorageKey from "@/common/StorageKey";
+
 export default class PopupTrack {
     ItemId: string = "";
     IsTracked: boolean = false;
@@ -13,6 +15,6 @@ export default class PopupTrack {
         this.saveSession();
     }
     private saveSession() {
-        return chrome.storage.session.set({ PopupTrack: this });
+        return new StorageKey("POPUP_TRACK").fromSession.set(this);
     }
 }

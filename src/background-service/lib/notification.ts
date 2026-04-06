@@ -9,6 +9,7 @@ import {
     isGCSSNotification,
 } from "@/content-scripts/pending-replies/newGcssWrapper";
 import NotificationItem from "./NotificationItem";
+import StorageKey from "@/common/StorageKey";
 async function whenNotificationClicked(notificationId: string) {
     console.log("[whenNotificationClicked] Notification clicked: ", notificationId);
     switch (notificationId) {
@@ -146,7 +147,7 @@ async function checkFetchError() {
         ICARE: boolean;
         GCSS: boolean;
     };
-    const err: FetchError | undefined = (await chrome.storage.session.get("FETCH_ERROR")).FETCH_ERROR as FetchError;
+    const err = await new StorageKey("FETCH_ERROR").fromSession.get<FetchError>();
     if (!err) return false;
     if (err.GCSS || err.ICARE) {
         return err;
@@ -161,8 +162,7 @@ interface StorageItem {
 }
 
 export async function getStorageItems<T>(key: string): Promise<T[]> {
-    const dict = await chrome.storage.session.get(key);
-    return (dict[key] as T[]) || [];
+    return await new StorageKey(key).fromSession.get<T[]>() || [];
 }
 async function gatherStorageItems(items: StorageItem[]): Promise<(WorkflowItem | GcssItem | GCSSMessage)[]> {
     const results: (WorkflowItem | GcssItem | GCSSMessage)[] = [];

@@ -1,9 +1,7 @@
-import { MSG, CMD } from "@/common/message-hub/Message";
 import { ms } from "@/common/TimespanExtension";
 import "./serviceAwakener";
 
 void (() => {
-    let isFetching = false;
     const originalTitle = document.title;
 
     let folderId = getFolderId();
@@ -19,12 +17,10 @@ void (() => {
 
     updateTitle(elmCount);
 
-    setLazyInterval(() => {
-        (async () => {
-            const unreadCount = await getUnreadCountByFetch();
-            updateTitle(unreadCount);
-            console.log("[LazyInterval] item fetched", document.title);
-        })();
+    setLazyInterval(async () => {
+        const unreadCount = await getUnreadCountByFetch();
+        updateTitle(unreadCount);
+        console.log("[LazyInterval] item fetched", document.title);
     }, ms(3).toMinutes());
 
     function setLazyInterval(callback: () => void, delay: number, immediate: boolean = false) {
@@ -98,12 +94,13 @@ void (() => {
         }
         return id;
     }
-    function executeWindowScript(folderId: string, count: number) {
-        new MSG(CMD.KMMBOX_REFRESH, {
-            fId: folderId,
-            count: count,
-            lastCount: getCurrentNumber(),
-        }).fromContent.toService();
+    function updateMsgCount(folderId: string, count: number) {
+        const lastCount = getCurrentNumber();
+
+        if (count !== lastCount) {
+            (window as any).FolderTreePanel.getNodeById(folderId).ui.updateMsgNum(lastCount);
+            (window as any).Handler.mailListGroupStore.reload();
+        }
     }
     function refreshUI(count: number) {
         if (count === 0) {
@@ -116,16 +113,14 @@ void (() => {
             }
             document.getElementById("r3-maill-unseen-cnt")!.innerHTML = count.toString();
         }
-        executeWindowScript(folderId!, count);
+        updateMsgCount(folderId!, count);
     }
     async function getUnreadCountByFetch() {
-        isFetching = true;
         try {
             const fetch = await fetchInbox();
 
             if (!fetch) {
                 console.log("Fetch failed");
-                isFetching = false;
                 return 0;
             }
 
@@ -133,8 +128,9 @@ void (() => {
 
             console.log("Fetched unread count: ", unreadCount);
             return unreadCount;
-        } finally {
-            isFetching = false;
+        } catch (err) {
+            console.log("Error fetching unread count: ", err);
+            return 0;
         }
     }
     async function fetchInbox() {
@@ -171,24 +167,6 @@ void (() => {
         return result as inboxFetchResult;
     }
 
-    async function wait(ms: number) {
-        return new Promise((resolve) => setTimeout(resolve, ms));
-    }
-
-    chrome.runtime.onMessage.addListener((message: MSG) => {
-        if (message.Command === CMD.WEB_REQUEST_COMPLETE) {
-            if (isFetching) {
-                console.log("Request already in progress, ignoring message");
-                return;
-            }
-            (async () => {
-                await wait(800);
-                const unreadCount = getUnreadCountByElement2();
-                updateTitle(unreadCount);
-                console.log("Message Received. Title updated to: ", document.title);
-            })();
-        }
-    });
     interface mailUnit {
         folderUid: number;
         mailUid: number;

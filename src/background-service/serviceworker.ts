@@ -8,6 +8,7 @@ import { ServiceTypes } from "../content-scripts/pending-replies/gcssReplies";
 import { GCSSMessage } from "../content-scripts/pending-replies/newGcssWrapper";
 import createNotification, { clearAllNotifications, getStorageItems } from "./lib/notification";
 import NotificationItem from "./lib/NotificationItem";
+import StorageKey from "@/common/StorageKey";
 
 //chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
 void chrome.action.setBadgeBackgroundColor({ color: "#424242" });
@@ -23,22 +24,11 @@ const GLOBAL_INTERVAL = ms(30).toSeconds();
 const UPDATE_CHECK_TICK = 6; // Every 3 minutes (6 * 30 seconds)
 const MAXIMUM_TICK = 120;
 
-const MAIL_TAB_INTERVAL = ms(20).toMinutes();
-
 let currentVersion = chrome.runtime.getVersion();
 
 main();
 
 async function main() {
-    const lastVersion = (await chrome.storage.local.get("IMIC_EXTENSION_VERSION"))?.IMIC_EXTENSION_VERSION as
-        | string
-        | undefined;
-    if (lastVersion && lastVersion !== currentVersion) {
-        console.log(`[Main] Extension updated from version ${lastVersion} to ${currentVersion}.`);
-        await chrome.storage.local.set({ IMIC_EXTENSION_VERSION: currentVersion });
-        await whenExtensionInstalled({ reason: "update", previousVersion: lastVersion, id: chrome.runtime.id });
-    }
-
     await updateExtension();
 
     setInterval(() => {
@@ -53,29 +43,6 @@ async function main() {
     }, GLOBAL_INTERVAL);
 
     console.log("Global Timer has been started. Interval: ", ms(GLOBAL_INTERVAL).toSecondsString());
-
-    const mailTabFunc = async () => {
-        const [ext_mail_tab] = await chrome.tabs.query({
-            url: "https://kmmbox.korea.kr/mail/*",
-            active: false,
-        });
-        if (ext_mail_tab) {
-            chrome.tabs.reload(ext_mail_tab.id!);
-            console.log("[Interval] Mail tab has been reloaded.", ext_mail_tab);
-            return;
-        }
-        console.log("[Interval] Inactive mail tab has not been found.");
-    };
-
-    void mailTabFunc();
-
-    setInterval(() => {
-        void mailTabFunc();
-    }, MAIL_TAB_INTERVAL);
-    console.log(
-        new Date().toLocaleTimeString() + " Mail tab reloading timer has been started. Interval: ",
-        ms(MAIL_TAB_INTERVAL).toMinutesString(),
-    );
 }
 async function APICalls(count: number, final = false) {
     console.log(`[APICalls] Ticking Global Timer: `, count, " times");
@@ -127,7 +94,6 @@ export async function updateExtension() {
     switch (updateStatus.status) {
         case "update_available":
             console.log("[updateExtension] An update is available. Reloading to update...");
-            await chrome.storage.local.set({ IMIC_EXTENSION_VERSION: currentVersion });
             chrome.runtime.reload();
             break;
         case "no_update":
@@ -141,7 +107,6 @@ export async function updateExtension() {
 
 chrome.runtime.onUpdateAvailable.addListener(async ({ version }) => {
     console.log(`[onUpdateAvailable] A new version (${version}) of the extension is available. Reloading to update...`);
-    await chrome.storage.local.set({ IMIC_EXTENSION_VERSION: currentVersion });
     chrome.runtime.reload();
 });
 
@@ -156,19 +121,17 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
     const openedWindows = await chrome.windows.getAll({ populate: true });
 
     if (openedWindows.length === 0 || ["chrome_update", "shared_module_update"].includes(details.reason)) {
+        const key = new StorageKey("IMIC_EXTENSION_UPDATE_LOG");
         const logMessage = `[whenExtensionInstalled] Extension installed/updated with details: ${JSON.stringify(newDetails)}`;
-        const currentLog = (await chrome.storage.local.get("IMIC_EXTENSION_UPDATE_LOG"))?.IMIC_EXTENSION_UPDATE_LOG as
-            | string
-            | undefined;
+        const currentLog = await key.fromLocal.get<string>();
         const updatedLog = currentLog ? `${currentLog}\n${logMessage}` : logMessage;
-        await chrome.storage.local.set({ IMIC_EXTENSION_UPDATE_LOG: updatedLog });
+        await key.fromLocal.set(updatedLog);
         console.log(logMessage);
         return;
     }
 
-    const previousVersion = await chrome.storage.local
-        .get("IMIC_EXTENSION_VERSION")
-        .then((res) => res.IMIC_EXTENSION_VERSION as string | undefined);
+    const versionKey = new StorageKey("IMIC_EXTENSION_VERSION");
+    const previousVersion = (await versionKey.fromLocal.get<string>()) || "";
     console.log(
         `[whenExtensionInstalled] Previous version in storage: ${previousVersion}, Current version: ${currentVersion}`,
     );
@@ -189,7 +152,7 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
     if (details.reason === "install") {
         console.log("[whenExtensionInstalled] Extension installed with version", currentVersion);
         await showNotificationAndOpenTab("https://github.com/psh0626/TrackPostExtZip/");
-    } else if ((previousVersion ?? details.previousVersion) !== currentVersion) {
+    } else if (previousVersion !== currentVersion) {
         console.log(
             "[whenExtensionInstalled] Extension updated to version from",
             previousVersion,
@@ -197,45 +160,10 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
             currentVersion,
         );
         await showNotificationAndOpenTab("https://github.com/psh0626/TrackPostExtZip/releases");
+        await versionKey.fromLocal.set(currentVersion);
     }
 }
 
-let isTime = true;
-chrome.webRequest.onCompleted.addListener(
-    (details) => {
-        if (
-            details.url.includes("https://kmmbox.korea.kr/history/maillist/") ||
-            details.url.includes("https://kmmbox.korea.kr/mail24read/") ||
-            details.url.includes("https://kmmbox.korea.kr/mail/list/mailbox.json") ||
-            details.url.includes("https://kmmbox.korea.kr/mail/manage/seen.json")
-        ) {
-            if (!isTime) {
-                console.log("API " + details.method + " request completed: ", details.url);
-                console.log("Cooltime is not yet reached.");
-                return;
-            }
-
-            console.log("API " + details.method + " request completed: ", details.url);
-            void (async () => {
-                const mailTabs = await chrome.tabs.query({ url: "https://kmmbox.korea.kr/*" });
-                if (!mailTabs) {
-                    console.log("No mail tabs found.");
-                    return;
-                }
-                mailTabs.forEach((tab) => {
-                    new MSG(CMD.WEB_REQUEST_COMPLETE).fromService.toTab(tab);
-                    console.log("Message Sent to content script in: ", tab);
-                });
-                isTime = false;
-                setTimeout(() => {
-                    isTime = true;
-                    console.log("Cooltime is over. Messages can be sent to content script now.");
-                }, ms("1").toSeconds());
-            })();
-        }
-    },
-    { urls: ["https://kmmbox.korea.kr/*"] },
-);
 chrome.webRequest.onCompleted.addListener(
     async function (details) {
         if (details.statusCode === 200) {

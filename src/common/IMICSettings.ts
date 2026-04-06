@@ -1,6 +1,7 @@
 import { ServiceTypes } from "../content-scripts/pending-replies/gcssReplies";
 import { requestFetch } from "./findTabs";
 import { CMD, MSG } from "./message-hub/Message";
+import StorageKey from "./StorageKey";
 
 export class PersonalRemark {
     Section: string;
@@ -44,7 +45,7 @@ export class IMICSettings {
     }
     async saveOptions(immediately: boolean = true) {
         const saveFunc = async () => {
-            await chrome.storage.local.set({ IMICSettings: this });
+            await new StorageKey("IMICSettings").fromLocal.set(this);
             console.log("Options Saved as ", this);
             if (IMICSettings.SavingFinished) clearTimeout(IMICSettings.SavingFinished);
             IMICSettings.SavingFinished = setTimeout(this.notifyTabs, 4000);
@@ -59,8 +60,8 @@ export class IMICSettings {
         }, 2000);
     }
     async loadOptions() {
-        const newThis = await chrome.storage.local.get("IMICSettings");
-        Object.assign(this, newThis.IMICSettings);
+        const newThis = await new StorageKey("IMICSettings").fromLocal.get<IMICSettings>();
+        Object.assign(this, newThis);
         console.log("Options loaded this: ", this);
     }
 

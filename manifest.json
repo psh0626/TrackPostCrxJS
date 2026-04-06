@@ -81,6 +81,7 @@
         },
         {
             "matches": ["https://kmmbox.korea.kr/*"],
+            "world": "MAIN",
             "js": ["src/content-scripts/kmmboxScript.ts"]
         },
         {

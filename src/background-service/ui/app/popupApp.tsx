@@ -11,6 +11,7 @@ import { GCSSNotification, GCSSWorkflow } from "../../../content-scripts/pending
 import PopupTrack from "../../lib/popupTrack";
 import StyledTextField from "./components/styledTextField";
 import { WorkflowList } from "./popup/workflowList";
+import StorageKey from "@/common/StorageKey";
 
 class iCareState {
     replyItems: WorkflowItem[] = [];
@@ -31,13 +32,13 @@ class NewGcssState {
     notifOutItems: GCSSNotification[] = [];
 }
 async function loadSessionData<T>(key: CMD): Promise<T[]> {
-    const data = await chrome.storage.session.get(key).then((result) => result[key]);
+    const data = await new StorageKey(key).fromSession.get<T[]>();
     if (!data) {
         console.log(`No data found in session storage for key: ${key}`);
     } else {
         console.log(`Data loaded from session storage for key: ${key}`, data);
     }
-    return (data ?? []) as T[];
+    return data ?? [];
 }
 function PopUpApp() {
     const [inputState, setInputState] = useState({

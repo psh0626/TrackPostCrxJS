@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import PopupTrack from "../../lib/popupTrack";
 import StyledTextField from "./components/styledTextField";
 import InfoTextField from "./side-panel/infoTextField";
+import StorageKey from "@/common/StorageKey";
 
 function SidePanelApp() {
     // State for PostElement
@@ -46,8 +47,7 @@ function SidePanelApp() {
     };
 
     const getPopupState = async () => {
-        const dict = await chrome.storage.session.get("PopupTrack");
-        const popup = dict.PopupTrack as PopupTrack | undefined;
+        const popup = await new StorageKey("POPUP_TRACK").fromSession.get<PopupTrack>();
         console.log("response received: ", popup);
         return popup;
     };
