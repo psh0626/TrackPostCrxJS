@@ -50,31 +50,31 @@ void (() => {
             ?.querySelector("li.badge-m");
         if (!unreadElm) {
             console.log("Unread element (tr.x-tree-action-id-1) not found");
-            return getUnreadCountByElement();
+            return 0;
         }
 
         const unreadCount = parseInt(unreadElm.innerText || "0");
         if (isNaN(unreadCount)) {
             console.log("Unread count is NaN", unreadCount);
-            return getUnreadCountByElement();
+            return 0;
         }
 
         return unreadCount;
     }
-    function getUnreadCountByElement() {
-        const unreadElm: HTMLLIElement | null = document.querySelector("li#r3-maill-unseen-cnt");
-        if (!unreadElm) {
-            console.log("Unread element (li#r3-maill-unseen-cnt) not found");
-            return 0;
-        }
+    // function getUnreadCountByElement() {
+    //     const unreadElm: HTMLLIElement | null = document.querySelector("li#r3-maill-unseen-cnt");
+    //     if (!unreadElm) {
+    //         console.log("Unread element (li#r3-maill-unseen-cnt) not found");
+    //         return 0;
+    //     }
 
-        const unreadCount = unreadElm.innerText === "" ? 0 : parseInt(unreadElm.innerText);
-        if (isNaN(unreadCount)) {
-            console.log("Unread count is NaN", unreadCount);
-            return 0;
-        }
-        return unreadCount;
-    }
+    //     const unreadCount = unreadElm.innerText === "" ? 0 : parseInt(unreadElm.innerText);
+    //     if (isNaN(unreadCount)) {
+    //         console.log("Unread count is NaN", unreadCount);
+    //         return 0;
+    //     }
+    //     return unreadCount;
+    // }
     function updateTitle(unreadCount: number) {
         refreshUI(unreadCount);
         if (unreadCount === 0) {
