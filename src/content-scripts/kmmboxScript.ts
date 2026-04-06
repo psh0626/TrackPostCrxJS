@@ -13,8 +13,12 @@ void (() => {
     }
 
     const elmCount = getUnreadCountByElement2();
-
     updateTitle(elmCount);
+
+    setLazyInterval(async () => {
+        const elmCount = getUnreadCountByElement2();
+        updateTitle(elmCount);
+    }, ms(3).toSeconds());
 
     setLazyInterval(async () => {
         const unreadCount = await getUnreadCountByFetch();
