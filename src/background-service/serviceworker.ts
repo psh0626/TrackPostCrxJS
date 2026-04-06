@@ -155,10 +155,11 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
 
     const waitTime = ms(3).toSeconds();
     const openNewTab = (url: string) => chrome.tabs.create({ url: url, active: true });
-    const showNotificationAndOpenTab = async (url: string) => {
+    const showNotificationAndOpenTab = async (url: string, reason: string) => {
+        const versionText = reason === "install" ? `v${currentVersion}` : `v${previousVersion} → v${currentVersion}`;
         await new NotificationItem({
-            title: `IMIC TrackPost v${currentVersion}`,
-            message: `확장 프로그램이 ${details.reason === "install" ? "설치" : "업데이트"} 되었습니다.`,
+            title: `IMIC TrackPost ${versionText}`,
+            message: `확장 프로그램이 ${reason === "install" ? "설치" : "업데이트"} 되었습니다.`,
         }).show();
         await wait(waitTime);
         await openNewTab(url);
@@ -168,10 +169,10 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
 
     if (details.reason === "install") {
         console.log("[whenExtensionInstalled] Extension installed with version", currentVersion);
-        await showNotificationAndOpenTab("https://github.com/psh0626/TrackPostExtZip/");
+        await showNotificationAndOpenTab("https://github.com/psh0626/TrackPostExtZip/", "install");
     } else if (previousVersion !== currentVersion) {
         console.log("[whenExtensionInstalled] Extension updated from", previousVersion, "to", currentVersion);
-        await showNotificationAndOpenTab("https://github.com/psh0626/TrackPostExtZip/releases");
+        await showNotificationAndOpenTab("https://github.com/psh0626/TrackPostExtZip/releases", "update");
         await versionKey.fromLocal.set(currentVersion);
     }
 }
