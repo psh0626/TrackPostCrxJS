@@ -61,11 +61,12 @@ async function main() {
     if (newVersion === currentVersion) {
         logBuildWarning(`${c("Version unchanged.", ansi.bold, ansi.yellow)}`);
     } else {
+        const oldVersion = currentVersion;
         currentVersion = newVersion;
         updateVersionInFile(packagePath, currentVersion);
         updateVersionInFile(manifestPath, currentVersion);
         logBuildSuccess(
-            `Updated version from ${c(currentVersion, ansi.bold, ansi.white)} to ${c(currentVersion, ansi.bold, ansi.blue)} in package.json and manifest.json`,
+            `Updated version from ${c(oldVersion, ansi.bold, ansi.white)} to ${c(currentVersion, ansi.bold, ansi.blue)} in package.json and manifest.json`,
         );
         exec("git", ["add", "."], { cwd: workspaceDir, stdio: "pipe" });
         exec("git", ["commit", "-m", `Update version to ${currentVersion}`], { cwd: workspaceDir, stdio: "pipe" });

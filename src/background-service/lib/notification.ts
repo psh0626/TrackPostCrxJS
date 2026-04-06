@@ -34,7 +34,7 @@ async function whenNotificationClicked(notificationId: string) {
         default:
             break;
     }
-    await clearAllNotifications();
+    chrome.notifications.clear(notificationId);
 }
 chrome.notifications.onClicked.addListener((notificationId) => {
     whenNotificationClicked(notificationId);
@@ -140,7 +140,7 @@ export default async function createNotification(force_update = false) {
     });
 
     if (force_update) {
-        await clearAllNotifications();
+        await chrome.notifications.clear("IMIC_PENDING_MESSAGES");
     }
     await newItem.show();
 

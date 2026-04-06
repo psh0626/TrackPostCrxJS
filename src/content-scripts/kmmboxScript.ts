@@ -22,7 +22,7 @@ void (() => {
 
     setLazyInterval(async () => {
         const unreadCount = await getUnreadCountByFetch();
-        updateTitle(unreadCount);
+        updateTitle(unreadCount, true);
         console.log("[LazyInterval] item fetched", document.title);
     }, ms(3).toMinutes());
 
@@ -61,6 +61,7 @@ void (() => {
 
         return unreadCount;
     }
+
     // function getUnreadCountByElement() {
     //     const unreadElm: HTMLLIElement | null = document.querySelector("li#r3-maill-unseen-cnt");
     //     if (!unreadElm) {
@@ -75,8 +76,9 @@ void (() => {
     //     }
     //     return unreadCount;
     // }
-    function updateTitle(unreadCount: number) {
-        refreshUI(unreadCount);
+
+    function updateTitle(unreadCount: number, refresh = false) {
+        if(refresh) refreshUI(unreadCount);
         if (unreadCount === 0) {
             document.title = `${originalTitle}`;
         } else {
@@ -106,6 +108,7 @@ void (() => {
         }
     }
     function refreshUI(count: number) {
+        updateMsgCount(folderId!, count);
         if (count === 0) {
             if (!document.querySelector("#r3-maill-unseen-cnt-td")?.classList.contains("x-hidden")) {
                 document.querySelector("#r3-maill-unseen-cnt-td")?.classList.add("x-hidden");
@@ -116,7 +119,6 @@ void (() => {
             }
             document.getElementById("r3-maill-unseen-cnt")!.innerHTML = count.toString();
         }
-        updateMsgCount(folderId!, count);
     }
     async function getUnreadCountByFetch() {
         try {
