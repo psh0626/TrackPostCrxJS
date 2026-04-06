@@ -1,5 +1,6 @@
 import { IMICSettings } from "@/common/IMICSettings";
 import { CMD } from "@/common/message-hub/Message";
+import StorageKey from "@/common/StorageKey";
 import { GcssItem, isGcssItem, isWorkflowItem, WorkflowItem } from "@/content-scripts/pending-replies/dataWrapper";
 import {
     GCSSMessage,
@@ -9,7 +10,6 @@ import {
     isGCSSNotification,
 } from "@/content-scripts/pending-replies/newGcssWrapper";
 import NotificationItem from "./NotificationItem";
-import StorageKey from "@/common/StorageKey";
 async function whenNotificationClicked(notificationId: string) {
     console.log("[whenNotificationClicked] Notification clicked: ", notificationId);
     switch (notificationId) {
@@ -34,6 +34,7 @@ async function whenNotificationClicked(notificationId: string) {
         default:
             break;
     }
+    await clearAllNotifications();
 }
 chrome.notifications.onClicked.addListener((notificationId) => {
     whenNotificationClicked(notificationId);
@@ -166,7 +167,7 @@ interface StorageItem {
 }
 
 export async function getStorageItems<T>(key: string): Promise<T[]> {
-    return await new StorageKey(key).fromSession.get<T[]>() || [];
+    return (await new StorageKey(key).fromSession.get<T[]>()) || [];
 }
 async function gatherStorageItems(items: StorageItem[]): Promise<(WorkflowItem | GcssItem | GCSSMessage)[]> {
     const results: (WorkflowItem | GcssItem | GCSSMessage)[] = [];
