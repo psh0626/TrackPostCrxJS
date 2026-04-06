@@ -1,5 +1,4 @@
 import { ms } from "@/common/TimespanExtension";
-import "./serviceAwakener";
 
 void (() => {
     const originalTitle = document.title;

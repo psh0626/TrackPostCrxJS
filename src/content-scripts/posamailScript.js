@@ -1,5 +1,3 @@
-import "./serviceAwakener";
-
 const updateTitle = (ms = 1000) => {
     setTimeout(() => {
         const currentURL = new URL(location.href);
