@@ -1,3 +1,5 @@
+import { clearAllNotifications } from "./notification";
+
 type NotificationCreateOptions = chrome.notifications.NotificationCreateOptions;
 type NotificationItemData = { notificationId?: string } & SetRequired<
     chrome.notifications.NotificationOptions,
@@ -29,7 +31,8 @@ export default class NotificationItem implements NotificationCreateOptions {
         this.type = obj.type ?? "basic";
         this.iconUrl = obj.iconUrl ?? "icon.png";
     }
-    show() {
+    show(force = false) {
+        if (force) clearAllNotifications();
         const { notificationId, ...options } = this;
         return chrome.notifications.create(this.notificationId, options);
     }

@@ -605,7 +605,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
 
     return (
         <div>
-            <Header title="일반 설정">
+            <Header title="알림 설정">
                 <ImportExport
                     target={settingsState}
                     fileName="MyGeneralSettings.json"
@@ -637,7 +637,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings }) =>
                     void resetWeekpicker(forIcare, false);
                 }}
             />
-            <Stack spacing={5} sx={{ pl: 2 }}>
+            <Stack spacing={5} sx={{ pl: 2, pb: 5 }}>
                 <GcssSection
                     settingsState={settingsState}
                     gcssAuthorRaw={gcssAuthorRaw}

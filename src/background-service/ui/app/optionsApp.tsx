@@ -58,7 +58,7 @@ export default function OptionsApp() {
                         orientation="vertical"
                         sx={{ borderRight: 1, borderColor: "divider", minHeight: "88vh" }}
                     >
-                        <Tab label="General" />
+                        <Tab label="Notifications" />
                         <Tab label="Personal Remarks" />
                         <Tab label="Exchange Rates" />
                         <Tab label="About" />

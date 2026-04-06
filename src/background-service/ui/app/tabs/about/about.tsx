@@ -1,4 +1,5 @@
 import manifest from "@/../manifest.json";
+import { checkUpdate } from "@/background-service/serviceworker";
 import { Info, Refresh } from "@mui/icons-material";
 import { Button, Divider, Paper, Stack, Typography } from "@mui/material";
 import { useState } from "react";
@@ -47,10 +48,8 @@ export default function About() {
                     <Button
                         sx={{ ml: "auto", minWidth: 45 }}
                         onClick={() =>
-                            chrome.runtime.requestUpdateCheck().then((result) => {
-                                if (result.status === "update_available") {
-                                    chrome.runtime.reload();
-                                } else {
+                            checkUpdate().then((status) => {
+                                if (status.status === "no_update") {
                                     setIsAlertOpen(true);
                                 }
                             })

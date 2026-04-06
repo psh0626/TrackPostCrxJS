@@ -39,8 +39,12 @@ chrome.notifications.onClicked.addListener((notificationId) => {
     whenNotificationClicked(notificationId);
 });
 
-// chrome.notifications.onButtonClicked.addListener(() => {
-//     whenNotificationClicked();
+// chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
+//     if (notificationId === "IMIC_NOTIFICATION") {
+//         if (buttonIndex === 0) {
+//             chrome.windows.getAll()
+//         }
+//     }
 // });
 
 export default async function createNotification(force_update = false) {
@@ -128,8 +132,8 @@ export default async function createNotification(force_update = false) {
         priority: 2,
         requireInteraction: true,
         title: `${err_msg}IMIC 알림: ${current_num}개 메시지 대기`,
-        message: `GCSS/iCare 읽지 않은 메시지가 ${current_num}개 있습니다.`,
-        contextMessage: `GCSS/iCare unread replies: ${current_num}`,
+        message: `GCSS/iCare 새 메시지가 ${current_num}개 있습니다.`,
+        contextMessage: `GCSS/iCare New Messages: ${current_num}`,
         items: combined,
         // buttons: [{ title: "확인" }],
     });
