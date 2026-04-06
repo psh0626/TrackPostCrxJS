@@ -61,10 +61,10 @@ async function main() {
         });
         if (ext_mail_tab) {
             chrome.tabs.reload(ext_mail_tab.id!);
-            console.log(new Date().toLocaleTimeString() + " [Interval] Mail tab has been reloaded.", ext_mail_tab);
+            console.log("[Interval] Mail tab has been reloaded.", ext_mail_tab);
             return;
         }
-        console.log(new Date().toLocaleTimeString() + " [Interval] Inactive mail tab has not been found.");
+        console.log("[Interval] Inactive mail tab has not been found.");
     };
 
     void mailTabFunc();
@@ -140,7 +140,7 @@ export async function updateExtension() {
 }
 
 chrome.runtime.onUpdateAvailable.addListener(async ({ version }) => {
-    console.log(`[updateExtension] A new version (${version}) of the extension is available. Reloading to update...`);
+    console.log(`[onUpdateAvailable] A new version (${version}) of the extension is available. Reloading to update...`);
     await chrome.storage.local.set({ IMIC_EXTENSION_VERSION: currentVersion });
     chrome.runtime.reload();
 });
@@ -150,15 +150,28 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 });
 
 async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) {
-    console.log("[whenExtensionInstalled] Extension installed/updated with details: ", {
-        currentVersion: currentVersion,
-        ...details,
-    });
+    const newDetails = { currentVersion: currentVersion, ...details };
+    console.log("[whenExtensionInstalled] Extension installed/updated with details: ", newDetails);
 
     const openedWindows = await chrome.windows.getAll({ populate: true });
+
     if (openedWindows.length === 0 || ["chrome_update", "shared_module_update"].includes(details.reason)) {
+        const logMessage = `[whenExtensionInstalled] Extension installed/updated with details: ${JSON.stringify(newDetails)}`;
+        const currentLog = (await chrome.storage.local.get("IMIC_EXTENSION_UPDATE_LOG"))?.IMIC_EXTENSION_UPDATE_LOG as
+            | string
+            | undefined;
+        const updatedLog = currentLog ? `${currentLog}\n${logMessage}` : logMessage;
+        await chrome.storage.local.set({ IMIC_EXTENSION_UPDATE_LOG: updatedLog });
+        console.log(logMessage);
         return;
     }
+
+    const previousVersion = await chrome.storage.local
+        .get("IMIC_EXTENSION_VERSION")
+        .then((res) => res.IMIC_EXTENSION_VERSION as string | undefined);
+    console.log(
+        `[whenExtensionInstalled] Previous version in storage: ${previousVersion}, Current version: ${currentVersion}`,
+    );
 
     const waitTime = ms(3).toSeconds();
     const openNewTab = (url: string) => chrome.tabs.create({ url: url, active: true });
@@ -176,10 +189,10 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
     if (details.reason === "install") {
         console.log("[whenExtensionInstalled] Extension installed with version", currentVersion);
         await showNotificationAndOpenTab("https://github.com/psh0626/TrackPostExtZip/");
-    } else if (details.previousVersion !== currentVersion) {
+    } else if ((previousVersion ?? details.previousVersion) !== currentVersion) {
         console.log(
             "[whenExtensionInstalled] Extension updated to version from",
-            details.previousVersion,
+            previousVersion,
             "to",
             currentVersion,
         );

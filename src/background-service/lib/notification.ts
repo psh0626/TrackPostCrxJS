@@ -9,24 +9,33 @@ import {
     isGCSSNotification,
 } from "@/content-scripts/pending-replies/newGcssWrapper";
 import NotificationItem from "./NotificationItem";
-async function whenNotificationClicked() {
-    const windows = await chrome.windows.getAll({ populate: true });
-    const window = windows.find(
-        (w) =>
-            w.tabs &&
-            w.tabs.some((t) => {
-                const url = (t.url ?? "").toLowerCase();
-                return ["gcss", "icare"].some((keyword) => url.includes(keyword));
-            }),
-    );
-    console.log(`[whenNotificationClicked] Found window: `, window);
-    if (window && window.id) {
-        await chrome.windows.update(window.id, { focused: true });
-        await chrome.action.openPopup({ windowId: window.id });
+async function whenNotificationClicked(notificationId: string) {
+    console.log("[whenNotificationClicked] Notification clicked: ", notificationId);
+    switch (notificationId) {
+        case "IMIC_PENDING_MESSAGES":
+            const windows = await chrome.windows.getAll({ populate: true });
+            const window = windows.find(
+                (w) =>
+                    w.tabs &&
+                    w.tabs.some((t) => {
+                        const url = (t.url ?? "").toLowerCase();
+                        return ["gcss", "icare"].some((keyword) => url.includes(keyword));
+                    }),
+            );
+            console.log(`[whenNotificationClicked] Found window: `, window);
+            if (window && window.id) {
+                await chrome.windows.update(window.id, { focused: true });
+                await chrome.action.openPopup({ windowId: window.id });
+            }
+            break;
+        case "IMIC_NOTIFICATION":
+            break;
+        default:
+            break;
     }
 }
-chrome.notifications.onClicked.addListener(() => {
-    whenNotificationClicked();
+chrome.notifications.onClicked.addListener((notificationId) => {
+    whenNotificationClicked(notificationId);
 });
 
 // chrome.notifications.onButtonClicked.addListener(() => {
