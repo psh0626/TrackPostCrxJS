@@ -26,6 +26,7 @@ export default defineConfig(() => {
             // TODO: remove zip plugin.
         ],
         build: {
+            minify: false,
             rolldownOptions: {
                 input: {
                     sidepanel: "/src/background-service/ui/sidepanel.html",

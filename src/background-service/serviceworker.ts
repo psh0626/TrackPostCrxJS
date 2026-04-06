@@ -90,7 +90,11 @@ async function APICalls(count: number, final = false) {
     }
 }
 export async function checkUpdate() {
-    const updateUrl = "https://raw.githubusercontent.com/psh0626/TrackPostExtZip/main/updateManifest.xml";
+    const updateUrl = await chrome.management.getSelf().then((info) => info.updateUrl);
+    if (!updateUrl) {
+        console.error("[checkUpdate] No update URL found for the extension.");
+        return { status: "no_update" };
+    }
     const response = await fetch(updateUrl);
     const data = await response.text();
     const xml = await parseStringPromise(data, {
@@ -104,7 +108,10 @@ export async function checkUpdate() {
         return { status: "no_update" };
     }
 
-    if (latestVersion !== currentVersion) {
+    if (latestVersion === currentVersion) {
+        console.log(`[checkUpdate] Current version (${currentVersion}) is up to date.`);
+        return { status: "no_update" };
+    } else {
         console.log(`[checkUpdate] A new version (${latestVersion}) is available! Current version: ${currentVersion}`);
         const checkResult = await chrome.runtime.requestUpdateCheck();
         if (checkResult.status !== "update_available") {
@@ -116,7 +123,6 @@ export async function checkUpdate() {
         }
         return { status: "update_available", version: latestVersion };
     }
-    return { status: "no_update" };
 }
 
 chrome.runtime.onUpdateAvailable.addListener(async ({ version }) => {

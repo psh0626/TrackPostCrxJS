@@ -30,7 +30,7 @@ export async function getAllServiceTabs(shouldAwaken: boolean) {
         url: Object.values(SERVICES).map((service) => service.queryPattern),
     });
 
-    console.log("WORK TABS: ", allTabs);
+    console.log("[getAllServiceTabs] Found Tabs: ", allTabs);
 
     if (shouldAwaken) {
         const groupedTabs = groupTabsByService(allTabs);
@@ -54,7 +54,7 @@ export async function findActive(tabs: chrome.tabs.Tab[]) {
 
     if (activeTab.frozen === false && activeTab.discarded === false) return activeTab;
 
-    console.log("No active tab found, reloading first tab: ", activeTab);
+    console.log("[findActive] No active tab found, reloading first tab: ", activeTab);
     if (activeTab.id) {
         await chrome.tabs.update(activeTab.id, { autoDiscardable: false });
         await chrome.tabs.reload(activeTab.id);
@@ -81,13 +81,13 @@ export async function requestFetch() {
     const tabs = await findFirstTabsForEachService();
 
     if (!tabs || tabs.length === 0) {
-        console.log("No tabs to request fetch");
+        console.log("[requestFetch] No tabs to request fetch");
         return;
     }
 
     tabs.forEach((tab) => {
         if (tab && tab.id) {
-            console.log("Requesting fetch to tab ", tab);
+            console.log("[requestFetch] Requesting fetch to tab ", tab);
             new MSG(CMD.FETCH_REQUEST).fromService.toTab(tab);
         }
     });
