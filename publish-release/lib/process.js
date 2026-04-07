@@ -17,9 +17,10 @@ export function exec(cmd, args = "", options = {}) {
 export function runChecked(cmd, args = "", options = {}, errorMessage = "Command failed.") {
     const commandText = formatCommand(cmd, args);
     const cwdText = options.cwd || process.cwd();
+    const lastPartOfCwd = cwdText.split("\\").slice(-1)[0] || cwdText;
 
-    logInfo(`Running command: ${commandText}`);
-    logDetail("cwd", cwdText);
+    logDetail(`Running command: ${commandText}`);
+    logInfo("cwd", lastPartOfCwd);
 
     const result = exec(cmd, args, options);
 
@@ -36,10 +37,12 @@ export function runChecked(cmd, args = "", options = {}, errorMessage = "Command
             console.error(`${releasePrefix(ansi.red)} ${c("stderr:", ansi.bold, ansi.red)}\n${result.stderr.trim()}`);
         }
         console.error(errorText(errorMessage));
+        console.log("");
         throw new ReleaseError(errorMessage, { logged: true });
     }
 
     logSuccess(`Command completed: ${commandText}`);
+    console.log("");
     return result;
 }
 

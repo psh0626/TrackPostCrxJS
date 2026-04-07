@@ -154,7 +154,7 @@ async function main() {
         writeFileSync(draftPath, draftContent, "utf8");
         logSuccess("Release note draft written.\n");
 
-        // --- 5. Open in VS Code ---
+        // --- Open draft in VS Code ---
         logInfo("Opening release notes in VS Code. Save and close to continue...");
         runChecked(
             "code",
@@ -164,7 +164,7 @@ async function main() {
         );
         logSuccess("Release note editor closed.\n");
 
-        // --- 6. Validate notes ---
+        // --- Validate notes ---
         const baselineNotes = draftContent.trim();
         const notes = readFileSync(draftPath, "utf8").trim();
         if (!notes) die("Release notes are empty.");
@@ -180,7 +180,7 @@ async function main() {
         // Strip HTML comments for a cleaner git commit message
         const commitBody = stripHtmlComments(notes);
 
-        // --- 7. Create or update GitHub release ---
+        // --- Create or update GitHub release ---
         const releaseExists = ghExec(`release view ${tag} --json tagName`, publishDir) !== null;
         logDetail("releaseAlreadyExists", releaseExists ? "yes" : "no");
 
@@ -256,19 +256,22 @@ async function main() {
             });
         }
 
-        // --- 8. Sync root repository ---
+        // --- Sync root repository ---
         logInfo("Syncing root repository after publish release update.");
         runChecked("git", ["add", "publish"], { cwd: workspaceDir }, "Failed to stage root repo release changes.");
+        
         runChecked(
             "git",
             ["commit", "-m", "Update submodule reference"],
             { cwd: workspaceDir },
             "Failed to commit root repo release changes.",
         );
+        
         runChecked("git", ["push", "origin", "main"], { cwd: workspaceDir }, "Failed to push root repo main branch.");
+        
         rollbackState.rootMainPushed = true;
 
-        console.log(`\n${releasePrefix(ansi.green)} ${c("Release flow completed.", ansi.bold, ansi.green)}`);
+        console.log(`${releasePrefix(ansi.green)} ${c("Release flow completed.", ansi.bold, ansi.green)}`);
 
         // Clean up draft on success only; on error the file is left for inspection
         if (existsSync(draftPath)) rmSync(draftPath);
