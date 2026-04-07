@@ -4,7 +4,11 @@ type NotificationCreateOptions = chrome.notifications.NotificationCreateOptions;
 type NotificationItemData = { notificationId?: string } & SetRequired<
     chrome.notifications.NotificationOptions,
     "title" | "message"
->;
+    >;
+export enum NotificationIDs {
+    IMIC_PENDING_MESSAGES = "IMIC_PENDING_MESSAGES",
+    IMIC_NOTIFICATION = "IMIC_NOTIFICATION",
+}
 
 export default class NotificationItem implements NotificationCreateOptions {
     appIconMaskUrl?: string | undefined;
@@ -27,7 +31,7 @@ export default class NotificationItem implements NotificationCreateOptions {
         Object.assign(this, obj);
         this.title = obj.title;
         this.message = obj.message;
-        this.notificationId = obj.notificationId ?? "IMIC_NOTIFICATION";
+        this.notificationId = obj.notificationId ?? NotificationIDs.IMIC_NOTIFICATION;
         this.type = obj.type ?? "basic";
         this.iconUrl = obj.iconUrl ?? "icon.png";
     }

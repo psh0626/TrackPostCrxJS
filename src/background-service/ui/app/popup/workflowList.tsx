@@ -1,3 +1,4 @@
+import { NotificationIDs } from "@/background-service/lib/NotificationItem";
 import { requestFetch } from "@/common/findTabs";
 import { wait } from "@/content-scripts/gcssSumScript";
 import { GcssItem, isGcssItem, isWorkflowItem, WorkflowItem } from "@/content-scripts/pending-replies/dataWrapper";
@@ -54,10 +55,11 @@ export const WorkflowList = ({
     if (isNotification) list_title = list_title.replace("회신", "통지").replace("문의", "통지");
     list_title += `: ${items.length}건`;
     if (author !== "") list_title += ` (${author})`;
+
     const OpenNewTab = async (urlLink: string) => {
-        const current_tab = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+        const [current_tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
         return await chrome.tabs.create({
-            index: current_tab[0].index + 1,
+            index: current_tab.index + 1,
             url: urlLink,
             active: false,
         });
@@ -68,6 +70,7 @@ export const WorkflowList = ({
             console.log("Requesting fetch after opening all tabs");
             requestFetch();
         });
+        chrome.notifications.clear(NotificationIDs.IMIC_PENDING_MESSAGES);
         // const reversed_items = [...items].reverse();
         const tab_promises = items.map(async (wf) => {
             let tab: chrome.tabs.Tab;
@@ -131,6 +134,7 @@ export const WorkflowList = ({
             console.log("Requesting fetch after clicking item");
             requestFetch();
         });
+        chrome.notifications.clear(NotificationIDs.IMIC_PENDING_MESSAGES);
         if (isWorkflowItem(item)) await OpenNewTab(item.link);
         else if (isGcssItem(item)) await OpenNewTab(isNotification ? item.notificationLink : item.workflowLink);
         else await OpenNewTab(item.messageLink);

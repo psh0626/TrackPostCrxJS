@@ -9,11 +9,12 @@ import {
     isGCSSMessage,
     isGCSSNotification,
 } from "@/content-scripts/pending-replies/newGcssWrapper";
-import NotificationItem from "./NotificationItem";
+import NotificationItem, { NotificationIDs } from "./NotificationItem";
+
 async function whenNotificationClicked(notificationId: string) {
     console.log("[whenNotificationClicked] Notification clicked: ", notificationId);
     switch (notificationId) {
-        case "IMIC_PENDING_MESSAGES":
+        case NotificationIDs.IMIC_PENDING_MESSAGES:
             const windows = await chrome.windows.getAll({ populate: true });
             const window = windows.find(
                 (w) =>
@@ -29,7 +30,7 @@ async function whenNotificationClicked(notificationId: string) {
                 await chrome.action.openPopup({ windowId: window.id });
             }
             break;
-        case "IMIC_NOTIFICATION":
+        case NotificationIDs.IMIC_NOTIFICATION:
             break;
         default:
             break;
@@ -41,7 +42,7 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 });
 
 // chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
-//     if (notificationId === "IMIC_NOTIFICATION") {
+//     if (notificationId === NotificationIDs.IMIC_NOTIFICATION) {
 //         if (buttonIndex === 0) {
 //             chrome.windows.getAll()
 //         }
@@ -128,7 +129,7 @@ export default async function createNotification(force_update = false) {
     const err_msg = fetch_error ? (fetch_error.GCSS ? "(GCSS 에러)\n" : "(i-Care 에러)\n") : "";
 
     const newItem = new NotificationItem({
-        notificationId: "IMIC_PENDING_MESSAGES",
+        notificationId: NotificationIDs.IMIC_PENDING_MESSAGES,
         type: "list",
         priority: 2,
         requireInteraction: true,
@@ -140,7 +141,7 @@ export default async function createNotification(force_update = false) {
     });
 
     if (force_update) {
-        await chrome.notifications.clear("IMIC_PENDING_MESSAGES");
+        await chrome.notifications.clear(NotificationIDs.IMIC_PENDING_MESSAGES);
     }
     await newItem.show();
 
