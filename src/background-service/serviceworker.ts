@@ -29,7 +29,7 @@ const EXTENSION_UPDATE_LOG_KEY = "IMIC_EXTENSION_UPDATE_LOG";
 const EXTENSION_VERSION_KEY = "IMIC_EXTENSION_VERSION";
 const INSTALL_PAGE_URL = "https://github.com/psh0626/TrackPostExtZip/";
 const RELEASES_PAGE_URL = "https://github.com/psh0626/TrackPostExtZip/releases";
-const WINDOW_WAIT_INTERVAL = ms(10).toSeconds();
+
 const INSTALL_OPEN_PAGE_DELAY = ms(3).toSeconds();
 
 const currentVersion = chrome.runtime.getVersion();
@@ -156,34 +156,39 @@ chrome.runtime.onInstalled.addListener(whenExtensionInstalled);
 async function appendExtensionUpdateLog(message: string) {
     const key = new StorageKey(EXTENSION_UPDATE_LOG_KEY);
     const currentLog = await key.fromLocal.get<string>();
-    const updatedLog = currentLog
-        ? `${currentLog}\n${new Date().toLocaleString()} - ${message}`
-        : `${new Date().toLocaleString()} - ${message}`;
+    let updatedLog = "";
+    if (currentLog) {
+        const logEntries = currentLog.split("\n");
+        const entriesToday = logEntries.filter((entry) => entry.includes(new Date().toLocaleDateString()));
+        updatedLog = `${entriesToday.join("\n")}\n${new Date().toLocaleString()} - ${message}`;
+    } else {
+        updatedLog = `${new Date().toLocaleString()} - ${message}`;
+    }
     await key.fromLocal.set(updatedLog);
 }
 
-async function waitForOpenBrowserWindow(details: chrome.runtime.InstalledDetails, maxRetry = MAXIMUM_TICK) {
-    for (let count = 0; count <= maxRetry; count++) {
-        const openedWindows = await chrome.windows.getAll({ populate: false });
-        if (openedWindows.length > 0) {
-            return true;
-        }
+function waitForOpenBrowserWindow(timeoutMins = 60) {
+    const timeoutMs = ms(timeoutMins).toMinutes();
+    let timeoutId: NodeJS.Timeout;
+    let callback: () => void;
 
-        const logMessage = `[waitForOpenBrowserWindow] Extension installed/updated with details: ${JSON.stringify({ currentVersion, ...details })}. However, no browser windows are currently open. Waiting for a window to open...`;
-        console.log(logMessage);
-        await appendExtensionUpdateLog(logMessage);
+    const timeoutPromise = new Promise<boolean>((res) => {
+        timeoutId = setTimeout(() => {
+            chrome.windows.onCreated.removeListener(callback);
+            res(false);
+        }, timeoutMs);
+    });
 
-        if (count === maxRetry) {
-            const logMessage = "[waitForOpenBrowserWindow] Maximum wait time exceeded. Exiting...";
-            console.log(logMessage);
-            await appendExtensionUpdateLog(logMessage);
-            return false;
-        }
+    const eventPromise = new Promise<boolean>((res) => {
+        callback = () => {
+            clearTimeout(timeoutId);
+            chrome.windows.onCreated.removeListener(callback!!);
+            res(true);
+        };
+        chrome.windows.onCreated.addListener(callback, { windowTypes: ["normal"] });
+    });
 
-        await wait(WINDOW_WAIT_INTERVAL);
-    }
-
-    return false;
+    return Promise.race([eventPromise, timeoutPromise]);
 }
 
 async function notifyInstallationResult(reason: "install" | "update", previousVersion: string, targetUrl: string) {
@@ -226,6 +231,7 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
         return;
     }
 
+    // Set the flag to indicate that the installation flow is running (prevents duplicate execution)
     isInstallationFlowRunning = true;
     const versionKey = new StorageKey(EXTENSION_VERSION_KEY);
     const previousVersion = (await versionKey.fromLocal.get<string>()) || "unknown";
@@ -233,7 +239,25 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
         `[whenExtensionInstalled] Previous version in storage: ${previousVersion}, Current version: ${currentVersion}`,
     );
 
-    const hasOpenWindow = await waitForOpenBrowserWindow(details);
+    // Check if there are any open browser windows. If not, wait for a window to open before proceeding with the installation flow.
+    // This is to prevent notifications from showing up without an open window, which could lead to users dismissing the notification about the update.
+    const openWindows = await chrome.windows.getAll({ windowTypes: ["normal"], populate: true });
+    console.log("[whenExtensionInstalled] Currently open browser windows: ", openWindows);
+
+    if (openWindows.length === 0) {
+        const logMessage = `[waitForOpenBrowserWindow] Extension installed/updated with details: ${JSON.stringify(newDetails)}. However, no browser windows are currently open. Waiting for a window to open...`;
+        console.log(logMessage);
+        await appendExtensionUpdateLog(logMessage);
+        const hasOpenWindow = await waitForOpenBrowserWindow();
+        if (!hasOpenWindow) {
+            const timeoutMessage = `[waitForOpenBrowserWindow] No browser window was opened within the timeout period after installation/update. Installation flow has been canceled.`;
+            console.log(timeoutMessage);
+            await appendExtensionUpdateLog(timeoutMessage);
+            isInstallationFlowRunning = false;
+            return;
+        }
+    }
+    // Window is open, proceed with the rest of the installation flow
 
     const reloadOtherTabs = async () => {
         const tabs = await chrome.tabs.query({
@@ -243,10 +267,8 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
     };
     await Promise.all([reloadAllServiceTabs(), reloadOtherTabs(), clearAllNotifications()]);
 
-    if (!hasOpenWindow) {
-        return;
-    }
-
+    // Update the stored version to the current version after successful notification
+    // This is to ensure the user gets the notification.
     if (details.reason === "install") {
         console.log("[whenExtensionInstalled] Extension installed with version", currentVersion);
         await notifyInstallationResult(details.reason, previousVersion, INSTALL_PAGE_URL);
