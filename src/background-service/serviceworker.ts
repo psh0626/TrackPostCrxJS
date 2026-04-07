@@ -199,6 +199,12 @@ async function notifyInstallationResult(reason: "install" | "update", previousVe
     }).show();
 
     await wait(INSTALL_OPEN_PAGE_DELAY);
+    const [openedTab] = await chrome.tabs.query({ url: targetUrl });
+    if (openedTab && openedTab.id) {
+        await Promise.all([chrome.tabs.update(openedTab.id, { active: true }), chrome.tabs.reload(openedTab.id)]);
+        return;
+    }
+
     await chrome.tabs.create({ url: targetUrl, active: true });
 }
 
@@ -214,13 +220,8 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
     }
 
     if (isInstallationFlowRunning) {
-        console.log(
+        console.trace(
             `[whenExtensionInstalled] Installation flow is already running. Skipping duplicate execution. Current trigger details:`,
-            new Error().stack
-                ?.split("\n")
-                .map((l) => l.trim())
-                .slice(2)
-                .join("\n"),
         );
         return;
     }
