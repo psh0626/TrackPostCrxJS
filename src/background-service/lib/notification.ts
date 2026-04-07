@@ -134,7 +134,7 @@ export default async function createNotification(force_update = false) {
         requireInteraction: true,
         title: `${err_msg}IMIC 알림: ${current_num}개 메시지 대기`,
         message: `GCSS/iCare 새 메시지가 ${current_num}개 있습니다.`,
-        contextMessage: `GCSS/iCare New Messages: ${current_num}`,
+        contextMessage: `GCSS/iCare New Messages`,
         items: combined,
         // buttons: [{ title: "확인" }],
     });
