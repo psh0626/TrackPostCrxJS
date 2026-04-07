@@ -20,7 +20,7 @@ export function runChecked(cmd, args = "", options = {}, errorMessage = "Command
     const lastPartOfCwd = cwdText.split("\\").slice(-1)[0] || cwdText;
 
     logDetail("Running command", commandText);
-    logInfo(`Working Directory: ${lastPartOfCwd}\\`);
+    logInfo(`Working Directory: ${lastPartOfCwd}`);
 
     const result = exec(cmd, args, options);
 
@@ -41,8 +41,7 @@ export function runChecked(cmd, args = "", options = {}, errorMessage = "Command
         throw new ReleaseError(errorMessage, { logged: true });
     }
 
-    logSuccess(`Command completed successfully!`);
-    console.log("");
+    logSuccess(`Command completed.\n`);
     return result;
 }
 
