@@ -120,14 +120,14 @@ export async function checkUpdate() {
         trim: true,
     });
     const latestVersion = xml.gupdate.app.updatecheck.$.version as string | undefined;
-    console.log("[checkUpdate] Fetched version: ", latestVersion);
     if (!latestVersion) {
         console.error("[checkUpdate] Failed to fetch the latest version from updateManifest.xml");
         return { status: "no_update" };
     }
+    console.log("[checkUpdate] Fetched version: ", latestVersion);
 
     if (latestVersion === currentVersion) {
-        console.log(`[checkUpdate] Current version (${currentVersion}) is up to date.`);
+        console.log(`[checkUpdate] Current version ${currentVersion} is up to date.`);
         return { status: "no_update" };
     } else {
         console.log(`[checkUpdate] A new version (${latestVersion}) is available! Current version: ${currentVersion}`);
