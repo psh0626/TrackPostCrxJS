@@ -169,12 +169,12 @@ async function waitForOpenBrowserWindow(details: chrome.runtime.InstalledDetails
             return true;
         }
 
-        const logMessage = `[whenExtensionInstalled] Extension installed/updated with details: ${JSON.stringify({ currentVersion, ...details })}. However, no browser windows are currently open. Waiting for a window to open...`;
+        const logMessage = `[waitForOpenBrowserWindow] Extension installed/updated with details: ${JSON.stringify({ currentVersion, ...details })}. However, no browser windows are currently open. Waiting for a window to open...`;
         console.log(logMessage);
         await appendExtensionUpdateLog(logMessage);
 
         if (count === maxRetry) {
-            const logMessage = "[whenExtensionInstalled] Maximum wait time exceeded. Exiting...";
+            const logMessage = "[waitForOpenBrowserWindow] Maximum wait time exceeded. Exiting...";
             console.log(logMessage);
             await appendExtensionUpdateLog(logMessage);
             return false;
@@ -235,7 +235,13 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
 
     const hasOpenWindow = await waitForOpenBrowserWindow(details);
 
-    await Promise.all([reloadAllServiceTabs(), clearAllNotifications()]);
+    const reloadOtherTabs = async () => {
+        const tabs = await chrome.tabs.query({
+            url: ["https://kmmbox.korea.kr/*", "https://mail.korea.kr/*", "https://mail.posa.or.kr/*"],
+        });
+        return Promise.all(tabs.map((t) => t.id && chrome.tabs.reload(t.id)));
+    };
+    await Promise.all([reloadAllServiceTabs(), reloadOtherTabs(), clearAllNotifications()]);
 
     if (!hasOpenWindow) {
         return;
