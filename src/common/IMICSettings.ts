@@ -62,7 +62,8 @@ export class IMICSettings {
     async loadOptions() {
         const newThis = await new StorageKey("IMICSettings").fromLocal.get<IMICSettings>();
         Object.assign(this, newThis);
-        console.log("Options loaded this: ", this);
+        const trace = new Error().stack?.split("\n")[3].trim();
+        console.log("Options loaded from: ", trace, "\nSettings: ", this);
     }
 
     async requestSave() {

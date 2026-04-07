@@ -34,6 +34,8 @@ const INSTALL_OPEN_PAGE_DELAY = ms(3).toSeconds();
 
 const currentVersion = chrome.runtime.getVersion();
 
+let isInstallationFlowRunning = false;
+
 main();
 
 async function main() {
@@ -134,6 +136,7 @@ export async function checkUpdate() {
             new NotificationItem({
                 title: `IMIC TrackPost (v${currentVersion} → v${latestVersion})`,
                 message: "새로운 업데이트가 있습니다. 인터넷 브라우저를 재시작하면 적용됩니다.",
+                priority: 2,
                 requireInteraction: true,
             }).show(true);
         }
@@ -188,7 +191,10 @@ async function notifyInstallationResult(reason: "install" | "update", previousVe
     const versionText = isInstall ? `v${currentVersion}` : `v${previousVersion} → v${currentVersion}`;
 
     await new NotificationItem({
+        priority: 2,
         title: `IMIC TrackPost ${versionText}`,
+        contextMessage: `${versionText}`,
+        requireInteraction: true,
         message: `확장 프로그램이 ${isInstall ? "설치" : "업데이트"} 되었습니다.`,
     }).show();
 
@@ -207,6 +213,19 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
         return;
     }
 
+    if (isInstallationFlowRunning) {
+        console.log(
+            `[whenExtensionInstalled] Installation flow is already running. Skipping duplicate execution. Current trigger details:`,
+            new Error().stack
+                ?.split("\n")
+                .map((l) => l.trim())
+                .slice(2)
+                .join("\n"),
+        );
+        return;
+    }
+
+    isInstallationFlowRunning = true;
     const versionKey = new StorageKey(EXTENSION_VERSION_KEY);
     const previousVersion = (await versionKey.fromLocal.get<string>()) || "unknown";
     console.log(
@@ -230,6 +249,7 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
         await notifyInstallationResult(details.reason, previousVersion, RELEASES_PAGE_URL);
         await versionKey.fromLocal.set(currentVersion);
     }
+    isInstallationFlowRunning = false;
 }
 
 chrome.webRequest.onCompleted.addListener(

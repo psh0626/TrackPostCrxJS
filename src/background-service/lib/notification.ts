@@ -107,7 +107,7 @@ export default async function createNotification(force_update = false) {
     const current_num = workflowItems.length + gcssStoredItems.length + newGcssStoredItems.length;
     const last_num = parseInt(await chrome.action.getBadgeText({})) || 0;
 
-    console.log("current number: ", current_num, "  last number: ", last_num);
+    console.log("[createNotification] current number: ", current_num, "  last number: ", last_num);
 
     // Update badge
     if (last_num >= current_num) {
