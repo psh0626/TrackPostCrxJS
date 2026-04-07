@@ -18,6 +18,7 @@ void (() => {
     setLazyInterval(async () => {
         const elmCount = getUnreadCountByElement2();
         updateTitle(elmCount);
+        clickPostponeLogout();
     }, ms(3).toSeconds());
 
     setLazyInterval(async () => {
@@ -36,6 +37,15 @@ void (() => {
         }, delay);
     }
 
+    function clickPostponeLogout() {
+        const allButtons = [...document.querySelectorAll("button")];
+        const postponeButton = allButtons.find((btn) => btn.textContent.includes("연장하기"));
+        if (postponeButton) {
+            postponeButton.click();
+            console.log("Postpone logout button clicked");
+        }
+    }
+
     function getCurrentNumber() {
         const currentTitle = document.title;
         const match = currentTitle.match(/\((\d+)\)/);
@@ -49,7 +59,7 @@ void (() => {
             .querySelector("tr.x-tree-action-id-1")
             ?.querySelector("li.badge-m");
         if (!unreadElm) {
-            console.log("Unread element (tr.x-tree-action-id-1) not found");
+            console.log("Unread element (tr.x-tree-action-id-1) not found, unread count considered 0");
             return 0;
         }
 
@@ -78,7 +88,7 @@ void (() => {
     // }
 
     function updateTitle(unreadCount: number, refresh = false) {
-        if(refresh) refreshUI(unreadCount);
+        if (refresh) refreshUI(unreadCount);
         if (unreadCount === 0) {
             document.title = `${originalTitle}`;
         } else {
