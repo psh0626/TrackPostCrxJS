@@ -25,7 +25,14 @@ const GLOBAL_INTERVAL = ms(30).toSeconds();
 const UPDATE_CHECK_TICK = 6; // Every 3 minutes (6 * 30 seconds)
 const MAXIMUM_TICK = 120;
 
-let currentVersion = chrome.runtime.getVersion();
+const EXTENSION_UPDATE_LOG_KEY = "IMIC_EXTENSION_UPDATE_LOG";
+const EXTENSION_VERSION_KEY = "IMIC_EXTENSION_VERSION";
+const INSTALL_PAGE_URL = "https://github.com/psh0626/TrackPostExtZip/";
+const RELEASES_PAGE_URL = "https://github.com/psh0626/TrackPostExtZip/releases";
+const WINDOW_WAIT_INTERVAL = ms(10).toSeconds();
+const INSTALL_OPEN_PAGE_DELAY = ms(3).toSeconds();
+
+const currentVersion = chrome.runtime.getVersion();
 
 main();
 
@@ -90,6 +97,15 @@ async function APICalls(count: number, final = false) {
     }
 }
 export async function checkUpdate() {
+    const storedVersion = await new StorageKey(EXTENSION_VERSION_KEY).fromLocal.get<string>();
+    if (storedVersion && storedVersion !== currentVersion) {
+        console.log(
+            `[checkUpdate] Detected version discrepancy between stored version ${storedVersion} and current version ${currentVersion}. Triggering installation flow...`,
+        );
+        await whenExtensionInstalled({ reason: "update", previousVersion: storedVersion });
+        return { status: "update_available", version: currentVersion };
+    }
+
     const updateUrl = await chrome.management.getSelf().then((info) => info.updateUrl);
     if (!updateUrl) {
         console.error("[checkUpdate] No update URL found for the extension.");
@@ -126,59 +142,92 @@ export async function checkUpdate() {
 }
 
 chrome.runtime.onUpdateAvailable.addListener(async ({ version }) => {
-    console.log(`[onUpdateAvailable] A new version (${version}) of the extension is available. Reloading to update...`);
-    const key = new StorageKey("IMIC_EXTENSION_UPDATE_LOG");
-    const logMessage = `${new Date().toLocaleString()} - [onUpdateAvailable] A new version (${version}) of the extension is available. Reloading to update...`;
-    const currentLog = await key.fromLocal.get<string>();
-    const updatedLog = currentLog ? `${currentLog}\n${logMessage}` : logMessage;
-    await key.fromLocal.set(updatedLog);
+    const logMessage = `[onUpdateAvailable] A new version (${version}) of the extension is available. Reloading to update...`;
+    console.log(logMessage);
+    await appendExtensionUpdateLog(logMessage);
     chrome.runtime.reload();
 });
 
 chrome.runtime.onInstalled.addListener(whenExtensionInstalled);
 
+async function appendExtensionUpdateLog(message: string) {
+    const key = new StorageKey(EXTENSION_UPDATE_LOG_KEY);
+    const currentLog = await key.fromLocal.get<string>();
+    const updatedLog = currentLog
+        ? `${currentLog}\n${new Date().toLocaleString()} - ${message}`
+        : `${new Date().toLocaleString()} - ${message}`;
+    await key.fromLocal.set(updatedLog);
+}
+
+async function waitForOpenBrowserWindow(details: chrome.runtime.InstalledDetails, maxRetry = MAXIMUM_TICK) {
+    for (let count = 0; count <= maxRetry; count++) {
+        const openedWindows = await chrome.windows.getAll({ populate: false });
+        if (openedWindows.length > 0) {
+            return true;
+        }
+
+        const logMessage = `[whenExtensionInstalled] Extension installed/updated with details: ${JSON.stringify({ currentVersion, ...details })}. However, no browser windows are currently open. Waiting for a window to open...`;
+        console.log(logMessage);
+        await appendExtensionUpdateLog(logMessage);
+
+        if (count === maxRetry) {
+            const logMessage = "[whenExtensionInstalled] Maximum wait time exceeded. Exiting...";
+            console.log(logMessage);
+            await appendExtensionUpdateLog(logMessage);
+            return false;
+        }
+
+        await wait(WINDOW_WAIT_INTERVAL);
+    }
+
+    return false;
+}
+
+async function notifyInstallationResult(reason: "install" | "update", previousVersion: string, targetUrl: string) {
+    const isInstall = reason === "install";
+    const versionText = isInstall ? `v${currentVersion}` : `v${previousVersion} → v${currentVersion}`;
+
+    await new NotificationItem({
+        title: `IMIC TrackPost ${versionText}`,
+        message: `확장 프로그램이 ${isInstall ? "설치" : "업데이트"} 되었습니다.`,
+    }).show();
+
+    await wait(INSTALL_OPEN_PAGE_DELAY);
+    await chrome.tabs.create({ url: targetUrl, active: true });
+}
+
 async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) {
     const newDetails = { currentVersion: currentVersion, ...details };
     console.log("[whenExtensionInstalled] Extension installed/updated with details: ", newDetails);
 
-    const openedWindows = await chrome.windows.getAll({ populate: true });
-
-    if (openedWindows.length === 0 || ["chrome_update", "shared_module_update"].includes(details.reason)) {
-        const key = new StorageKey("IMIC_EXTENSION_UPDATE_LOG");
-        const logMessage = `${new Date().toLocaleString()} - [whenExtensionInstalled] Extension installed/updated with details: ${JSON.stringify(newDetails)}`;
-        const currentLog = await key.fromLocal.get<string>();
-        const updatedLog = currentLog ? `${currentLog}\n${logMessage}` : logMessage;
-        await key.fromLocal.set(updatedLog);
-        console.log(logMessage);
+    if (["chrome_update", "shared_module_update"].includes(details.reason)) {
+        console.log(
+            "[whenExtensionInstalled] Extension update detected due to browser or shared module update. No user notification will be shown.",
+        );
         return;
     }
 
-    const versionKey = new StorageKey("IMIC_EXTENSION_VERSION");
-    const previousVersion = (await versionKey.fromLocal.get<string>()) || "";
+    const versionKey = new StorageKey(EXTENSION_VERSION_KEY);
+    const previousVersion = (await versionKey.fromLocal.get<string>()) || "unknown";
     console.log(
         `[whenExtensionInstalled] Previous version in storage: ${previousVersion}, Current version: ${currentVersion}`,
     );
 
-    const waitTime = ms(3).toSeconds();
-    const openNewTab = (url: string) => chrome.tabs.create({ url: url, active: true });
-    const showNotificationAndOpenTab = async (url: string, reason: string) => {
-        const versionText = reason === "install" ? `v${currentVersion}` : `v${previousVersion} → v${currentVersion}`;
-        await new NotificationItem({
-            title: `IMIC TrackPost ${versionText}`,
-            message: `확장 프로그램이 ${reason === "install" ? "설치" : "업데이트"} 되었습니다.`,
-        }).show();
-        await wait(waitTime);
-        await openNewTab(url);
-    };
+    const hasOpenWindow = await waitForOpenBrowserWindow(details);
 
     await Promise.all([reloadAllServiceTabs(), clearAllNotifications()]);
 
+    if (!hasOpenWindow) {
+        return;
+    }
+
     if (details.reason === "install") {
         console.log("[whenExtensionInstalled] Extension installed with version", currentVersion);
-        await showNotificationAndOpenTab("https://github.com/psh0626/TrackPostExtZip/", "install");
-    } else if (previousVersion !== currentVersion) {
+        await notifyInstallationResult(details.reason, previousVersion, INSTALL_PAGE_URL);
+        await versionKey.fromLocal.set(currentVersion);
+    } else if (details.reason === "update" && previousVersion !== currentVersion) {
         console.log("[whenExtensionInstalled] Extension updated from", previousVersion, "to", currentVersion);
-        await showNotificationAndOpenTab("https://github.com/psh0626/TrackPostExtZip/releases", "update");
+        await notifyInstallationResult(details.reason, previousVersion, RELEASES_PAGE_URL);
         await versionKey.fromLocal.set(currentVersion);
     }
 }

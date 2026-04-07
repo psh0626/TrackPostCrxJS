@@ -48,8 +48,8 @@ export default function About() {
                     <Button
                         sx={{ ml: "auto", minWidth: 45 }}
                         onClick={() =>
-                            checkUpdate().then((status) => {
-                                if (status.status === "no_update") {
+                            checkUpdate().then((update) => {
+                                if (update.status === "no_update") {
                                     setIsAlertOpen(true);
                                 }
                             })
