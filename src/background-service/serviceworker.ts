@@ -193,11 +193,11 @@ function waitForOpenBrowserWindow(timeoutMins = 60) {
 
 async function notifyInstallationResult(reason: "install" | "update", previousVersion: string, targetUrl: string) {
     const isInstall = reason === "install";
-    const versionText = isInstall ? `v${currentVersion}` : `v${previousVersion} → v${currentVersion}`;
+    const versionText = isInstall || previousVersion==="unknown" ? `v${currentVersion}` : `v${previousVersion} → v${currentVersion}`;
 
     await new NotificationItem({
         priority: 2,
-        title: `IMIC TrackPost ${versionText}`,
+        title: `IMIC TrackPost`,
         contextMessage: `${versionText}`,
         requireInteraction: true,
         message: `확장 프로그램이 ${isInstall ? "설치" : "업데이트"} 되었습니다.`,
