@@ -1,8 +1,7 @@
 import { existsSync, rmSync } from "fs";
-import { exec, runChecked } from "./process.js";
 import { die } from "./errors.js";
-import { releasePrefix, ansi, c, logInfo, logSuccess, logDetail, logWarning } from "./log.js";
-import { copyAllFiles } from "./files.js";
+import { ansi, c, logDetail, logInfo, logSuccess, logWarning, releasePrefix } from "./log.js";
+import { exec, runChecked } from "./process.js";
 
 export function captureCheckpoint(rootDir, publishDir) {
     const rootShaResult = exec("git", ["rev-parse", "HEAD"], { cwd: rootDir });
@@ -136,7 +135,7 @@ export function commitTagAndRelease({
     );
 
     const headResult = exec("git", ["rev-parse", "HEAD"], { cwd: publishDir });
-    if (headResult.status === 0) logDetail("publishHeadSha", headResult.stdout.trim());
+    if (headResult.status === 0) logDetail("publishHeadSha", headResult.stdout.trim() + "\n");
 
     runChecked(
         "git",

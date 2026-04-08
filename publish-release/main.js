@@ -197,7 +197,7 @@ async function main() {
                 throw new ReleaseError("Release update cancelled by user.", { exitCode: 0, logged: false });
             }
 
-            console.log(`\nRecreating release ${tag} and refreshing source archives...`);
+            logInfo(`\nRecreating release ${tag} and refreshing source archives...`);
 
             runChecked(
                 "gh",
@@ -243,7 +243,7 @@ async function main() {
                 );
             }
 
-            console.log(`\nCreating new release ${tag}...`);
+            logInfo(`Creating new release ${tag}...\n`);
             commitTagAndRelease({
                 publishDir,
                 assetPaths: releaseAssetPaths,
@@ -259,16 +259,16 @@ async function main() {
         // --- Sync root repository ---
         logInfo("Syncing root repository after publish release update.");
         runChecked("git", ["add", "publish"], { cwd: workspaceDir }, "Failed to stage root repo release changes.");
-        
+
         runChecked(
             "git",
             ["commit", "-m", "Update submodule reference"],
             { cwd: workspaceDir },
             "Failed to commit root repo release changes.",
         );
-        
+
         runChecked("git", ["push", "origin", "main"], { cwd: workspaceDir }, "Failed to push root repo main branch.");
-        
+
         rollbackState.rootMainPushed = true;
 
         console.log(`${releasePrefix(ansi.green)} ${c("Release flow completed.", ansi.bold, ansi.green)}`);

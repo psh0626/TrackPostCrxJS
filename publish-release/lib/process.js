@@ -19,8 +19,8 @@ export function runChecked(cmd, args = "", options = {}, errorMessage = "Command
     const cwdText = options.cwd || process.cwd();
     const lastPartOfCwd = cwdText.split("\\").slice(-1)[0] || cwdText;
 
-    logDetail("Running command", commandText);
     logInfo(`Working Directory: ${lastPartOfCwd}`);
+    logDetail("Running command", commandText);
 
     const result = exec(cmd, args, options);
 
