@@ -64,7 +64,7 @@ export class IMICSettings {
         Object.assign(this, newThis);
         const trace = new Error().stack?.split("\n").map((e) => e.trim());
         const currentStack = trace?.findIndex((e) => e.includes(".loadOptions"));
-        const caller = trace?.[currentStack ? currentStack + 1 : 2].replace("at ", "") || "Unknown";
+        const caller = trace?.[currentStack ? currentStack + 1 : 2].replace("at ", "").replace("(", "\n(") || "Unknown";
         console.log("Options loaded from: ", caller, "\nSettings: ", this);
     }
 
