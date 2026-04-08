@@ -1,3 +1,4 @@
+import { NotificationIDs } from "@/background-service/lib/NotificationItem";
 import { IMICSettings } from "@/common/IMICSettings";
 import { CMD } from "@/common/message-hub/Message";
 import StorageKey from "@/common/StorageKey";
@@ -51,13 +52,13 @@ function PopUpApp() {
     const [newGcssState, setNewGcssState] = useState<NewGcssState>(new NewGcssState());
 
     const settings = useRef<IMICSettings>(new IMICSettings());
-    const textfield_ref = useRef<HTMLInputElement>(null);
+    const textfieldRef = useRef<HTMLInputElement>(null);
     const tracker = new PopupTrack();
     const idNumber = useRef(0);
 
     useEffect(() => {
-        if (textfield_ref.current) {
-            textfield_ref.current.focus();
+        if (textfieldRef.current) {
+            textfieldRef.current.focus();
         }
 
         void (async () => {
@@ -120,10 +121,7 @@ function PopUpApp() {
             setOldGcssState(nextOldGcssState);
             setNewGcssState(nextNewGcssState);
 
-            // chrome.storage.session.onChanged.addListener((dict) => {
-            //   set_workflow_items(dict.ICARE_UNREAD_REPLIES.newValue as WorkflowItem[]);
-            //   set_gcss_items(dict.GCSS_UNREAD_REPLIES.newValue as GcssItem[]);
-            // });
+            chrome.notifications.clear(NotificationIDs.IMIC_PENDING_MESSAGES);
         })();
     }, []);
 
@@ -477,7 +475,7 @@ function PopUpApp() {
     return (
         <Stack spacing={0} margin={6} marginTop={0} width="300px">
             <StyledTextField
-                inputRef={textfield_ref}
+                inputRef={textfieldRef}
                 variant="outlined"
                 label="Tracking Number"
                 error={!inputState.isValid}
