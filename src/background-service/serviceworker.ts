@@ -193,7 +193,8 @@ function waitForOpenBrowserWindow(timeoutMins = 60) {
 
 async function notifyInstallationResult(reason: "install" | "update", previousVersion: string, targetUrl: string) {
     const isInstall = reason === "install";
-    const versionText = isInstall || previousVersion==="unknown" ? `v${currentVersion}` : `v${previousVersion} → v${currentVersion}`;
+    const versionText =
+        isInstall || previousVersion === "unknown" ? `v${currentVersion}` : `v${previousVersion} → v${currentVersion}`;
 
     await new NotificationItem({
         priority: 2,
@@ -256,8 +257,10 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
             isInstallationFlowRunning = false;
             return;
         }
+        const msg = `[waitForOpenBrowserWindow] A browser window has been opened. Proceeding with the installation flow...`;
+        console.log(msg);
+        await appendExtensionUpdateLog(msg);
     }
-    // Window is open, proceed with the rest of the installation flow
 
     const reloadOtherTabs = async () => {
         const tabs = await chrome.tabs.query({
