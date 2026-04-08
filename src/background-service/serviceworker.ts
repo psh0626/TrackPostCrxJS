@@ -265,6 +265,7 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
     const reloadOtherTabs = async () => {
         const tabs = await chrome.tabs.query({
             url: ["https://kmmbox.korea.kr/*", "https://mail.korea.kr/*", "https://mail.posa.or.kr/*"],
+            active: false,
         });
         return Promise.all(tabs.map((t) => t.id && chrome.tabs.reload(t.id)));
     };

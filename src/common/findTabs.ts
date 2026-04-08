@@ -95,11 +95,12 @@ export async function requestFetch() {
     return tabs;
 }
 
-export async function reloadAllServiceTabs() {
+export async function reloadAllServiceTabs(skipActive: boolean = true) {
     const tabs = await getAllServiceTabs(false);
     const reloads = tabs
         .map((tab) => {
             if (!tab.id) return null;
+            if (skipActive && tab.active) return null;
             return chrome.tabs.reload(tab.id);
         })
         .filter((p) => p !== null);
