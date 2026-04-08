@@ -1,3 +1,4 @@
+import { reloadAllServiceTabs } from "@/common/findTabs";
 import { IMICSettings } from "@/common/IMICSettings";
 import { CMD } from "@/common/message-hub/Message";
 import StorageKey from "@/common/StorageKey";
@@ -10,7 +11,6 @@ import {
     isGCSSNotification,
 } from "@/content-scripts/pending-replies/newGcssWrapper";
 import NotificationItem, { NotificationIDs } from "./NotificationItem";
-import { reloadAllServiceTabs } from "@/common/findTabs";
 
 async function whenNotificationClicked(notificationId: string) {
     console.log("[whenNotificationClicked] Notification clicked: ", notificationId);
@@ -32,6 +32,7 @@ async function whenNotificationClicked(notificationId: string) {
             }
             break;
         case NotificationIDs.IMIC_NOTIFICATION:
+            reloadAllPages();
             break;
         default:
             break;
@@ -45,17 +46,20 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
     if (notificationId === NotificationIDs.IMIC_NOTIFICATION) {
         if (buttonIndex === 0) {
-            const reloadOtherTabs = async () => {
-                const tabs = await chrome.tabs.query({
-                    url: ["https://kmmbox.korea.kr/*", "https://mail.korea.kr/*", "https://mail.posa.or.kr/*"],
-                });
-                return Promise.all(tabs.map((t) => t.id && chrome.tabs.reload(t.id)));
-            };
-            Promise.all([reloadAllServiceTabs(false), reloadOtherTabs(), clearAllNotifications()]);
+            reloadAllPages();
         }
     }
 });
+function reloadAllPages() {
+    const reloadOtherTabs = async () => {
+        const tabs = await chrome.tabs.query({
+            url: ["https://kmmbox.korea.kr/*", "https://mail.korea.kr/*", "https://mail.posa.or.kr/*"],
+        });
+        return Promise.all(tabs.map((t) => t.id && chrome.tabs.reload(t.id)));
+    };
 
+    return Promise.all([reloadAllServiceTabs(false), reloadOtherTabs(), clearAllNotifications()]);
+}
 export default async function createNotification(force_update = false) {
     const settings = new IMICSettings();
     await settings.loadOptions();
