@@ -43,6 +43,19 @@ import { wait } from "@/common/utils";
         if (currentURL.origin !== GCSS_URL) return;
 
         document.head.querySelector("link[rel='stylesheet']")?.removeAttribute("media");
+        
+        document.oncopy = (e) => {
+            const selection = window.getSelection();
+            if (selection) {
+                const selectedText = selection.toString();
+                if (selectedText) {
+                    e.clipboardData?.setData("text/plain", selectedText);
+                    console.log("Copied text:", selectedText);
+                    e.preventDefault();
+                }
+            }
+        };
+        
         window.addEventListener("hashchange", (e) => {
             if (e.newURL.includes("/query")) {
                 OldGcssInjectUtil.InjectQueryInput();
@@ -82,14 +95,12 @@ import { wait } from "@/common/utils";
                         등기번호: ${item_id}
                         현재 페이지의 서비스: ${urlService === "UPU" ? "Parcels" : urlService}
                         추천 서비스: ${correctService === "UPU" ? "Parcels" : correctService}
-                        \n등기번호와 서비스가 일치하지 않습니다. 해당 등기번호에 맞는 서비스 페이지로 이동하시겠습니까?`);
+                        \n등기번호와 서비스가 일치하지 않습니다. 페이지를 닫겠습니까?`);
                     if (saidYes) {
                         document.querySelector<HTMLInputElement>("#btnCancel")?.click();
                         setTimeout(() => {
                             window.close();
                         }, 2000);
-                        const newURL = currentURL.href.replace(`/${urlService}/`, `/${correctService}/`);
-                        window.open(newURL, "mywindow")?.focus();
                     }
                 }
             }
@@ -112,18 +123,6 @@ import { wait } from "@/common/utils";
             } else {
                 injectGcssL2();
             }
-        } else if (currentURL.pathname.includes("/reply/")) {
-            document.oncopy = (e) => {
-                const selection = window.getSelection();
-                if (selection) {
-                    const selectedText = selection.toString();
-                    if (selectedText) {
-                        e.clipboardData?.setData("text/plain", selectedText);
-                        console.log("Copied text:", selectedText);
-                        e.preventDefault();
-                    }
-                }
-            };
         }
     }
 

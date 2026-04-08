@@ -10,6 +10,7 @@ import {
     isGCSSNotification,
 } from "@/content-scripts/pending-replies/newGcssWrapper";
 import NotificationItem, { NotificationIDs } from "./NotificationItem";
+import { reloadAllServiceTabs } from "@/common/findTabs";
 
 async function whenNotificationClicked(notificationId: string) {
     console.log("[whenNotificationClicked] Notification clicked: ", notificationId);
@@ -41,13 +42,19 @@ chrome.notifications.onClicked.addListener((notificationId) => {
     whenNotificationClicked(notificationId);
 });
 
-// chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
-//     if (notificationId === NotificationIDs.IMIC_NOTIFICATION) {
-//         if (buttonIndex === 0) {
-//             chrome.windows.getAll()
-//         }
-//     }
-// });
+chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
+    if (notificationId === NotificationIDs.IMIC_NOTIFICATION) {
+        if (buttonIndex === 0) {
+            const reloadOtherTabs = async () => {
+                const tabs = await chrome.tabs.query({
+                    url: ["https://kmmbox.korea.kr/*", "https://mail.korea.kr/*", "https://mail.posa.or.kr/*"],
+                });
+                return Promise.all(tabs.map((t) => t.id && chrome.tabs.reload(t.id)));
+            };
+            Promise.all([reloadAllServiceTabs(false), reloadOtherTabs(), clearAllNotifications()]);
+        }
+    }
+});
 
 export default async function createNotification(force_update = false) {
     const settings = new IMICSettings();

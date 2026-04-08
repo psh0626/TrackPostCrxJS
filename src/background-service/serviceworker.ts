@@ -1,4 +1,4 @@
-import { reloadAllServiceTabs, requestFetch } from "@/common/findTabs";
+import { requestFetch } from "@/common/findTabs";
 import { CMD, MSG } from "@/common/message-hub/Message";
 import processMessage from "@/common/message-hub/MessageHub";
 import StorageKey from "@/common/StorageKey";
@@ -196,12 +196,17 @@ async function notifyInstallationResult(reason: "install" | "update", previousVe
     const versionText =
         isInstall || previousVersion === "unknown" ? `v${currentVersion}` : `v${previousVersion} → v${currentVersion}`;
 
+    const msg = isInstall
+        ? `확장 프로그램이 설치되었습니다.`
+        : `확장 프로그램이 업데이트 되었습니다. (${versionText}) \n새로고침 버튼을 클릭하면 새로운 버전이 각 페이지에 적용됩니다.`;
+    const btns = isInstall ? undefined : [{ title: "모든 페이지 새로고침" }];
     await new NotificationItem({
         priority: 2,
         title: `IMIC TrackPost`,
         contextMessage: `${versionText}`,
         requireInteraction: true,
-        message: `확장 프로그램이 ${isInstall ? "설치" : "업데이트"} 되었습니다.`,
+        message: msg,
+        buttons: btns,
     }).show();
 
     await wait(INSTALL_OPEN_PAGE_DELAY);
@@ -262,14 +267,7 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
         await appendExtensionUpdateLog(msg);
     }
 
-    const reloadOtherTabs = async () => {
-        const tabs = await chrome.tabs.query({
-            url: ["https://kmmbox.korea.kr/*", "https://mail.korea.kr/*", "https://mail.posa.or.kr/*"],
-            active: false,
-        });
-        return Promise.all(tabs.map((t) => t.id && chrome.tabs.reload(t.id)));
-    };
-    await Promise.all([reloadAllServiceTabs(), reloadOtherTabs(), clearAllNotifications()]);
+    await clearAllNotifications();
 
     // Update the stored version to the current version after successful notification
     // This is to ensure the user gets the notification.
