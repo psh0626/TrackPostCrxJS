@@ -134,7 +134,8 @@ export async function checkUpdate() {
         const checkResult = await chrome.runtime.requestUpdateCheck();
         if (checkResult.status !== "update_available") {
             new NotificationItem({
-                title: `IMIC TrackPost (v${currentVersion} → v${latestVersion})`,
+                contextMessage: `v${latestVersion} → v${latestVersion}`,
+                title: `IMIC TrackPost`,
                 message: "새로운 업데이트가 있습니다. 인터넷 브라우저를 재시작하면 적용됩니다.",
                 priority: 2,
                 requireInteraction: true,
@@ -198,7 +199,7 @@ async function notifyInstallationResult(reason: "install" | "update", previousVe
 
     const msg = isInstall
         ? `확장 프로그램이 설치되었습니다.`
-        : `확장 프로그램이 업데이트 되었습니다. (${versionText}) \n새로고침 버튼을 클릭하면 새로운 버전이 각 페이지에 적용됩니다.`;
+        : `확장 프로그램이 업데이트 되었습니다. \n새로고침 버튼을 클릭하여 적용하세요`;
     const btns = isInstall ? undefined : [{ title: "모든 페이지 새로고침" }];
     await new NotificationItem({
         priority: 2,
