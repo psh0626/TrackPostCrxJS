@@ -133,6 +133,13 @@ export async function checkUpdate() {
         console.log(`[checkUpdate] A new version (${latestVersion}) is available! Current version: ${currentVersion}`);
         const checkResult = await chrome.runtime.requestUpdateCheck();
         if (checkResult.status !== "update_available") {
+            const windows = await chrome.windows.getAll({ windowTypes: ["normal"] });
+            if (windows.length === 0) {
+                const msg = `[checkUpdate] No open windows to show update notification. Skipping user notification about the new version ${latestVersion}.`;
+                console.log(msg);
+                await appendExtensionUpdateLog(msg);
+                return { status: "update_available", version: latestVersion };
+            }
             new NotificationItem({
                 contextMessage: `v${latestVersion} → v${latestVersion}`,
                 title: `IMIC TrackPost`,
