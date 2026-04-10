@@ -15,9 +15,11 @@
         "@mui/icons-material": "^7.3.9",
         "@mui/material": "^7.3.9",
         "@mui/x-date-pickers": "^8.27.2",
+        "@tsparticles/basic": "^3.9.1",
+        "@tsparticles/preset-triangles": "^3.2.0",
+        "@tsparticles/react": "^3.0.0",
         "dayjs": "^1.11.20",
         "events": "^3.3.0",
-        "particles.js": "^2.0.0",
         "react": "^19.2.4",
         "react-dom": "^19.2.4",
         "xml2js": "^0.6.2"
