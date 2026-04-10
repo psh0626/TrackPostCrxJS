@@ -8,7 +8,7 @@ import ExchangeRate from "./tabs/exhcnage-rate/exchangeRate";
 import { GeneralSettings } from "./tabs/genral-settings/generalSettings";
 import { PersonalRemarks } from "./tabs/personal-remarks/personalRemarks";
 
-const tabs = ["general", "remarks", "exchange", "about"];
+const tabs = ["general", "remarks", "exchange", "about", "about2"];
 export default function OptionsApp() {
     const settings = useRef(new IMICSettings());
     const [initialized, setInitialized] = useState(false);
