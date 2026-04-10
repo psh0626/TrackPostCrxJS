@@ -3,6 +3,7 @@ import { TravelExplore } from "@mui/icons-material";
 import { AppBar, Box, Paper, Tab, Tabs, Toolbar, Typography } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import About from "./tabs/about/about";
+import About2 from "./tabs/about/about2";
 import ExchangeRate from "./tabs/exhcnage-rate/exchangeRate";
 import { GeneralSettings } from "./tabs/genral-settings/generalSettings";
 import { PersonalRemarks } from "./tabs/personal-remarks/personalRemarks";
@@ -56,26 +57,34 @@ export default function OptionsApp() {
                         value={tabValue}
                         onChange={(_e, n) => setTabValue(n)}
                         orientation="vertical"
-                        sx={{ borderRight: 1, borderColor: "divider", minHeight: "88vh" }}
+                        sx={{ borderRight: 1, borderColor: "divider", minHeight: "88vh", minWidth: "180px" }}
                     >
                         <Tab label="Notifications" />
                         <Tab label="Personal Remarks" />
                         <Tab label="Exchange Rates" />
                         <Tab label="About" />
+                        <Tab label="About2" />
                     </Tabs>
-                    <Box sx={{ padding: "10px" }}>
-                        <Box sx={{ display: tabValue === 0 ? "block" : "none" }}>
+                    <Box sx={{ padding: "10px", width: "100%" }}>
+                        <Box sx={{ display: tabValue === 0 ? "block" : "none", width: "585px" }}>
                             <GeneralSettings settings={settings} />
                         </Box>
-                        <Box sx={{ display: tabValue === 1 ? "block" : "none" }}>
+                        <Box sx={{ display: tabValue === 1 ? "block" : "none", width: "576px" }}>
                             <PersonalRemarks settings={settings} />
                         </Box>
-                        <Box sx={{ display: tabValue === 2 ? "block" : "none" }}>
+                        <Box sx={{ display: tabValue === 2 ? "block" : "none", width: "585px" }}>
                             <ExchangeRate />
                         </Box>
-                        <Box sx={{ display: tabValue === 3 ? "block" : "none" }}>
-                            <About />
-                        </Box>
+                        {tabValue === 3 && (
+                            <Box sx={{ display: tabValue === 3 ? "block" : "none" }}>
+                                <About />
+                            </Box>
+                        )}
+                        {tabValue === 4 && (
+                            <Box sx={{ position: "relative", width: "100%", height: "100%" }}>
+                                <About2 />
+                            </Box>
+                        )}
                     </Box>
                 </Box>
             )}

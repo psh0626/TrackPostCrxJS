@@ -164,7 +164,7 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
             <Header title="iCare Personal Remarks">
                 <ImportExport fileName="MyPersonalRemarks.json" target={prList} onImport={onItemImported} />
             </Header>
-            <Stack direction="row-reverse" alignItems="end" spacing={3} marginBottom={3} pl={2} width={560}>
+            <Stack direction="row-reverse" alignItems="end" spacing={3} marginBottom={3} pl={2} >
                 <Fab
                     color="primary"
                     variant="extended"
@@ -195,7 +195,7 @@ export const PersonalRemarks: React.FC<PersonalRemarksProps> = ({ settings }) =>
                                 <Card key={idx} sx={{ mb: 2 }}>
                                     <Stack direction="row">
                                         <CardActionArea onClick={() => onCardClicked(pr)}>
-                                            <CardContent sx={{ minHeight: 120, width: "450px" }}>
+                                            <CardContent sx={{ minHeight: 120 }}>
                                                 <Typography gutterBottom variant="h6" component="div">
                                                     {pr.Title}
                                                 </Typography>
