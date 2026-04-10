@@ -42,6 +42,7 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     animation: slideUp 1s ease-out;
 }
+
 #app-version {
     color: #555555;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -49,6 +50,7 @@
     animation-delay: 1s;
     animation-fill-mode: both;
 }
+
 @keyframes slideUp {
     from {
         transform: translateY(20px);
@@ -60,4 +62,9 @@
         filter: blur(0);
         opacity: 1;
     }
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
 }
