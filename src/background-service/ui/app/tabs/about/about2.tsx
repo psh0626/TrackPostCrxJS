@@ -1,7 +1,8 @@
 import manifest from "@/../manifest.json";
 import { checkUpdate } from "@/background-service/serviceworker";
 import StorageKey from "@/common/StorageKey";
-import { ArrowDropDown, Refresh } from "@mui/icons-material";
+import { wait } from "@/common/utils";
+import { ArrowDropDown, GitHub, Refresh } from "@mui/icons-material";
 import {
     Accordion,
     AccordionDetails,
@@ -78,25 +79,31 @@ async function getCachedUpdateInfo() {
     return cache;
 }
 
+async function getUpdateInfo() {
+    const cache = await getCachedUpdateInfo();
+    if (cache && !cache.isExpired()) {
+        return cache.releases;
+    }
+    const releases = await fetchUpdateInfo().catch(() => null);
+    if (releases) {
+        cacheUpdateInfo(releases);
+    }
+    return releases;
+}
+
 export default function About2() {
     const [init, setInit] = useState(false);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [updateInfo, setUpdateInfo] = useState<GitHubReleaseList | null>(null);
 
     useEffect(() => {
-        getCachedUpdateInfo().then((cache) => {
-            if (cache && !cache.isExpired()) {
-                setUpdateInfo(cache.releases);
-            } else {
-                fetchUpdateInfo()
-                    .then((releases) => {
-                        setUpdateInfo(releases);
-                        cacheUpdateInfo(releases);
-                    })
-                    .catch(() => setUpdateInfo(null));
-            }
+        wait(2000).then(() => {
+            getUpdateInfo().then((info) => {
+                if (info) {
+                    setUpdateInfo(info);
+                }
+            });
         });
-
         void initParticlesEngine(async (engine) => {
             await loadExternalRepulseInteraction(engine, false);
             await loadExternalPushInteraction(engine, false);
@@ -106,11 +113,11 @@ export default function About2() {
     }, []);
 
     const renderUpdateInfo = () => {
-        if (!updateInfo) return <CircularProgress />;
+        if (!updateInfo) return <CircularProgress color="inherit" sx={{ marginTop: 6 }} />;
         if (updateInfo.length === 0) return <Typography>업데이트 정보가 없습니다.</Typography>;
 
         return (
-            <>
+            <Stack id="update-info-container">
                 {updateInfo.map((release, idx) => (
                     <Accordion
                         variant="elevation"
@@ -119,7 +126,7 @@ export default function About2() {
                         sx={{ width: "100%", "--idx": idx + 1 }}
                     >
                         <AccordionSummary expandIcon={<ArrowDropDown />}>
-                            <Typography variant="h6" fontWeight={300} textAlign="center" width="100%">
+                            <Typography variant="h6" fontWeight={300} fontSize={16} textAlign="center" width="100%">
                                 {release.name}
                             </Typography>
                         </AccordionSummary>
@@ -131,7 +138,18 @@ export default function About2() {
                         </AccordionDetails>
                     </Accordion>
                 ))}
-            </>
+                <Button
+                    endIcon={<GitHub />}
+                    variant="contained"
+                    color="inherit"
+                    href="https://github.com/psh0626/TrackPostExtZip/releases"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ mt: 2, alignSelf: "center", textTransform: "none" }}
+                >
+                    Click to see more on GitHub
+                </Button>
+            </Stack>
         );
     };
 
@@ -157,7 +175,7 @@ export default function About2() {
                                         setIsAlertOpen(true);
                                     }
                                 })
-                            }                              
+                            }
                             sx={{ width: "fit-content", alignSelf: "flex-end", textTransform: "none" }}
                         >
                             <Typography color="text.secondary" variant="subtitle1" fontWeight={300}>
@@ -171,7 +189,7 @@ export default function About2() {
                         </a>
                     </Stack>
 
-                    <Stack id="update-info-container">{renderUpdateInfo()}</Stack>
+                    {renderUpdateInfo()}
                 </Stack>
                 <AlertDialog
                     content="현재 최신 버전입니다."
