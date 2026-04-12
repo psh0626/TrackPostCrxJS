@@ -46,11 +46,53 @@
 #app-version {
     color: #555555;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    animation: slideUp 1s ease-out;
-    animation-delay: 1s;
+    animation: slideUp 1s ease-out 0.5s;
     animation-fill-mode: both;
 }
-
+#update-info-container {
+    width: 520px;
+    height: 540px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    overflow-y: auto;
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+    background: rgba(255, 255, 255, 0.3);
+    /* background: black; */
+    border-radius: 12px;
+    animation: fadeIn 1s ease-out 1s;
+    animation-fill-mode: both;
+}
+.MuiAccordion-root {
+    animation: slideUp 0.5s ease-out;
+    animation-delay: calc(1s + var(--idx) * 0.4s);
+    animation-fill-mode: both;
+}
+#update-info-container h2 {
+    &::after {
+        content: "";
+        display: block;
+        width: 100%;
+        margin-top: 6px;
+        height: 0.5px;
+        background: #333333;
+    }
+}
+/* #update-info-container li {
+    font-size: 14px;
+} */
+#update-info-container code {
+    font-family: inherit;
+    font-size: 90%;
+    background: #333333;
+    color: #ffffff;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    margin: 0 4px;
+}
 @keyframes slideUp {
     from {
         transform: translateY(20px);
@@ -60,6 +102,14 @@
     to {
         transform: translateY(0);
         filter: blur(0);
+        opacity: 1;
+    }
+}
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
         opacity: 1;
     }
 }

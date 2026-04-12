@@ -1,15 +1,29 @@
 import manifest from "@/../manifest.json";
 import { checkUpdate } from "@/background-service/serviceworker";
+import StorageKey from "@/common/StorageKey";
 import { ArrowDropDown, Refresh } from "@mui/icons-material";
-import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Typography } from "@mui/material";
+import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Button,
+    CircularProgress,
+    Stack,
+    Typography,
+} from "@mui/material";
 import { loadExternalPushInteraction } from "@tsparticles/interaction-external-push";
 import { loadExternalRepulseInteraction } from "@tsparticles/interaction-external-repulse";
 import { loadTrianglesPreset } from "@tsparticles/preset-triangles";
 import Particles, { initParticlesEngine, IParticlesProps } from "@tsparticles/react";
 import { loadLifeUpdater } from "@tsparticles/updater-life";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import Markdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
 import AlertDialog from "../components/alertDialog";
 import "./about2.css";
+import { GitHubReleaseList } from "./githubWrapper";
+import { UpdateInfoCache, UpdateInfoCacheData } from "./updateInfoCache";
 
 const options = {
     preset: "triangles",
@@ -44,25 +58,45 @@ const options = {
     pauseOnBlur: true,
     pauseOnOutsideViewport: true,
 } as const as IParticlesProps["options"];
+async function fetchUpdateInfo() {
+    const response = await fetch("https://api.github.com/repos/psh0626/TrackPostExtZip/releases?page=1&per_page=5");
+    if (!response.ok) {
+        throw new Error("Failed to fetch release information");
+    }
+    const releases: GitHubReleaseList = await response.json();
+    return releases;
+}
+function cacheUpdateInfo(releases: GitHubReleaseList) {
+    const cache = new UpdateInfoCache(releases);
+    return new StorageKey("UPDATE_INFO").fromLocal.set(cache);
+}
+async function getCachedUpdateInfo() {
+    const cached = await new StorageKey("UPDATE_INFO").fromLocal.get<UpdateInfoCacheData>();
+    if (!cached) return null;
+    const cache = new UpdateInfoCache(cached.releases, cached._timestamp);
+    console.log("[getCachedUpdateInfo] cache: ", cache, "  isExpired: ", cache.isExpired());
+    return cache;
+}
+
 export default function About2() {
     const [init, setInit] = useState(false);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
-    const [updateInfo, setUpdateInfo] = useState<React.ReactElement | null>(null);
+    const [updateInfo, setUpdateInfo] = useState<GitHubReleaseList | null>(null);
 
-    const fetchUpdateInfo = async () => {
-        fetch("https://github.com/psh0626/TrackPostExtZip/releases/tag/v3.1.37").then(async (res) => {
-            const html = await res.text();
-
-            const newDiv = document.createElement("div");
-            newDiv.innerHTML = html;
-            const content = newDiv.querySelector<HTMLDivElement>(`div[data-test-selector="body-content"]`);
-            const reactElement = React.createElement("div", {
-                dangerouslySetInnerHTML: { __html: content?.innerHTML ?? "" },
-            });
-            setUpdateInfo(reactElement);
-        });
-    };
     useEffect(() => {
+        getCachedUpdateInfo().then((cache) => {
+            if (cache && !cache.isExpired()) {
+                setUpdateInfo(cache.releases);
+            } else {
+                fetchUpdateInfo()
+                    .then((releases) => {
+                        setUpdateInfo(releases);
+                        cacheUpdateInfo(releases);
+                    })
+                    .catch(() => setUpdateInfo(null));
+            }
+        });
+
         void initParticlesEngine(async (engine) => {
             await loadExternalRepulseInteraction(engine, false);
             await loadExternalPushInteraction(engine, false);
@@ -70,6 +104,36 @@ export default function About2() {
             await loadTrianglesPreset(engine, true);
         }).then(() => setInit(true));
     }, []);
+
+    const renderUpdateInfo = () => {
+        if (!updateInfo) return <CircularProgress />;
+        if (updateInfo.length === 0) return <Typography>업데이트 정보가 없습니다.</Typography>;
+
+        return (
+            <>
+                {updateInfo.map((release, idx) => (
+                    <Accordion
+                        variant="elevation"
+                        key={release.id}
+                        defaultExpanded={idx === 0}
+                        sx={{ width: "100%", "--idx": idx + 1 }}
+                    >
+                        <AccordionSummary expandIcon={<ArrowDropDown />}>
+                            <Typography variant="h6" fontWeight={300} textAlign="center" width="100%">
+                                {release.name}
+                            </Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Markdown
+                                remarkPlugins={[remarkGfm]}
+                                rehypePlugins={[rehypeRaw]}
+                            >{`#### ${new Date(release.updated_at).toLocaleString()}\n${release.body}`}</Markdown>
+                        </AccordionDetails>
+                    </Accordion>
+                ))}
+            </>
+        );
+    };
 
     if (init) {
         return (
@@ -93,7 +157,7 @@ export default function About2() {
                                         setIsAlertOpen(true);
                                     }
                                 })
-                            }
+                            }                              
                             sx={{ width: "fit-content", alignSelf: "flex-end", textTransform: "none" }}
                         >
                             <Typography color="text.secondary" variant="subtitle1" fontWeight={300}>
@@ -107,16 +171,7 @@ export default function About2() {
                         </a>
                     </Stack>
 
-                    <Stack width={500}>
-                        <Accordion>
-                            <AccordionSummary expandIcon={<ArrowDropDown />}>
-                                <Typography variant="h5" fontWeight={300} textAlign="center" width="100%">
-                                    v{manifest.version} 업데이트 노트
-                                </Typography>
-                            </AccordionSummary>
-                            <AccordionDetails>{updateInfo ?? "SDFA"}</AccordionDetails>
-                        </Accordion>
-                    </Stack>
+                    <Stack id="update-info-container">{renderUpdateInfo()}</Stack>
                 </Stack>
                 <AlertDialog
                     content="현재 최신 버전입니다."
