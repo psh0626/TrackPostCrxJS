@@ -180,7 +180,7 @@ export default function About() {
                                 setFirstItemExpanded((prev) => !prev);
                             }
                         }}
-                        sx={{ width: "100%", "--idx": idx + 1, mt: 0 }}
+                        sx={{ width: "100%", "--idx": idx + 1, mt: idx === 0 && !firstItemExpanded ? 2 :0 }}
                     >
                         <AccordionSummary expandIcon={<ArrowDropDown />}>
                             <Typography variant="h6" fontWeight={300} fontSize={16} textAlign="center" width="100%">
