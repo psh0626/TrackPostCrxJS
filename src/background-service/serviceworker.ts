@@ -28,7 +28,7 @@ const MAXIMUM_TICK = 120;
 const EXTENSION_UPDATE_LOG_KEY = "IMIC_EXTENSION_UPDATE_LOG";
 const EXTENSION_VERSION_KEY = "IMIC_EXTENSION_VERSION";
 const INSTALL_PAGE_URL = "https://github.com/psh0626/TrackPostExtZip/";
-const RELEASES_PAGE_URL = "https://github.com/psh0626/TrackPostExtZip/releases";
+const RELEASES_PAGE_URL = chrome.runtime.getURL("src/background-service/ui/options.html?tab=about"); //"https://github.com/psh0626/TrackPostExtZip/releases";
 
 const INSTALL_OPEN_PAGE_DELAY = ms(3).toSeconds();
 
