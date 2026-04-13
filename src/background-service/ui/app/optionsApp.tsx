@@ -3,12 +3,11 @@ import { TravelExplore } from "@mui/icons-material";
 import { AppBar, Box, Paper, Tab, Tabs, Toolbar, Typography } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import About from "./tabs/about/about";
-import About2 from "./tabs/about/about2";
 import ExchangeRate from "./tabs/exhcnage-rate/exchangeRate";
 import { GeneralSettings } from "./tabs/genral-settings/generalSettings";
 import { PersonalRemarks } from "./tabs/personal-remarks/personalRemarks";
 
-const tabs = ["general", "remarks", "exchange", "about", "about2"];
+const tabs = ["general", "remarks", "exchange", "about"];
 export default function OptionsApp() {
     const settings = useRef(new IMICSettings());
     const [initialized, setInitialized] = useState(false);
@@ -63,7 +62,6 @@ export default function OptionsApp() {
                         <Tab label="Personal Remarks" />
                         <Tab label="Exchange Rates" />
                         <Tab label="About" />
-                        <Tab label="About2" />
                     </Tabs>
                     <Box sx={{ padding: "10px", width: "100%" }}>
                         <Box sx={{ display: tabValue === 0 ? "block" : "none", width: "585px" }}>
@@ -78,11 +76,6 @@ export default function OptionsApp() {
                         {tabValue === 3 && (
                             <Box sx={{ display: tabValue === 3 ? "block" : "none" }}>
                                 <About />
-                            </Box>
-                        )}
-                        {tabValue === 4 && (
-                            <Box sx={{ position: "relative", width: "100%", height: "100%" }}>
-                                <About2 />
                             </Box>
                         )}
                     </Box>
