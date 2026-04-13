@@ -113,7 +113,13 @@ export async function checkUpdate() {
         console.error("[checkUpdate] No update URL found for the extension.");
         return { status: "no_update" };
     }
-    const response = await fetch(updateUrl);
+    const response = await fetch(updateUrl, { cache: "no-cache" }).catch((error) => {
+        console.error("[checkUpdate] Failed to fetch update information: ", error);
+        return null;
+    });
+    if (!response) {
+        return { status: "no_update" };
+    }
     const data = await response.text();
     const xml = await parseStringPromise(data, {
         explicitArray: false,
