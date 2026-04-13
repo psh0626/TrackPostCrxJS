@@ -53,12 +53,12 @@
     "content_scripts": [
         {
             "matches": ["https://icare.post/*"],
-            "js": ["src/content-scripts/icareScript.tsx"],
+            "js": ["src/content-scripts/icareScript.tsx", "src/content-scripts/party.tsx"],
             "run_at": "document_idle"
         },
         {
             "matches": ["https://gcss.ipc.be/*"],
-            "js": ["src/content-scripts/oldGcssScript.tsx"],
+            "js": ["src/content-scripts/oldGcssScript.tsx", "src/content-scripts/party.tsx"],
             "run_at": "document_idle",
             "exclude_matches": [
                 "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REPLY",
@@ -68,7 +68,7 @@
         },
         {
             "matches": ["https://gcss-uat.ipc.be/*"],
-            "js": ["src/content-scripts/newGcssScript.ts"],
+            "js": ["src/content-scripts/newGcssScript.ts", "src/content-scripts/party.tsx"],
             "run_at": "document_idle"
         },
         {
