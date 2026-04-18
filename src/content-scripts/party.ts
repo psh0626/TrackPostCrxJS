@@ -9,6 +9,15 @@ function randomInRange(min: number, max: number) {
 }
 
 (async function main() {
+    const birthDay = new Date("1994-06-26");
+    const now = new Date();
+    const isBirthDay = now.getMonth() === birthDay.getMonth() && now.getDate() === birthDay.getDate();
+    if (!isBirthDay) {
+        return;
+    }
+
+    console.log("[party] Injecting party script!");
+
     const style = document.createElement("style");
     style.id = "party-exclude-print";
     style.innerHTML = `
@@ -25,15 +34,6 @@ function randomInRange(min: number, max: number) {
         }
     `;
     document.head.appendChild(style);
-
-    const birthDay = new Date("1994-06-26");
-    const now = new Date();
-    const isBirthDay = now.getMonth() === birthDay.getMonth() && now.getDate() === birthDay.getDate();
-    if (!isBirthDay) {
-        return;
-    }
-
-    console.log("[party] Injecting party script!");
 
     window.addEventListener("click", async (ev) => {
         const [screenSizeX, screenSizeY] = [window.innerWidth, window.innerHeight];
