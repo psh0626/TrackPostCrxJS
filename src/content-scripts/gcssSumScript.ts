@@ -1,3 +1,4 @@
+import { wait } from "@/common/utils";
 import "./serviceAwakener";
 // Global map to store authors as they are retrieved
 const authorCellMap: Record<string, HTMLElement[] | undefined> = {};
@@ -16,11 +17,6 @@ chrome.runtime.onMessage.addListener((message) => {
     }
     return false; // No response needed for other messages
 });
-
-export async function wait(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 async function getQuery(itemId: string): Promise<string> {
     const servieType = itemId[0] === "C" ? "UPU" : itemId[0] === "L" ? "EXPRES" : itemId[0] === "R" ? "REG" : "EMS";
     if (fetchedItemsAuthors[itemId]) {

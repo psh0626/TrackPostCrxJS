@@ -15,6 +15,8 @@ import NotificationItem from "./lib/NotificationItem";
 void chrome.action.setBadgeBackgroundColor({ color: "#424242" });
 void chrome.action.setBadgeTextColor({ color: "white" });
 
+chrome.storage.session.setAccessLevel({ accessLevel: "TRUSTED_AND_UNTRUSTED_CONTEXTS" });
+
 // const GCSS_URL = "https://gcss.ipc.be";
 const ICARE_URL = "https://icare.post";
 console.log("BackgroundWorker has been initiated.");

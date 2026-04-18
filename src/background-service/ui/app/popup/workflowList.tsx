@@ -1,6 +1,6 @@
 import { NotificationIDs } from "@/background-service/lib/NotificationItem";
 import { requestFetch } from "@/common/findTabs";
-import { wait } from "@/content-scripts/gcssSumScript";
+import { wait } from "@/common/utils";
 import { GcssItem, isGcssItem, isWorkflowItem, WorkflowItem } from "@/content-scripts/pending-replies/dataWrapper";
 import { ServiceNames } from "@/content-scripts/pending-replies/gcssReplies";
 import { GCSSMessage, isGCSSMessage, isGCSSNotification } from "@/content-scripts/pending-replies/newGcssWrapper";
