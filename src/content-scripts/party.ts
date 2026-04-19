@@ -13,7 +13,7 @@ function randomInRange(min: number, max: number) {
     const now = new Date();
     const isBirthDay = now.getMonth() === birthDay.getMonth() && now.getDate() === birthDay.getDate();
     if (!isBirthDay) {
-        // return;
+        return;
     }
 
     console.log("[party] Injecting party script!");
@@ -61,13 +61,13 @@ function randomInRange(min: number, max: number) {
     const partyKey = new StorageKey("PARTY");
     const partyStored = await partyKey.fromSession.get<SessionDict>();
     if (partyStored) {
-        // if (partyStored?.[currentPage]?.shownCount >= 4) {
-        //     console.log("[party] Party has been shown 4 times already. Aborting party script.");
-        //     return;
-        // } else if (Date.now() - partyStored?.[currentPage]?.lastShown < ms(30).toMinutes()) {
-        //     console.log("[party] Party was shown less than 30 minutes ago. Aborting party script.");
-        //     return;
-        // }
+        if (partyStored?.[currentPage]?.shownCount >= 4) {
+            console.log("[party] Party has been shown 4 times already. Aborting party script.");
+            return;
+        } else if (Date.now() - partyStored?.[currentPage]?.lastShown < ms(30).toMinutes()) {
+            console.log("[party] Party was shown less than 30 minutes ago. Aborting party script.");
+            return;
+        }
     }
     partyKey.fromSession.set({
         ...partyStored,
