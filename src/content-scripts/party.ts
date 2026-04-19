@@ -53,10 +53,9 @@ function randomInRange(min: number, max: number) {
         console.log("[party] Could not find the element. Aborting party script.");
         return;
     }
-    type SessionDict = Record<"GCSS" | "ICARE", { lastShown: number; shownCount: number }>;
+    type SessionDict = Record<string, { lastShown: number; shownCount: number }>;
 
-    const url = new URL(window.location.href);
-    const currentPage = url.href.includes("icare") ? "ICARE" : "GCSS";
+    const currentPage = location.hostname;
 
     const partyKey = new StorageKey("PARTY");
     const partyStored = await partyKey.fromSession.get<SessionDict>();
