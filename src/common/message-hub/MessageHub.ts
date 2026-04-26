@@ -99,6 +99,9 @@ export default function processMessage(
                 SendResponse(dict);
             })();
             return true;
+        case CMD.RELOAD_EXTENSION:
+            chrome.runtime.reload();
+            return false;
         // case CMD.NEW_GCSS_MONITOR_PREFILL_REQUEST:
         //     const prefillMonitor = (details: chrome.webRequest.OnCompletedDetails) => {
         //         console.log("Prefill monitor triggered for: ", details.url);

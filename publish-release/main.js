@@ -19,12 +19,13 @@ const packagePath = join(workspaceDir, "package.json");
 const publishDir = join(workspaceDir, "publish");
 const prePublishDir = join(workspaceDir, "pre-publish");
 const draftPath = join(prePublishDir, ".release-notes-draft.md");
-const assetPath = join(prePublishDir, "dist.zip");
+const distAssetPath = join(prePublishDir, "dist.zip");
+const animAssetPath = join(publishDir, "anim.zip");
 const crxAssetPath = join(publishDir, "dist.crx");
 const installScriptAssetPath = join(publishDir, "TrackPost-install.bat");
 const uninstallScriptAssetPath = join(publishDir, "TrackPost-uninstall.bat");
 
-const releaseAssetPaths = [assetPath, crxAssetPath, installScriptAssetPath, uninstallScriptAssetPath];
+const releaseAssetPaths = [distAssetPath, animAssetPath, crxAssetPath, installScriptAssetPath, uninstallScriptAssetPath];
 
 const releaseNoteSections = ["Added", "Changed", "Fixed"];
 

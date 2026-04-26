@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "IMIC TrackPost",
     "description": "Chrome/Edge 확장프로그램 - iCare, GCSS 사무 자동화",
-    "version": "3.2.39",
+    "version": "3.2.40",
     "icons": {
         "16": "icon.png",
         "32": "icon.png",
@@ -93,6 +93,10 @@
             "matches": ["https://mail.posa.or.kr/*"],
             "js": ["src/content-scripts/posamailScript.js"],
             "world": "MAIN"
+        },
+        {
+            "matches": ["https://github.com/psh0626/*"],
+            "js": ["src/content-scripts/githubScript.ts"]
         }
     ]
 }

@@ -300,46 +300,6 @@ async function whenExtensionInstalled(details: chrome.runtime.InstalledDetails) 
 }
 
 chrome.webRequest.onCompleted.addListener(
-    async function (details) {
-        if (details.statusCode === 200) {
-            const tabs = await chrome.tabs.query({ url: "https://github.com/psh0626/TrackPostExtZip/*" });
-            tabs.forEach(async (tab) => {
-                if (!tab.id || !tab.url) return;
-
-                await chrome.scripting.executeScript({
-                    target: { tabId: tab.id },
-                    world: "MAIN",
-                    func: () => {
-                        document.querySelector("div[itemtype*='abstract']")?.scrollIntoView({ behavior: "smooth" });
-                    },
-                });
-                const reload = new URL(tab.url).searchParams.get("reload");
-                if (reload === "true") {
-                    console.log(
-                        "[Github onCompleted] Github page extension reload requested, extension reloads..",
-                        details,
-                    );
-                    await chrome.scripting.executeScript({
-                        target: { tabId: tab.id },
-                        world: "MAIN",
-                        func: () => {
-                            console.log(
-                                "[Github onCompleted] Github page extension reload requested, extension reloads..",
-                            );
-                            window.history.replaceState(null, "", window.location.pathname);
-                        },
-                    });
-                    chrome.runtime.reload();
-                }
-            });
-        }
-    },
-    {
-        urls: ["https://github.com/psh0626/TrackPostExtZip/*"],
-    },
-);
-
-chrome.webRequest.onCompleted.addListener(
     function (details) {
         if (details.method === "GET") {
             if (details.url.includes("icare.post/?module=workflow&action=requestFields")) {

@@ -180,7 +180,7 @@ export default function About() {
                                 setFirstItemExpanded((prev) => !prev);
                             }
                         }}
-                        sx={{ width: "100%", "--idx": idx + 1, mt: idx === 0 && !firstItemExpanded ? 2 :0 }}
+                        sx={{ width: "100%", "--idx": idx + 1, mt: idx === 0 && !firstItemExpanded ? 2 : 0 }}
                     >
                         <AccordionSummary expandIcon={<ArrowDropDown />}>
                             <Typography variant="h6" fontWeight={300} fontSize={16} textAlign="center" width="100%">
@@ -240,7 +240,11 @@ export default function About() {
                                 version {manifest.version}
                             </Typography>
                         </Button>
-                        <a href="https://github.com/psh0626/TrackPostExtZip/" target="_blank" rel="noopener noreferrer">
+                        <a
+                            href="https://github.com/psh0626/TrackPostExtZip?focus=readme"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
                             <Typography id="app-title" variant="h2" fontWeight={800}>
                                 IMIC TrackPost
                             </Typography>
