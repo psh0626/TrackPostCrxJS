@@ -1,5 +1,5 @@
-export const GCSS_API_BASE_URL = "https://gcss-uat.ipc.be/ui-gtw/api";
-export const GCSS_WEB_BASE_URL = "https://gcss-uat.ipc.be";
+export const GCSS_API_BASE_URL = "https://gcss.ipc.be/ui-gtw/api";
+export const GCSS_WEB_BASE_URL = "https://gcss.ipc.be";
 
 // Type guard for GCSSMessage
 export function isGCSSMessage(obj: any): obj is GCSSMessage {

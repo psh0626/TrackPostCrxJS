@@ -57,19 +57,14 @@
             "run_at": "document_idle"
         },
         {
-            "matches": ["https://gcss.ipc.be/*"],
-            "js": ["src/content-scripts/oldGcssScript.tsx"],
+            "matches": ["https://gcss.ipc.be/*", "https://gcss-uat.ipc.be/*"],
+            "js": ["src/content-scripts/gcssLoader.ts"],
             "run_at": "document_idle",
             "exclude_matches": [
                 "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REPLY",
                 "https://gcss.ipc.be/CSS/gcss/*/alerts/show/SUM_REQ",
                 "https://gcss.ipc.be/CSS/gcss/*/alerts/show/QUM_REQ"
             ]
-        },
-        {
-            "matches": ["https://gcss-uat.ipc.be/*"],
-            "js": ["src/content-scripts/newGcssScript.ts"],
-            "run_at": "document_idle"
         },
         {
             "matches": ["https://icare.post/*", "https://gcss.ipc.be/*", "https://gcss-uat.ipc.be/*"],

@@ -3,7 +3,6 @@ import { CMD, MSG } from "@/common/message-hub/Message";
 import processMessage from "@/common/message-hub/MessageHub";
 import StorageKey from "@/common/StorageKey";
 import { ms } from "@/common/TimespanExtension";
-import { wait } from "@/common/utils";
 import { parseStringPromise } from "xml2js";
 import { GcssItem, isGcssItem, WorkflowItem } from "../content-scripts/pending-replies/dataWrapper";
 import { ServiceTypes } from "../content-scripts/pending-replies/gcssReplies";
@@ -32,7 +31,7 @@ const EXTENSION_VERSION_KEY = "IMIC_EXTENSION_VERSION";
 const INSTALL_PAGE_URL = "https://github.com/psh0626/TrackPostExtZip/";
 const RELEASES_PAGE_URL = chrome.runtime.getURL("src/background-service/ui/options.html?tab=about"); //"https://github.com/psh0626/TrackPostExtZip/releases";
 
-const INSTALL_OPEN_PAGE_DELAY = ms(3).toSeconds();
+// const INSTALL_OPEN_PAGE_DELAY = ms(3).toSeconds();
 
 const currentVersion = chrome.runtime.getVersion();
 
@@ -225,7 +224,7 @@ async function notifyInstallationResult(reason: "install" | "update", previousVe
         buttons: btns,
     }).show();
 
-    await wait(INSTALL_OPEN_PAGE_DELAY);
+    // await wait(INSTALL_OPEN_PAGE_DELAY);
     const [openedTab] = await chrome.tabs.query({ url: targetUrl });
     if (openedTab && openedTab.id) {
         await Promise.all([chrome.tabs.update(openedTab.id, { active: true }), chrome.tabs.reload(openedTab.id)]);

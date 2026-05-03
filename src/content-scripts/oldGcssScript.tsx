@@ -1,14 +1,14 @@
 import ExchangeRateUtil from "@/common/exchangeRateUtil";
 import { IMICSettings } from "@/common/IMICSettings";
-import { MSG, CMD } from "@/common/message-hub/Message";
+import { CMD, MSG } from "@/common/message-hub/Message";
 import { PostElement } from "@/common/PostUtil";
+import { wait } from "@/common/utils";
 import InjectUtil from "./inject-dom/injectUtil";
 import OldGcssInjectUtil from "./inject-dom/oldGcssInjectUtil";
 import { GcssAPI } from "./pending-replies/gcssReplies";
 import "./serviceAwakener";
-import { wait } from "@/common/utils";
 
-(async () => {
+export default async function OldGcssScript() {
     const settings = new IMICSettings();
     await settings.requestLoad();
 
@@ -43,7 +43,7 @@ import { wait } from "@/common/utils";
         if (currentURL.origin !== GCSS_URL) return;
 
         document.head.querySelector("link[rel='stylesheet']")?.removeAttribute("media");
-        
+
         document.oncopy = (e) => {
             const selection = window.getSelection();
             if (selection) {
@@ -55,7 +55,7 @@ import { wait } from "@/common/utils";
                 }
             }
         };
-        
+
         window.addEventListener("hashchange", (e) => {
             if (e.newURL.includes("/query")) {
                 OldGcssInjectUtil.InjectQueryInput();
@@ -392,4 +392,4 @@ import { wait } from "@/common/utils";
                 return "EMS";
         }
     }
-})();
+}

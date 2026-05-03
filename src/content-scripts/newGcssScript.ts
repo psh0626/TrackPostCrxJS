@@ -11,7 +11,7 @@ import { GcssWorkflowService } from "./pending-replies/newGcssReplies";
 import { GcssPrefillObject } from "./pending-replies/newGcssWrapper";
 import "./serviceAwakener";
 
-(async () => {
+export default async function NewGcssScript() {
     console.log("Content script loaded at: " + document.readyState);
 
     const settings = new IMICSettings();
@@ -173,4 +173,4 @@ import "./serviceAwakener";
         perfMarks.push(performance.mark("Finished Injecting"));
         GcssHelper.finalizeInjectRequestForm(perfMarks);
     }
-})();
+}

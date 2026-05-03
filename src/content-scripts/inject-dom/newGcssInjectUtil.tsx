@@ -526,8 +526,8 @@ export async function applyPostElementFormValues(
     const callCenterSelect = await tryGetSelect("messageRouting.receivingCallCenterUpuCode");
 
     wait(500).then(async () => {
-        document.querySelector(".overflow-auto")?.scrollTo({ behavior: "smooth", top: 200 });
         if (callCenterSelect?.textContent === "Select Destination Call Center") {
+            document.querySelector(".overflow-auto")?.scrollTo({ behavior: "smooth", top: 200 });
             await wait(500);
             simulateSelectClick(callCenterSelect);
         }

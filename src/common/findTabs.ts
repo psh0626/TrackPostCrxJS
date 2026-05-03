@@ -5,11 +5,11 @@ const SERVICES = {
         queryPattern: "https://icare.post/*",
         hostMatch: "icare.post",
     },
-    oldGcss: {
+    gcss: {
         queryPattern: "https://gcss.ipc.be/*",
         hostMatch: "gcss.ipc.be",
     },
-    newGcss: {
+    gcssUat: {
         queryPattern: "https://gcss-uat.ipc.be/*",
         hostMatch: "gcss-uat.ipc.be",
     },
@@ -20,8 +20,8 @@ type ServiceKey = keyof typeof SERVICES;
 function groupTabsByService(tabs: chrome.tabs.Tab[]): Record<ServiceKey, chrome.tabs.Tab[]> {
     return {
         iCare: tabs.filter((tab) => tab.url?.includes(SERVICES.iCare.hostMatch)),
-        oldGcss: tabs.filter((tab) => tab.url?.includes(SERVICES.oldGcss.hostMatch)),
-        newGcss: tabs.filter((tab) => tab.url?.includes(SERVICES.newGcss.hostMatch)),
+        gcss: tabs.filter((tab) => tab.url?.includes(SERVICES.gcss.hostMatch)),
+        gcssUat: tabs.filter((tab) => tab.url?.includes(SERVICES.gcssUat.hostMatch)),
     };
 }
 
