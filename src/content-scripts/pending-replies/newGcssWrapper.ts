@@ -28,6 +28,7 @@ export interface IGCSSBase {
     receivingCountry: string;
     attachmentCount: number;
     readStatus: string;
+    workflowId: string;
 }
 
 export interface IGCSSNotification extends IGCSSBase {
@@ -84,6 +85,7 @@ export class GCSSMessageBase implements IGCSSBase {
     itemId!: string;
     product!: string;
     status!: string;
+    workflowId!: string;
     sendingCallCenterUpuCode!: string;
     sendingPartner!: string;
     sendingCountry!: string;
@@ -117,7 +119,7 @@ export class GCSSWorkflow extends GCSSMessageBase implements IGCSSWorkflow {
     qumCount!: number;
     qumrCount!: number;
     reactivationCount!: number;
-    messageLink: string = `${GCSS_WEB_BASE_URL}/#/items/${this.itemId}?workflowId=${this.id}`;
+    messageLink: string = `${GCSS_WEB_BASE_URL}/#/items/${this.itemId}/workflow/${this.id}`;
     isNotification = false;
     constructor(data: IGCSSWorkflow) {
         super(data);
@@ -129,7 +131,6 @@ export class GCSSNotification extends GCSSMessageBase implements IGCSSNotificati
         super(data);
         Object.assign(this, data);
     }
-    workflowId!: string;
     type!: string;
     typeLabel!: string;
     reason!: string;
@@ -144,7 +145,7 @@ export class GCSSNotification extends GCSSMessageBase implements IGCSSNotificati
     ignored!: boolean;
     statusLabel!: string;
     reply!: null;
-    messageLink: string = `${GCSS_WEB_BASE_URL}/#/items/${this.itemId}/inquiry/${this.id}`;
+    messageLink: string = `${GCSS_WEB_BASE_URL}/#/items/${this.itemId}/workflow/${this.workflowId}/inquiry/${this.id}`;
     isNotification = true;
     isUnread(): boolean {
         return this.readStatus !== "READ";
@@ -202,13 +203,20 @@ export class GcssArray<T extends IGCSSBase> extends Array<T> {
         console.log("[GcssWorkflowService] Filtered by outbound notifications", filtered);
         return new GcssArray(filtered);
     }
+    filterEMS(): GcssArray<T> {
+        const filtered = this.filter((item) => item.product.toUpperCase() === "EMS");
+        console.log("[GcssWorkflowService] Filtered by EMS service", filtered);
+        return new GcssArray(filtered);
+    }
     filterOutboundByCountries(countries: string[]): GcssArray<T> {
+        if (countries.length === 0) return new GcssArray(this);
         const filtered = this.filter((item) => GcssArray.includesOneOf(item.sendingCountry, countries));
         console.log("[GcssWorkflowService] Filtered by outbound notification countries", filtered);
         return new GcssArray(filtered);
     }
 
     filterOutboundExcludeCountries(countries: string[]): GcssArray<T> {
+        if (countries.length === 0) return new GcssArray(this);
         const filtered = this.filter((item) => !GcssArray.includesOneOf(item.sendingCountry, countries));
         console.log("[GcssWorkflowService] Filtered by outbound notification excluded countries", filtered);
         return new GcssArray(filtered);
@@ -218,6 +226,7 @@ export class GcssArray<T extends IGCSSBase> extends Array<T> {
             this,
             (item: IGCSSWorkflow) => new GCSSWorkflow(item),
         ) as GCSSWorkflow[];
+        console.log("[GcssWorkflowService] Mapped to GCSSWorkflow", mapped);
         return new GcssArray(mapped);
     }
     mapToGcssNotification(): GcssArray<GCSSNotification> {
@@ -225,6 +234,7 @@ export class GcssArray<T extends IGCSSBase> extends Array<T> {
             this,
             (item: IGCSSNotification) => new GCSSNotification(item),
         ) as GCSSNotification[];
+        console.log("[GcssWorkflowService] Mapped to GCSSNotification", mapped);
         return new GcssArray(mapped);
     }
 }

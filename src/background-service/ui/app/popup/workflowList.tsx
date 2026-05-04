@@ -200,7 +200,12 @@ export const WorkflowList = ({
                         } else {
                             secondary_string = item.itemId;
                             if (isGCSSNotification(item)) {
-                                primary_string = `[${item.creationDate.split("T")[0].replace("-", "/")}] ${item.sendingCountry} - ${item.reasonLabel}`;
+                                const date = item.creationDate.split("T")[0].slice(5).replaceAll("-", "/");
+                                const reason = item.reasonLabel.split(" ").at(-1);
+                                const reasonCapitalized = reason
+                                    ? reason.charAt(0).toUpperCase() + reason.slice(1)
+                                    : "Unknown";
+                                primary_string = `[${date}] ${item.sendingCountry} - ${reasonCapitalized}`;
                             } else {
                                 primary_string = `${item.itemId.slice(-2) === "KR" ? item.sendingCountry : item.receivingCountry} - ${item.inquiryType} ${item.requestTypeMnemonic}`;
                             }

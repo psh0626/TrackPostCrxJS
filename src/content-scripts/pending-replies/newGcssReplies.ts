@@ -1,5 +1,5 @@
 import { IMICSettings } from "@/common/IMICSettings";
-import { MSG, CMD } from "@/common/message-hub/Message";
+import { CMD, MSG } from "@/common/message-hub/Message";
 import { ms } from "@/common/TimespanExtension";
 import {
     GCSS_API_BASE_URL,
@@ -142,12 +142,13 @@ export class GcssWorkflowService {
         if (this.settings.GcssUnreadNotificationInbound || this.settings.GcssUnreadNotificationOutbound) {
             const notifications = await this.client.getMessages(notification("RECEIVED"));
 
+            const notificationsUnread = notifications.filterEMS().filterUnread();
             if (this.settings.GcssUnreadNotificationInbound) {
-                const inbound = notifications.filterInbound().mapToGcssNotification();
+                const inbound = notificationsUnread.filterInbound().mapToGcssNotification();
                 messages.push(new MSG(CMD.NEW_GCSS_UNREAD_NOTIF_INBOUND, inbound).fromContent.toService());
             }
             if (this.settings.GcssUnreadNotificationOutbound) {
-                const outbound = notifications
+                const outbound = notificationsUnread
                     .filterOutbound()
                     .filterOutboundByCountries(this.settings.GcssOutboundNotificationCountries)
                     .filterOutboundExcludeCountries(this.settings.GcssOutboundNotificationExcludedCountries)
