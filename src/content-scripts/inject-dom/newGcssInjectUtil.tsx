@@ -308,12 +308,12 @@ export function getCurrentRequestInfo() {
 
     if (!form.requestType) {
         console.log(
-            "[getCurrentRequestInfo]Request type not found in URL search params, trying to get it from the form input",
+            "[getCurrentRequestInfo] Request type not found in URL search params, trying to get it from the form input",
         );
         const requestTypeInput = document.querySelector(
             "input[aria-labelledby='requestType']",
         ) as HTMLInputElement | null;
-        form.requestType = requestTypeInput?.value || null;
+        form.requestType = requestTypeInput?.value.toUpperCase() || null;
         console.log("[getCurrentRequestInfo] Request type from input:", form.requestType);
     }
 
