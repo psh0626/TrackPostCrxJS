@@ -12,11 +12,23 @@ async function getQuery(itemId: string): Promise<string> {
         return fetchedItemsAuthors[itemId];
     }
     const baseData = await fetch(`${baseUrl}/workflows/item/${itemId}/check`).then((res) => res.json());
-    const workflowId = baseData?.workflowId;
+    let workflowId = baseData?.workflowId;
     if (!workflowId) {
-        console.log(`No workflowId found for itemId ${itemId}, returning 'unknown'.`);
-        return "";
+        console.log(`No workflowId found for itemId ${itemId}, now checking closed workflows.`);
+        const itemQualification = await fetch(`${baseUrl}/item-qualifications/${itemId}`).then((res) => res.json());
+        const product = itemQualification?.qualification?.product;
+        if (!product) {
+            console.log(`No product found for itemId ${itemId}, cannot check closed workflows.`);
+            return "";
+        }
+        const closedData = await fetch(`${baseUrl}/workflows/${itemId}/${product}/closed`).then((res) => res.json());
+        workflowId = closedData?.workflowId;
+        if (!workflowId) {
+            console.log(`No workflowId found in closed workflows for itemId ${itemId}, returning unknown.`);
+            return "";
+        }
     }
+    
     const history = await fetch(`${baseUrl}/workflows/${workflowId}/history`).then((res) => res.json());
     const inquiries = (history?.messages as Array<any>)
         .filter((msg) => msg.sendingCountryCode === "KR")

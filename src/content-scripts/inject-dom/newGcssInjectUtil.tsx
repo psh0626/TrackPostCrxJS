@@ -346,8 +346,13 @@ function getExcludedRequestFormElements(formInfo: CurrentRequestInfo): RequestFo
         {
             condition:
                 formInfo.level === "L1Q" &&
+                formInfo.serviceType !== "UPU" &&
                 includesAny(formInfo.requestType, ["UPDATE", "CUSTOMS", "MISSENT", "CHANGE", "DELAYED"]),
             elements: ["indemnityAmount", "indemnityAmountCurrency"],
+        },
+        {
+            condition: formInfo.serviceType === "UPU" && includesAny(formInfo.requestType, "UPDATE"),
+            elements: ["podRequired"],
         },
         {
             condition: formInfo.level === "L1Q" && includesAny(formInfo.requestType, "RETURN"),
@@ -396,7 +401,12 @@ export async function resolveRequestFormElements(formInfo: CurrentRequestInfo) {
         ([key]) => !excludedElementSet.has(key as RequestFormElementKey),
     ) as [RequestFormElementKey, NonNullable<FormElements[RequestFormElementKey]>][];
 
-    console.log("[InjectRequestForm] Exclude conditions for elements in", formInfo.requestType, excludedElements);
+    console.log(
+        "[InjectRequestForm] Exclude conditions for elements in",
+        formInfo.requestType,
+        excludedElements,
+        formInfo,
+    );
 
     const elementPromises = await Promise.allSettled(
         activeElements.map(async ([key, resolveElement]) => {
