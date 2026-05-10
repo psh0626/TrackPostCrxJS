@@ -305,6 +305,18 @@ export function getCurrentRequestInfo() {
         serviceType: url.searchParams.get("qualifiedProduct"),
         requestType: url.searchParams.get("requestType"),
     };
+
+    if (!form.requestType) {
+        console.log(
+            "[getCurrentRequestInfo]Request type not found in URL search params, trying to get it from the form input",
+        );
+        const requestTypeInput = document.querySelector(
+            "input[aria-labelledby='requestType']",
+        ) as HTMLInputElement | null;
+        form.requestType = requestTypeInput?.value || null;
+        console.log("[getCurrentRequestInfo] Request type from input:", form.requestType);
+    }
+
     return form;
 }
 
