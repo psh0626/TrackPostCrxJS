@@ -1,4 +1,4 @@
-# <div align="left"> <img align="center" width="32" src="public/icon.png"/> TrackPost  </div>
+# <div align="left"> <img align="top" width="32" src="public/icon.png"/> TrackPost  </div>
 
 **TrackPost** is a Chrome extension that streamlines cross-border mail tracking and inquiry systems for postal agents within the Universal Postal Union (UPU) and the Kahala Posts Group (KPG).
 
