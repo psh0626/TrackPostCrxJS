@@ -1,16 +1,37 @@
+<!-- omit from toc -->
 # <div align="left"> <img align="top" width="32" src="public/icon.png"/> TrackPost  </div>
 
 **TrackPost** is a Chrome extension that streamlines cross-border mail tracking and inquiry systems for postal agents within the Universal Postal Union (UPU) and the Kahala Posts Group (KPG).
 
 Postal agents rely on platforms like [GCSS](https://gcss.ipc.be) and [iCare](https://icare.post) to handle inter-agency communications including item location tracking, address alteration requests, and status updates.
 
+<!-- omit from toc -->
 ## Installation
 1. Download the source code
 2. Run "npm install"
 3. Run "npm run devbuild"
 4. Drag and drop the "dist" folder on the extensions page on Chrome or Edge (Developer mode must be enabled)
 
-Or download the [dist.zip](https://github.com/psh0626/TrackPostCrxJS/releases/latest/) file in the releases, and do number 4 above.
+Or download the [dist.zip](https://github.com/psh0626/TrackPostCrxJS/releases/latest/) file in the releases, and proceed with number 4 above.
+
+<!-- omit from toc -->
+## Table of Contents
+- [The Problem](#the-problem)
+- [The Solution](#the-solution)
+    - [Version 1: A Desktop Application](#version-1-a-desktop-application)
+    - [Version 2: From Desktop to Browser](#version-2-from-desktop-to-browser)
+    - [Why TypeScript and React](#why-typescript-and-react)
+- [Implementation Details](#implementation-details)
+- [Maintenance](#maintenance)
+- [Folder structure](#folder-structure)
+    - [The reason for this structure](#the-reason-for-this-structure)
+- [Screenshots](#screenshots)
+  - [Popup UI](#popup-ui)
+  - [Sidepanel](#sidepanel)
+  - [Options Page](#options-page)
+  - [Windows Notification](#windows-notification)
+
+<br/>
 
 ## The Problem
 To raise an inquiry, agents had to fill out a form each time, providing details about the item's contents, sender, and recipient. While basic information was auto-filled, the missing fields still had to be manually copied, pasted, and verified by the agent. This repetitive and error-prone process left clear room for improvement.
@@ -96,11 +117,11 @@ This makes the architecture easier for me to maintain as page-specific automatio
 <img width="394" align="top" alt="image" src="https://github.com/user-attachments/assets/e6d02ac7-7d31-46fc-98d5-04eb1735c63a" />
 <img width="389" alt="image" src="https://github.com/user-attachments/assets/af2d252f-f803-4d5d-9936-251ad7c498ec" />
 
-## Sidepanel
+### Sidepanel
 
 <img height="600" alt="image" src="https://github.com/user-attachments/assets/b9c96e91-16b8-466d-8324-f6d664302290" />
 
-## Options Page
+### Options Page
 
 <img width="408" alt="optionsPage" src="https://github.com/user-attachments/assets/bad6941f-f444-47d6-ad58-0d18d4b960ad" />
 <img width="334" align="top" alt="image" src="https://github.com/user-attachments/assets/1c046255-725a-4cac-9ab0-497804060641" />
@@ -108,6 +129,6 @@ This makes the architecture easier for me to maintain as page-specific automatio
 <img width="408" align="top" alt="image" src="https://github.com/user-attachments/assets/6be6e7b2-1852-420c-9d7d-142bc827c40d" />
 
 
-## Windows Notification
+### Windows Notification
 
 <img width="445" height="279" alt="image" src="https://github.com/user-attachments/assets/8cb8bb70-8d54-4da7-93b1-ac6479e852f5" />
