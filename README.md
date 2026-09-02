@@ -4,6 +4,14 @@
 
 Postal agents rely on platforms like [GCSS](https://gcss.ipc.be) and [iCare](https://icare.post) to handle inter-agency communications including item location tracking, address alteration requests, and status updates.
 
+## Installation
+1. Download the source code
+2. Run "npm install"
+3. Run "npm run devbuild"
+4. Drag and drop the "dist" folder on the extensions page on Chrome or Edge (Developer mode must be enabled)
+
+Or download the [dist.zip](https://github.com/psh0626/TrackPostCrxJS/releases/latest/) file in the releases, and do number 4 above.
+
 ## The Problem
 To raise an inquiry, agents had to fill out a form each time, providing details about the item's contents, sender, and recipient. While basic information was auto-filled, the missing fields still had to be manually copied, pasted, and verified by the agent. This repetitive and error-prone process left clear room for improvement.
 

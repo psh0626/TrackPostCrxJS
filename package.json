@@ -48,5 +48,8 @@
         "typescript": "^5.9.3",
         "vite": "^8.0.3",
         "vite-plugin-zip-pack": "^1.2.4"
+    },
+    "allowScripts": {
+        "@tsparticles/engine@3.9.1": true
     }
 }
