@@ -1,4 +1,4 @@
-# <div align="left"> <img align="center" width="32" src="public/icon.png"/> TrackPost  </div>
+# <div align="left"> <img align="top" width="32" src="public/icon.png"/> TrackPost  </div>
 
 **TrackPost** is a Chrome extension that streamlines cross-border mail tracking and inquiry systems for postal agents within the Universal Postal Union (UPU) and the Kahala Posts Group (KPG).
 
@@ -28,7 +28,7 @@ With this transition, I was able to further develop features like notification/r
 Coming from a strongly-typed background in C#, TypeScript was a natural fit as it gave me type safety and the same compile-time confidence I was used to. For the view layer, I chose React because of its widespread adoption in the frontend ecosystem and its component-based model, which suited the modular structure of a browser extension well. My goal for this project was beyond shipping a working tool: I wanted to deepen my understanding of modern frontend engineering, and both choices deliberately supported that growth.
 
 ## Implementation Details
-While researching our [Korea Post website](http://epost.go.kr), I noticed that the page where customers file an investigation request sends an HTTP POST request via AJAX fill the item's data. The only input required was the tracking number, which was ideal since inquiries are always raised against a tracking number. This discovery became the foundation of the auto-fill feature.
+While researching our [Korea Post website](http://epost.go.kr), I noticed that the page where customers file an investigation request sends an HTTP POST request via AJAX and fills the data from the response. The only input required was the tracking number, which was ideal since inquiries are always raised against a tracking number. This discovery became the foundation of the auto-fill feature.
 
 Korea Post later added the sender's phone number as an additional check, but because it was enforced only in the front-end layer rather than the back end, the endpoint still returned a response without requiring the phone number.
 
